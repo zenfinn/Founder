@@ -15,16 +15,15 @@ export default function MentorenPage() {
       <PageHero
         eyebrow="Mentoren"
         title="Lerne direkt von erfolgreichen Unternehmern."
-        description="Filtere nach Branche und finde Mentoren, die bereits dort sind, wo du hinwillst. Jede Buchung ist auf konkrete Umsetzung, Wachstum und operative Erfahrung ausgelegt."
+        description="Die Mentor-Liste wächst gerade. Bewirb dich als Mentor oder buche Sessions von verifizierten Unternehmern."
         imageUrl="https://images.unsplash.com/photo-1551836022-d5d88e9218df?w=1600&q=80"
       />
       <section className="px-4 py-12">
         <div className="mx-auto max-w-6xl">
-          <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-            Filtere nach Branche und Preis. Buchungen laufen über Stripe, Founder verbucht automatisch 15% Provision.
-          </p>
           <MentorsList />
-          <MentorOfferForm />
+          <div id="apply">
+            <MentorOfferForm />
+          </div>
         </div>
       </section>
     </main>

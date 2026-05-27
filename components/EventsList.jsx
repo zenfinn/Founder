@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { ranks, sampleEvents } from "@/lib/founder-data";
+import { sampleEvents } from "@/lib/founder-data";
 import { RankBadge } from "@/components/RankBadge";
 
 function formatPrice(priceCents = 0) {
@@ -21,94 +21,64 @@ function formatDate(value) {
 
 export function EventsList() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
-  const [events, setEvents] = useState(sampleEvents);
-  const [category, setCategory] = useState("Alle");
-  const [rank, setRank] = useState("Alle");
-  const [dateRange, setDateRange] = useState("Alle");
+  const [previewEvents] = useState(sampleEvents.slice(0, 3));
 
   useEffect(() => {
     async function loadEvents() {
-      const { data, error } = await supabase
+      await supabase
         .from("events")
-        .select("id,slug,title,starts_at,price_cents,min_rank,location_text,status,category,image_url")
+        .select("id")
         .eq("status", "published")
-        .order("starts_at", { ascending: true });
-
-      if (!error && data?.length) {
-        setEvents(data);
-      }
+        .limit(1);
     }
 
     loadEvents();
   }, [supabase]);
 
-  const categories = ["Alle", ...new Set(events.map((event) => event.category ?? "Allgemein"))];
-  const filteredEvents = events.filter((event) => {
-    const categoryMatch = category === "Alle" || (event.category ?? "Allgemein") === category;
-    const rankMatch = rank === "Alle" || event.min_rank === rank;
-    const eventDate = new Date(event.starts_at);
-    const now = new Date();
-    const days = dateRange === "7 Tage" ? 7 : dateRange === "30 Tage" ? 30 : null;
-    const dateMatch = !days || (eventDate >= now && eventDate <= new Date(now.getTime() + days * 24 * 60 * 60 * 1000));
-    return categoryMatch && rankMatch && dateMatch;
-  });
-
   return (
-    <>
-      <div className="mt-8 grid gap-3 rounded-[1.5rem] border border-slate-200 bg-white p-4 sm:grid-cols-3">
-        <label className="block">
-          <span className="text-sm font-bold text-slate-700">Kategorie</span>
-          <select className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3" value={category} onChange={(event) => setCategory(event.target.value)}>
-            {categories.map((item) => <option key={item}>{item}</option>)}
-          </select>
-        </label>
-        <label className="block">
-          <span className="text-sm font-bold text-slate-700">Rang</span>
-          <select className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3" value={rank} onChange={(event) => setRank(event.target.value)}>
-            <option>Alle</option>
-            {ranks.map((item) => <option key={item.id} value={item.id}>{item.label}</option>)}
-          </select>
-        </label>
-        <label className="block">
-          <span className="text-sm font-bold text-slate-700">Datum</span>
-          <select className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3" value={dateRange} onChange={(event) => setDateRange(event.target.value)}>
-            <option>Alle</option>
-            <option>7 Tage</option>
-            <option>30 Tage</option>
-          </select>
-        </label>
-      </div>
-      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {filteredEvents.map((event) => {
-        return (
-          <article key={event.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
-            <div className="relative h-44">
-              <Image src={event.image_url ?? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"} alt="" fill className="object-cover" sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" />
-            </div>
-            <div className="p-5">
-              <div className="flex items-center justify-between gap-3">
-                <RankBadge rank={event.min_rank} />
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                  {formatPrice(event.price_cents)}
-                </span>
+    <div className="relative mt-8">
+      <div className="pointer-events-none select-none opacity-45 grayscale">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {previewEvents.map((event) => (
+            <article key={event.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
+              <div className="relative h-44">
+                <Image
+                  src={event.image_url ?? "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1200&q=80"}
+                  alt=""
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
+                />
               </div>
-              <p className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                {event.category ?? "Allgemein"}
-              </p>
-              <h2 className="mt-5 font-serif text-2xl font-bold text-slate-950">{event.title}</h2>
-              <p className="mt-3 text-sm font-semibold text-slate-600">{formatDate(event.starts_at)}</p>
-              {event.location_text && <p className="mt-1 text-sm text-slate-500">{event.location_text}</p>}
-              <Link
-                href={`/events/${event.slug ?? event.id}`}
-                className="mt-6 block w-full rounded-2xl bg-founder-600 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-founder-700"
-              >
-                Details ansehen
-              </Link>
-            </div>
-          </article>
-        );
-      })}
+              <div className="p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <RankBadge rank={event.min_rank} />
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                    {formatPrice(event.price_cents)}
+                  </span>
+                </div>
+                <p className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+                  {event.category ?? "Allgemein"}
+                </p>
+                <h2 className="mt-5 font-serif text-2xl font-bold text-slate-950">{event.title}</h2>
+                <p className="mt-3 text-sm font-semibold text-slate-600">{formatDate(event.starts_at)}</p>
+                {event.location_text && <p className="mt-1 text-sm text-slate-500">{event.location_text}</p>}
+              </div>
+            </article>
+          ))}
+        </div>
       </div>
-    </>
+
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="mx-4 max-w-lg rounded-[1.75rem] border border-slate-200 bg-white/95 px-8 py-10 text-center shadow-xl backdrop-blur">
+          <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-600">Coming Soon</p>
+          <h2 className="mt-3 font-serif text-3xl font-bold text-slate-950">Events starten bald</h2>
+          <p className="mt-3 text-sm leading-6 text-slate-600">
+            Wir finalisieren gerade Tickets, Stripe-Checkout und den Event-Kalender. Unten kannst du schon jetzt dein
+            Event vorschlagen.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

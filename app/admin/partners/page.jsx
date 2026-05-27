@@ -10,7 +10,7 @@ export default function AdminPartnersPage() {
           <Link href="/admin">
             <BrandMark />
           </Link>
-          <Link href="/ressourcen" className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">
+          <Link href="/admin/ressourcen" className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700">
             Ressourcen
           </Link>
         </div>

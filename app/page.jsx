@@ -4,7 +4,7 @@ import { LandingHeader } from "@/components/LandingHeader";
 import { FadeIn, MotionCard } from "@/components/Motion";
 import { FounderProUpgradeButton } from "@/components/FounderProUpgradeButton";
 import { RankBadge } from "@/components/RankBadge";
-import { communityChannels, mentorsPreview, ranks, sampleEvents } from "@/lib/founder-data";
+import { communityChannels, ranks, sampleEvents } from "@/lib/founder-data";
 import {
   Bot,
   CheckCircle,
@@ -191,31 +191,33 @@ export default function LandingPage() {
                 Haupt-Monetarisierung.
               </p>
             </div>
-            <Link href="/events" className="rounded-2xl bg-founder-600 px-5 py-3 text-center text-sm font-bold text-white">
-              Alle Events ansehen
+            <Link href="/events#vorschlagen" className="rounded-2xl bg-founder-600 px-5 py-3 text-center text-sm font-bold text-white">
+              Event vorschlagen
             </Link>
           </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {sampleEvents.map((event) => (
-              <MotionCard key={event.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
-                <div className="relative h-44">
-                  <Image src={event.image_url} alt="" fill className="object-cover" sizes="(min-width: 768px) 33vw, 100vw" />
-                </div>
-                <div className="p-5">
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-founder-600">
-                    {formatEventDate(event.starts_at)}
-                  </p>
-                  <h3 className="mt-5 font-serif text-2xl font-bold text-slate-950">{event.title}</h3>
-                  <p className="mt-2 text-lg font-bold text-founder-600">{formatEventPrice(event.price_cents)}</p>
-                  <Link
-                    href="/kontakt"
-                    className="mt-6 block rounded-2xl bg-founder-600 px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-founder-700"
-                  >
-                    Interesse anmelden
-                  </Link>
-                </div>
-              </MotionCard>
-            ))}
+          <div className="relative mt-8">
+            <div className="pointer-events-none grid gap-4 opacity-40 grayscale md:grid-cols-3">
+              {sampleEvents.slice(0, 3).map((event) => (
+                <MotionCard key={event.id} className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white">
+                  <div className="relative h-44">
+                    <Image src={event.image_url} alt="" fill className="object-cover" sizes="(min-width: 768px) 33vw, 100vw" />
+                  </div>
+                  <div className="p-5">
+                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-founder-600">
+                      {formatEventDate(event.starts_at)}
+                    </p>
+                    <h3 className="mt-5 font-serif text-2xl font-bold text-slate-950">{event.title}</h3>
+                    <p className="mt-2 text-lg font-bold text-founder-600">{formatEventPrice(event.price_cents)}</p>
+                  </div>
+                </MotionCard>
+              ))}
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="rounded-[1.5rem] border border-slate-200 bg-white/95 px-8 py-6 text-center shadow-lg backdrop-blur">
+                <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-600">Coming Soon</p>
+                <p className="mt-2 font-serif text-2xl font-bold text-slate-950">Events starten bald</p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -226,29 +228,21 @@ export default function LandingPage() {
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-600">Mentoren</p>
             <h2 className="mt-3 font-serif text-4xl font-bold text-slate-950">Buche Erfahrung statt Theorie.</h2>
             <p className="mt-3 text-base leading-7 text-slate-600">
-              Lerne direkt von erfolgreichen Unternehmern die bereits dort sind wo du hinwillst.
+              Die Mentor-Liste wächst gerade. Bewirb dich als Mentor ab Builder-Rang.
             </p>
           </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {mentorsPreview.map((mentor) => (
-              <MotionCard key={mentor.name} className="rounded-[1.5rem] bg-slate-50 p-5">
-                <div className="relative h-20 w-20 overflow-hidden rounded-full bg-founder-600">
-                  <Image src={mentor.avatar_url} alt="" fill className="object-cover" sizes="80px" />
-                </div>
-                <h3 className="mt-5 font-serif text-2xl font-bold text-slate-950">{mentor.name}</h3>
-                <p className="mt-1 text-sm font-semibold text-slate-500">{mentor.company}</p>
-                <p className="mt-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-bold text-founder-600">
-                  {mentor.expertise}
-                </p>
-                <p className="mt-4 text-sm font-bold text-founder-600">{mentor.price}</p>
-                <Link
-                  href="/mentoren"
-                  className="mt-6 block rounded-2xl border border-founder-200 bg-white px-5 py-3 text-center text-sm font-bold text-founder-600 transition hover:bg-founder-50"
-                >
-                  Jetzt buchen
-                </Link>
-              </MotionCard>
-            ))}
+          <div className="mt-8 rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-600">Coming Soon</p>
+            <h3 className="mt-3 font-serif text-3xl font-bold text-slate-950">Erste Mentoren werden freigeschaltet</h3>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-600">
+              Du hast Builder-Rang oder höher? Bewirb dich jetzt — nach Freigabe erscheinst du in der Liste.
+            </p>
+            <Link
+              href="/mentoren#apply"
+              className="mt-6 inline-flex rounded-2xl bg-founder-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-founder-700"
+            >
+              Als Mentor bewerben
+            </Link>
           </div>
         </div>
       </section>

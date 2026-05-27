@@ -1,6 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { AuthGuard } from "@/components/AuthGuard";
 import { ProfileEditor } from "@/components/ProfileEditor";
+import { ReferralSettingsSection } from "@/components/ReferralSettingsSection";
 
 export const metadata = {
   title: "Profil bearbeiten",
@@ -20,6 +21,7 @@ export default function ProfileEditPage() {
           </h1>
           <div className="mt-8">
             <ProfileEditor />
+            <ReferralSettingsSection />
           </div>
         </div>
       </section>

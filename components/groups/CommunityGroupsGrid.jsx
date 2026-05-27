@@ -121,11 +121,11 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
         />
       </label>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid items-stretch gap-4 md:grid-cols-2 xl:grid-cols-3">
         {filteredCommunities.map((group) => (
           <article
             key={group.id}
-            className="group rounded-[1.75rem] border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-founder-200 hover:shadow-xl hover:shadow-founder-950/5"
+            className="group flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-founder-200 hover:shadow-xl hover:shadow-founder-950/5"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-founder-600 text-white">
@@ -139,15 +139,21 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
             </div>
             <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-founder-600">{group.category}</p>
             <h2 className="mt-2 font-serif text-3xl font-bold text-slate-950">{group.name}</h2>
-            {group.description && (
-              <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{group.description}</p>
-            )}
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
+            <div className="mt-3 min-h-[4.5rem] flex-1">
+              {group.description ? (
+                <p className="line-clamp-3 text-sm leading-6 text-slate-600">{group.description}</p>
+              ) : (
+                <span className="block min-h-[4.5rem]" aria-hidden />
+              )}
+            </div>
+
+            <div className="mt-auto space-y-5 pt-5">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-50 px-3 py-2 text-sm font-bold text-slate-700">
               <Users className="h-4 w-4 text-founder-600" />
               {(group.member_count ?? 0).toLocaleString("de-DE")} Mitglieder
             </div>
 
-            <div className="mt-5">
+            <div>
               {group.is_member ? (
                 <Link
                   href={`/community/${group.id}`}
@@ -182,6 +188,7 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
                   )}
                 </button>
               )}
+            </div>
             </div>
           </article>
         ))}

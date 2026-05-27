@@ -11,7 +11,6 @@ export default function sitemap() {
     "/community",
     "/events",
     "/mentoren",
-    "/ressourcen",
     "/login",
     "/register",
     "/impressum",

@@ -11,7 +11,6 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getUserCommunities, getUserMentorBookings, getUserSubgroups } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
 import { getProfileWelcomeName, isFounderPro } from "@/lib/membership";
-import { sampleEvents } from "@/lib/founder-data";
 import { Calendar, Layers3, MessageSquare, UserRound, Users } from "lucide-react";
 
 const fallbackPosts = [
@@ -219,16 +218,14 @@ export function DashboardClient() {
                 <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-sm shadow-slate-950/5">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-5 w-5 text-founder-600" />
-                    <h2 className="font-serif text-2xl font-bold text-slate-950">Kommende Events</h2>
+                    <h2 className="font-serif text-2xl font-bold text-slate-950">Events</h2>
                   </div>
-                  <div className="mt-4 space-y-3">
-                    {sampleEvents.slice(0, 3).map((event) => (
-                      <Link key={event.id} href={`/events/${event.slug}`} className="block rounded-2xl bg-slate-50 p-4 transition hover:bg-founder-50/50">
-                        <p className="text-xs font-bold uppercase tracking-[0.14em] text-founder-600">{event.category}</p>
-                        <p className="mt-2 text-sm font-bold leading-5 text-slate-950">{event.title}</p>
-                      </Link>
-                    ))}
-                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-500">
+                    Coming Soon — der Event-Kalender startet in Kürze.
+                  </p>
+                  <Link href="/events#vorschlagen" className="mt-4 block rounded-2xl bg-founder-50 px-4 py-3 text-sm font-bold text-founder-700 transition hover:bg-founder-100">
+                    Event vorschlagen
+                  </Link>
                 </div>
               </aside>
             </div>

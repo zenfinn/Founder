@@ -3,9 +3,9 @@ import { PublicRankBadge } from "@/components/public/PublicRankBadge";
 
 export function RankTierCard({ tier }) {
   return (
-    <article className={`overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white ring-1 ${tier.ring}`}>
+    <article className={`flex h-full flex-col overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white ring-1 ${tier.ring}`}>
       <div className={`h-1.5 ${tier.accent}`} />
-      <div className="p-5 sm:p-6">
+      <div className="flex flex-1 flex-col p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <PublicRankBadge rank={tier.id} size="lg" />
           {tier.mentorCap ? (
@@ -38,7 +38,7 @@ export function RankTierCard({ tier }) {
 
         <Link
           href={`/register?rank=${tier.id}`}
-          className="mt-6 inline-flex w-full items-center justify-center rounded-2xl bg-founder-600 px-5 py-3.5 text-sm font-bold text-white transition hover:bg-founder-700 sm:w-auto"
+          className="mt-auto inline-flex w-full items-center justify-center rounded-2xl bg-founder-600 px-5 py-3.5 pt-6 text-sm font-bold text-white transition hover:bg-founder-700 sm:w-auto"
         >
           Jetzt bewerben
         </Link>

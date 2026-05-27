@@ -102,7 +102,7 @@ export function MentorOfferForm() {
     if (saveError) {
       setError(saveError.message);
     } else {
-      setMessage("Mentor-Profil gespeichert. Nach Freigabe erscheinst du in der Liste.");
+      setMessage("Bewerbung eingereicht. Nach Freigabe erscheinst du in der Mentor-Liste.");
     }
 
     setSubmitting(false);
@@ -145,7 +145,7 @@ export function MentorOfferForm() {
 
   return (
     <form onSubmit={handleSubmit} className="mt-10 rounded-[1.5rem] border border-slate-200 bg-white p-6">
-      <h2 className="font-serif text-2xl font-bold text-slate-950">Dein Mentor-Profil</h2>
+      <h2 className="font-serif text-2xl font-bold text-slate-950">Als Mentor bewerben</h2>
       <p className="mt-2 text-sm text-slate-600">
         Als <strong>{getRankLabel(rank)}</strong> darfst du maximal <strong>{cap}€/Stunde</strong> verlangen.
       </p>
@@ -201,7 +201,7 @@ export function MentorOfferForm() {
         disabled={submitting || Boolean(error)}
         className="mt-6 rounded-2xl bg-founder-600 px-6 py-3 text-sm font-bold text-white transition hover:bg-founder-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {submitting ? "Speichern..." : "Mentor-Profil speichern"}
+        {submitting ? "Wird eingereicht..." : "Als Mentor bewerben"}
       </button>
     </form>
   );

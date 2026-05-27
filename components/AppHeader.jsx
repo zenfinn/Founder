@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { UserHeaderControls } from "@/components/UserHeaderControls";
-import { Bell, BookOpen, Calendar, Home, Star, Users } from "lucide-react";
+import { Bell, Calendar, Home, Star, Users } from "lucide-react";
 
 export function AppHeader({ active }) {
   const [open, setOpen] = useState(false);
@@ -13,7 +13,6 @@ export function AppHeader({ active }) {
     { href: "/raenge", label: "Ränge", Icon: Star },
     { href: "/community", label: "Community", Icon: Users },
     { href: "/events", label: "Events", Icon: Calendar },
-    { href: "/ressourcen", label: "Ressourcen", Icon: BookOpen },
     { href: "/mentoren", label: "Mentoren", Icon: Star },
     { href: "/notifications", label: "Inbox", Icon: Bell },
   ];

@@ -21,7 +21,7 @@ create policy "groups_select_authenticated"
 
 insert into public.groups (name, category, slug, description, min_rank, requires_founder_pro, member_count)
 values
-  ('Reselling', 'Reselling', 'reselling', 'Sourcing, Margen, Plattformen und operative Tipps für Reseller.', 'aspiring', false, 1240),
+  ('Reselling', 'Reselling', 'reselling', 'High-End Streetwear, Sneakers, Hardware & Collectibles: Sourcing, Authentifizierung, Margen und Verkaufsstrategien.', 'aspiring', false, 1240),
   ('Dropshipping', 'Dropshipping', 'dropshipping', 'Shop-Aufbau, Lieferanten, Creatives und Testing für Dropshipping.', 'aspiring', false, 980),
   ('E-Commerce', 'E-Commerce', 'e-commerce', 'DTC, Shops, Conversion, Logistik und Wachstum für Online-Händler.', 'aspiring', false, 1540),
   ('Amazon FBA', 'Amazon FBA', 'amazon-fba', 'Private Label, Produktrecherche, Launch, Listing-Optimierung und Amazon Operations.', 'aspiring', false, 780),
