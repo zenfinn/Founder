@@ -3,10 +3,45 @@
   "buildCommand": "npm run build",
   "installCommand": "npm install",
   "regions": ["fra1"],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "joinfounder.forum"
+        }
+      ],
+      "destination": "https://www.joinfounder.forum/:path*",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "app/api/stripe/webhook/route.js": {
+      "maxDuration": 60
+    },
+    "app/api/stripe/checkout/route.js": {
+      "maxDuration": 30
+    }
+  },
   "headers": [
     {
       "source": "/api/stripe/webhook",
-      "headers": [{ "key": "Cache-Control", "value": "no-store" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
     }
   ]
 }

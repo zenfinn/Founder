@@ -1,3 +1,7 @@
 {
-  "/community/page": "app/community/page.js"
+  "/community/[groupId]/page": "app/community/[groupId]/page.js",
+  "/raenge/page": "app/raenge/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/mentoren/page": "app/mentoren/page.js",
+  "/ressourcen/page": "app/ressourcen/page.js"
 }

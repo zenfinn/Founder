@@ -1,1 +1,6 @@
-{}
+{
+  "lib/groups.js -> ./membership.js": {
+    "id": "lib/groups.js -> ./membership.js",
+    "files": []
+  }
+}
