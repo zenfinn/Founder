@@ -1,0 +1,29 @@
+{
+  "name": "Founder",
+  "short_name": "Founder",
+  "description": "Die verifizierte Community für Gründer und Unternehmer in Deutschland.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1a3aad",
+  "categories": ["business", "productivity", "social"],
+  "icons": [
+    {
+      "src": "/founder-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/founder-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "Founder Homescreen"
+    }
+  ]
+}
