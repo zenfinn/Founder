@@ -39,11 +39,14 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
     setLoading(true);
     setMessage("");
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
+
     const { data, error } = isRegister
       ? await supabase.auth.signUp({
           email,
           password,
           options: {
+            emailRedirectTo: `${appUrl}/login`,
             data: {
               display_name: name,
               company_name: companyName,
@@ -119,7 +122,7 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
     }
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/login`,
     });
 
     setMessage(error ? error.message : "Wenn ein Account existiert, wurde eine Passwort-E-Mail versendet.");

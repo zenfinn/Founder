@@ -2,61 +2,64 @@ import { LegalPage } from "@/components/LegalPage";
 
 export const metadata = {
   title: "Datenschutzerklärung | Founder",
+  description: "Datenschutzerklärung von Zndr Supply – Finn Zender.",
 };
 
 export default function DatenschutzPage() {
   return (
     <LegalPage eyebrow="Datenschutz" title="Datenschutzerklärung">
-      <p>
-        Diese Datenschutzerklärung informiert über die Verarbeitung personenbezogener Daten bei Nutzung von Founder. Die
-        Texte sind Platzhalter und müssen vor dem produktiven Start rechtlich geprüft und an die
-        tatsächlichen Anbieter, Serverstandorte und Datenflüsse angepasst werden.
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">1. Datenschutz auf einen Blick</h2>
+        <p className="mt-3">
+          Der Schutz Ihrer persönlichen Daten ist uns ein wichtiges Anliegen. Wir behandeln Ihre personenbezogenen Daten
+          vertraulich und entsprechend der gesetzlichen Datenschutzvorschriften (DSGVO) sowie dieser
+          Datenschutzerklärung.
+        </p>
+      </section>
 
-      <h2>Verantwortlicher</h2>
-      <p>
-        Verantwortlicher im Sinne der Datenschutz-Grundverordnung ist Founder, Musterstraße 1, 10115 Berlin,
-        E-Mail: datenschutz@founder-community.example.
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">2. Verantwortliche Stelle</h2>
+        <p className="mt-3">Verantwortlich für die Datenverarbeitung auf dieser Website ist:</p>
+        <p className="mt-3">
+          Finn Zender
+          <br />
+          Zndr Supply
+          <br />
+          Im Mühlenfeld 15
+          <br />
+          66687 Wadern
+          <br />
+          E-Mail:{" "}
+          <a href="mailto:zndr.supply@gmail.com" className="text-founder-200 underline underline-offset-2 hover:text-white">
+            zndr.supply@gmail.com
+          </a>
+        </p>
+      </section>
 
-      <h2>Verarbeitete Daten</h2>
-      <p>
-        Wir verarbeiten Daten, die Nutzer im Rahmen von Registrierung, Verifikation, Profilpflege, Event-Anmeldung,
-        Mentor-Buchung und Kontaktaufnahme bereitstellen. Dazu können Name, E-Mail-Adresse, Unternehmensdaten,
-        Verifikationsdokumente, technische Nutzungsdaten und Zahlungsinformationen gehören.
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">3. Datenerfassung auf unserer Website</h2>
+        <ul className="mt-3 list-disc space-y-3 pl-5 leading-8">
+          <li>
+            <strong className="font-semibold text-white">Registrierungs- und Profildaten:</strong> Wenn Sie sich auf
+            unserer Plattform registrieren, speichern wir die von Ihnen eingegebenen Daten zur Durchführung des
+            Nutzungsverhältnisses.
+          </li>
+          <li>
+            <strong className="font-semibold text-white">Server-Log-Files:</strong> Der Provider der Seiten erhebt und
+            speichert automatisch Informationen in sogenannten Server-Log-Dateien, die Ihr Browser automatisch an uns
+            übermittelt.
+          </li>
+        </ul>
+      </section>
 
-      <h2>Zwecke und Rechtsgrundlagen</h2>
-      <p>
-        Die Verarbeitung erfolgt zur Bereitstellung der Plattform, zur Durchführung
-        der Community, zur Kommunikation, zur Sicherheit der Plattform und zur Erfüllung gesetzlicher
-        Pflichten. Rechtsgrundlagen sind insbesondere Art. 6 Abs. 1 lit. b, lit. c und lit. f DSGVO sowie bei
-        Einwilligungen Art. 6 Abs. 1 lit. a DSGVO.
-      </p>
-
-      <h2>Speicherdauer</h2>
-      <p>
-        Personenbezogene Daten werden nur so lange gespeichert, wie es für die genannten Zwecke erforderlich ist oder
-        gesetzliche Aufbewahrungspflichten bestehen. Verifikationsdokumente werden nach Wegfall des
-        Verarbeitungszwecks gelöscht oder gesperrt, soweit keine gesetzlichen Pflichten entgegenstehen.
-      </p>
-
-      <h2>Auftragsverarbeiter und Drittanbieter</h2>
-      <p>
-        Für Authentifizierung, Hosting, Speicher, E-Mail-Versand, Zahlungen und Analyse können Dienstleister eingesetzt
-        werden. Vor dem Live-Betrieb müssen alle Anbieter, Auftragsverarbeitungsverträge und etwaige Drittlandtransfers
-        konkret dokumentiert werden.
-      </p>
-
-      <h2>Betroffenenrechte</h2>
-      <p>
-        Nutzer haben das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
-        Datenübertragbarkeit sowie Widerspruch gegen bestimmte Verarbeitungen. Zudem besteht ein Beschwerderecht bei
-        einer zuständigen Datenschutzaufsichtsbehörde.
-      </p>
-
-      <h2>Kontakt zum Datenschutz</h2>
-      <p>Für Datenschutzanfragen genügt eine E-Mail an datenschutz@founder-community.example.</p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">4. Ihre Rechte</h2>
+        <p className="mt-3">
+          Sie haben jederzeit das Recht auf unentgeltliche Auskunft über Herkunft, Empfänger und Zweck Ihrer gespeicherten
+          personenbezogenen Daten. Sie haben außerdem ein Recht auf Berichtigung, Sperrung oder Löschung dieser Daten.
+          Wenden Sie sich hierzu einfach an die oben genannte E-Mail-Adresse.
+        </p>
+      </section>
     </LegalPage>
   );
 }

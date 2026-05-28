@@ -2,47 +2,74 @@ import { LegalPage } from "@/components/LegalPage";
 
 export const metadata = {
   title: "Impressum | Founder",
+  description: "Impressum von Zndr Supply – Finn Zender.",
 };
 
 export default function ImpressumPage() {
   return (
     <LegalPage eyebrow="Rechtliches" title="Impressum">
-      <h2>Angaben gemäß §5 TMG</h2>
-      <p>
-        Founder<br />
-        Musterstraße 1<br />
-        10115 Berlin<br />
-        Deutschland
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">Angaben gemäß § 5 TMG:</h2>
+        <p className="mt-3">
+          Zndr Supply
+          <br />
+          Finn Zender
+          <br />
+          Im Mühlenfeld 15
+          <br />
+          66687 Wadern
+          <br />
+          Germany
+        </p>
+      </section>
 
-      <h2>Verantwortlicher</h2>
-      <p>
-        Verantwortlich für den Inhalt dieser Website ist:<br />
-        Max Mustermann<br />
-        Musterstraße 1<br />
-        10115 Berlin
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">Kontakt:</h2>
+        <p className="mt-3">
+          Telefon:{" "}
+          <a href="tel:+4915903170942" className="text-founder-200 underline underline-offset-2 hover:text-white">
+            +49 15903170942
+          </a>
+          <br />
+          E-Mail:{" "}
+          <a href="mailto:zndr.supply@gmail.com" className="text-founder-200 underline underline-offset-2 hover:text-white">
+            zndr.supply@gmail.com
+          </a>
+        </p>
+      </section>
 
-      <h2>Kontakt</h2>
-      <p>
-        E-Mail: kontakt@founder-community.example<br />
-        Telefon: +49 30 00000000
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">Umsatzsteuer-ID:</h2>
+        <p className="mt-3">
+          Umsatzsteuer-Identifikationsnummer gemäß § 27 a Umsatzsteuergesetz:
+          <br />
+          DE 455912109
+        </p>
+      </section>
 
-      <h2>EU-Streitschlichtung</h2>
-      <p>
-        Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung bereit:
-        https://ec.europa.eu/consumers/odr/. Wir sind nicht verpflichtet und nicht bereit, an einem
-        Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">EU-Streitschlichtung:</h2>
+        <p className="mt-3">
+          Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:{" "}
+          <a
+            href="https://ec.europa.eu/consumers/odr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-founder-200 underline underline-offset-2 hover:text-white"
+          >
+            https://ec.europa.eu/consumers/odr/
+          </a>
+          .
+        </p>
+      </section>
 
-      <h2>Haftungsausschluss</h2>
-      <p>
-        Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für die Inhalte externer Links. Für den
-        Inhalt der verlinkten Seiten sind ausschließlich deren Betreiber verantwortlich. Die Inhalte dieser Website
-        werden mit größtmöglicher Sorgfalt erstellt, eine Gewähr für Richtigkeit, Vollständigkeit und Aktualität kann
-        jedoch nicht übernommen werden.
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">Verbraucherstreitbeilegung/Universalschlichtungsstelle:</h2>
+        <p className="mt-3">
+          Wir sind nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle
+          teilzunehmen.
+        </p>
+      </section>
     </LegalPage>
   );
 }

@@ -2,38 +2,45 @@ import { LegalPage } from "@/components/LegalPage";
 
 export const metadata = {
   title: "Kontakt | Founder",
+  description: "Kontakt zu Zndr Supply – Finn Zender.",
 };
 
 export default function KontaktPage() {
   return (
     <LegalPage eyebrow="Kontakt" title="Kontakt">
       <p>
-        Du erreichst Founder über die folgenden Kontaktwege. Die Angaben sind Platzhalter und müssen vor
-        dem Livegang durch echte Unternehmensdaten ersetzt werden.
+        Haben Sie Fragen, Anregungen oder benötigen Support? Unser Team ist gerne für Sie da. Wir antworten in der
+        Regel innerhalb kürzester Zeit.
       </p>
 
-      <h2>Allgemeine Anfragen</h2>
-      <p>
-        E-Mail: kontakt@founder-community.example<br />
-        Antwortzeit: in der Regel innerhalb von 2 Werktagen
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">Unternehmenssitz:</h2>
+        <p className="mt-3">
+          Zndr Supply
+          <br />
+          Im Mühlenfeld 15
+          <br />
+          66687 Wadern
+          <br />
+          Germany
+        </p>
+      </section>
 
-      <h2>Verifikation</h2>
-      <p>
-        Für Fragen zum Dokumenten-Upload, Rangstatus oder zur erneuten Verifikation schreibe bitte an
-        verification@founder-community.example.
-      </p>
-
-      <h2>Datenschutz</h2>
-      <p>Datenschutzanfragen richtest du bitte an datenschutz@founder-community.example.</p>
-
-      <h2>Postanschrift</h2>
-      <p>
-        Founder<br />
-        Musterstraße 1<br />
-        10115 Berlin<br />
-        Deutschland
-      </p>
+      <section>
+        <h2 className="font-serif text-2xl font-bold text-white">So erreichen Sie uns:</h2>
+        <p className="mt-3">
+          E-Mail:{" "}
+          <a href="mailto:zndr.supply@gmail.com" className="text-founder-200 underline underline-offset-2 hover:text-white">
+            zndr.supply@gmail.com
+          </a>
+          <br />
+          Telefon:{" "}
+          <a href="tel:+4915903170942" className="text-founder-200 underline underline-offset-2 hover:text-white">
+            +49 15903170942
+          </a>{" "}
+          (Montag – Freitag)
+        </p>
+      </section>
     </LegalPage>
   );
 }
