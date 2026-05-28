@@ -1,5 +1,3 @@
-import { LegalPage } from "@/components/LegalPage";
-
 export const metadata = {
   title: "Kontakt | Founder",
   description: "Kontakt zu Zndr Supply – Finn Zender.",
@@ -7,40 +5,35 @@ export const metadata = {
 
 export default function KontaktPage() {
   return (
-    <LegalPage eyebrow="Kontakt" title="Kontakt">
-      <p>
-        Haben Sie Fragen, Anregungen oder benötigen Support? Unser Team ist gerne für Sie da. Wir antworten in der
-        Regel innerhalb kürzester Zeit.
+    <div className="min-h-screen bg-[#001220] text-white p-8 md:p-16 max-w-4xl mx-auto font-sans leading-relaxed">
+      <span className="text-blue-500 font-bold uppercase tracking-wider text-sm">Support</span>
+      <h1 className="text-4xl font-bold mt-2 mb-8">Kontakt</h1>
+
+      <p className="mb-6 text-lg">
+        Haben Sie Fragen, Anregungen oder benötigen Support? Unser Team ist gerne für Sie da. Wir antworten in der Regel
+        innerhalb kürzester Zeit.
       </p>
 
-      <section>
-        <h2 className="font-serif text-2xl font-bold text-white">Unternehmenssitz:</h2>
-        <p className="mt-3">
-          Zndr Supply
-          <br />
-          Im Mühlenfeld 15
-          <br />
-          66687 Wadern
-          <br />
-          Germany
-        </p>
+      <section className="mb-6 bg-[#001e36] p-6 rounded-lg border border-blue-900/50">
+        <h2 className="text-xl font-semibold mb-4">Unternehmenssitz:</h2>
+        <p>Zndr Supply</p>
+        <p>Im Mühlenfeld 15</p>
+        <p>66687 Wadern</p>
+        <p>Germany</p>
       </section>
 
-      <section>
-        <h2 className="font-serif text-2xl font-bold text-white">So erreichen Sie uns:</h2>
-        <p className="mt-3">
-          E-Mail:{" "}
-          <a href="mailto:zndr.supply@gmail.com" className="text-founder-200 underline underline-offset-2 hover:text-white">
+      <section className="mb-6 bg-[#001e36] p-6 rounded-lg border border-blue-900/50">
+        <h2 className="text-xl font-semibold mb-4">Direkte Erreichbarkeit:</h2>
+        <p className="mb-2">
+          <strong>E-Mail:</strong>{" "}
+          <a href="mailto:zndr.supply@gmail.com" className="text-blue-400 underline">
             zndr.supply@gmail.com
           </a>
-          <br />
-          Telefon:{" "}
-          <a href="tel:+4915903170942" className="text-founder-200 underline underline-offset-2 hover:text-white">
-            +49 15903170942
-          </a>{" "}
-          (Montag – Freitag)
+        </p>
+        <p>
+          <strong>Telefon:</strong> +49 15903170942 (Montag – Freitag)
         </p>
       </section>
-    </LegalPage>
+    </div>
   );
 }
