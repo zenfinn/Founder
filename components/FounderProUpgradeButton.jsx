@@ -8,7 +8,14 @@ import { readStoredReferralCode } from "@/components/ReferralCapture";
 const founderProStripePriceOrProductId =
   process.env.NEXT_PUBLIC_FOUNDER_PRO_STRIPE_PRICE_OR_PRODUCT_ID ?? "price_1TZXveIFneIajosQok3B8fgO";
 
-export function FounderProUpgradeButton() {
+export function FounderProUpgradeButton({
+  label = "Jetzt upgraden",
+  className = "mt-8 inline-flex rounded-2xl bg-white px-6 py-4 text-base font-bold text-founder-600 transition hover:bg-founder-50 disabled:cursor-not-allowed disabled:opacity-70",
+  errorClassName = "mt-3 text-sm font-semibold text-founder-50",
+  cancelPath = "/#pro",
+  unauthenticatedPath = "/login",
+  onboardingDiscount = false,
+}) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [loading, setLoading] = useState(false);
@@ -20,7 +27,7 @@ export function FounderProUpgradeButton() {
 
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
-      router.push("/login");
+      router.push(unauthenticatedPath);
       return;
     }
 
@@ -31,7 +38,8 @@ export function FounderProUpgradeButton() {
         type: "founder_pro",
         stripe_price_or_product_id: founderProStripePriceOrProductId,
         referral_code: readStoredReferralCode(),
-        cancel_path: "/#pro",
+        onboarding_discount: onboardingDiscount,
+        cancel_path: cancelPath,
       }),
     });
 
@@ -47,16 +55,11 @@ export function FounderProUpgradeButton() {
   }
 
   return (
-    <div>
-      <button
-        type="button"
-        onClick={startCheckout}
-        disabled={loading}
-        className="mt-8 inline-flex rounded-2xl bg-white px-6 py-4 text-base font-bold text-founder-600 transition hover:bg-founder-50 disabled:cursor-not-allowed disabled:opacity-70"
-      >
-        {loading ? "Checkout startet..." : "Jetzt upgraden"}
+    <div className="w-full sm:w-auto">
+      <button type="button" onClick={startCheckout} disabled={loading} className={className}>
+        {loading ? "Checkout startet..." : label}
       </button>
-      {error && <p className="mt-3 text-sm font-semibold text-founder-50">{error}</p>}
+      {error && <p className={errorClassName}>{error}</p>}
     </div>
   );
 }

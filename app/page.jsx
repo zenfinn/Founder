@@ -2,12 +2,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { LandingHeader } from "@/components/LandingHeader";
 import { FadeIn, MotionCard } from "@/components/Motion";
-import { FounderProUpgradeButton } from "@/components/FounderProUpgradeButton";
+import { LandingJoinCards } from "@/components/landing/LandingJoinCards";
 import { RankBadge } from "@/components/RankBadge";
 import { communityChannels, ranks, sampleEvents } from "@/lib/founder-data";
 import {
   Bot,
-  CheckCircle,
   Coins,
   Crown,
   Flame,
@@ -65,8 +64,6 @@ const testimonials = [
     rank: "elite",
   },
 ];
-
-const SHOW_FOUNDER_PRO_SECTIONS = false;
 
 function formatEventPrice(priceCents = 0) {
   if (!priceCents) return "Kostenlos";
@@ -164,21 +161,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="join" className="px-4 py-10">
-        <div className="mx-auto max-w-6xl rounded-[2rem] bg-founder-600 p-6 text-white sm:p-10">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-100">Kostenlos beitreten</p>
-          <h2 className="mt-4 max-w-4xl font-serif text-4xl font-bold tracking-tight sm:text-5xl">Kostenlos beitreten</h2>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-founder-50">
-            Registriere dich, lade deinen Gewerbenachweis hoch und erhalte deinen Rang – völlig kostenlos.
-          </p>
-          <Link
-            href="/register"
-            className="mt-8 inline-flex rounded-2xl bg-white px-6 py-4 text-base font-bold text-founder-600 transition hover:bg-founder-50"
-          >
-            Jetzt kostenlos starten
-          </Link>
-        </div>
-      </section>
+      <LandingJoinCards />
 
       <section id="events" className="px-4 py-10">
         <div className="mx-auto max-w-6xl">
@@ -246,29 +229,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {SHOW_FOUNDER_PRO_SECTIONS && (
-        <section id="pro" className="px-4 py-10">
-          <div className="mx-auto max-w-6xl rounded-[2rem] bg-founder-600 p-6 text-white sm:p-10">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-100">Optionales Upgrade</p>
-            <h2 className="mt-4 font-serif text-4xl font-bold tracking-tight sm:text-5xl">Founder Pro – 14,99€ / Monat</h2>
-            <div className="mt-8 grid gap-4 md:grid-cols-4">
-              {[
-                "Exklusive Premium-Channels",
-                "Früher Event-Zugang",
-                "Monatlicher Founder Report",
-                "Exklusive Partner-Deals",
-              ].map((benefit) => (
-                <div key={benefit} className="flex gap-3 rounded-2xl bg-white/10 p-4 text-sm font-bold text-white">
-                  <CheckCircle className="h-5 w-5 shrink-0 text-founder-100" />
-                  <span>{benefit}</span>
-                </div>
-              ))}
-            </div>
-            <FounderProUpgradeButton />
-          </div>
-        </section>
-      )}
 
       <section id="community" className="px-4 py-10 pb-16">
         <div className="mx-auto max-w-6xl">

@@ -2,14 +2,17 @@ import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
 import { BrandMark } from "@/components/BrandMark";
 import { ReferralCapture } from "@/components/ReferralCapture";
+import { RegisterProIntent } from "@/components/RegisterProIntent";
 
 export default function RegisterPage({ searchParams }) {
   const requestedRank = searchParams?.rank ?? searchParams?.rang ?? "aspiring";
   const referralCode = searchParams?.ref ?? "";
+  const intent = searchParams?.intent ?? "";
 
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-6">
       <ReferralCapture referralCode={referralCode} />
+      <RegisterProIntent intent={intent} />
       <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-2xl flex-col justify-center">
         <Link href="/" className="mb-8 inline-flex">
           <BrandMark />

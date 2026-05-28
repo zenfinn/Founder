@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { sanitizeProfilePayload } from "@/lib/profiles";
 import { readStoredReferralCode } from "@/components/ReferralCapture";
+import { FOUNDER_PRO_INTENT_KEY } from "@/components/RegisterProIntent";
 
 const industries = [
   "Reselling",
@@ -111,7 +112,10 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
       }
     }
 
-    router.push(isRegister ? "/profile/verify" : "/dashboard");
+    const proIntent =
+      typeof window !== "undefined" && window.sessionStorage.getItem(FOUNDER_PRO_INTENT_KEY) === "1";
+
+    router.push(isRegister ? (proIntent ? "/dashboard" : "/profile/verify") : "/dashboard");
     router.refresh();
   }
 

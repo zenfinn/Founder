@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { AuthGuard } from "@/components/AuthGuard";
 import { DashboardOnboardingSteps } from "@/components/DashboardOnboardingSteps";
+import { FounderProIntentHandler } from "@/components/FounderProIntentHandler";
 import { FeedAvatar } from "@/components/FeedAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -121,6 +122,8 @@ export function DashboardClient() {
         <AppHeader active="/dashboard" />
         <section className="px-4 py-6">
           <div className="mx-auto max-w-7xl">
+            <FounderProIntentHandler />
+
             <div className="mb-5 flex flex-col gap-3 rounded-[1.5rem] border border-slate-200 bg-white/80 px-5 py-4 shadow-sm shadow-slate-950/5 backdrop-blur md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.18em] text-founder-600">Founder Dashboard</p>
