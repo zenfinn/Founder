@@ -4,10 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { ProfileAvatarWithRank } from "@/components/ProfileAvatarWithRank";
-
-function formatRate(cents = 0) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100) + "/h";
-}
+import { formatMentorPricing } from "@/lib/mentors";
 
 export function MentorsList() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -18,7 +15,7 @@ export function MentorsList() {
     async function loadMentors() {
       const { data, error } = await supabase
         .from("mentors")
-        .select("id,name,bio,experience,expertise_tags,hourly_rate_cents,rating,user_id")
+        .select("id,name,bio,experience,expertise_tags,monthly_rate_cents,hourly_rate_cents,sessions_per_month,rating,user_id")
         .eq("is_approved", true)
         .order("created_at", { ascending: false });
 
@@ -93,7 +90,7 @@ export function MentorsList() {
             ))}
           </div>
           {mentor.bio && <p className="mt-4 line-clamp-3 text-sm leading-6 text-slate-600">{mentor.bio}</p>}
-          <p className="mt-4 text-sm font-bold text-founder-600">{formatRate(mentor.hourly_rate_cents)}</p>
+          <p className="mt-4 text-sm font-bold text-founder-600">{formatMentorPricing(mentor)}</p>
           <Link
             href={`/mentoren/${mentor.id}`}
             className="mt-6 block rounded-2xl bg-founder-600 px-5 py-3 text-center text-sm font-bold text-white"

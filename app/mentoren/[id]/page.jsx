@@ -5,11 +5,13 @@ import { MentorOfferForm } from "@/components/MentorOfferForm";
 import { ProfileAvatarWithRank } from "@/components/ProfileAvatarWithRank";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { buildOgImageUrl, buildPageMetadata } from "@/lib/seo";
+import {
+  formatMentorPricing,
+  formatMentorSessionPrice,
+  getMentorSessionPriceCents,
+  getMentorSessionAvailability,
+} from "@/lib/mentors";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-
-function formatRate(cents = 0) {
-  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(cents / 100) + "/h";
-}
 
 export async function generateMetadata({ params }) {
   const adminSupabase = createAdminSupabaseClient();
@@ -40,7 +42,7 @@ export default async function MentorProfilePage({ params }) {
   const adminSupabase = createAdminSupabaseClient();
   const { data: mentor } = await adminSupabase
     .from("mentors")
-    .select("id,name,bio,experience,expertise_tags,hourly_rate_cents,rating,user_id")
+    .select("id,name,bio,experience,expertise_tags,monthly_rate_cents,hourly_rate_cents,sessions_per_month,rating,user_id")
     .eq("id", params.id)
     .eq("is_approved", true)
     .maybeSingle();
@@ -49,9 +51,12 @@ export default async function MentorProfilePage({ params }) {
     notFound();
   }
 
+  const availability = await getMentorSessionAvailability(adminSupabase, mentor);
+  const sessionPriceCents = getMentorSessionPriceCents(mentor);
+
   const { data: similarMentors } = await adminSupabase
     .from("mentors")
-    .select("id, name, hourly_rate_cents, expertise_tags")
+    .select("id, name, monthly_rate_cents, hourly_rate_cents, sessions_per_month, expertise_tags")
     .eq("is_approved", true)
     .neq("id", mentor.id)
     .limit(3);
@@ -110,23 +115,33 @@ export default async function MentorProfilePage({ params }) {
 
           <aside className="h-fit rounded-[2rem] border border-slate-200 bg-white p-6">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-600">Buchung</p>
-            <p className="mt-3 font-serif text-4xl font-bold text-slate-950">{formatRate(mentor.hourly_rate_cents)}</p>
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              Buche eine 60-Minuten-Session per Stripe. Founder erfasst 15% Plattform-Provision für die Abrechnung.
+            <p className="mt-3 font-serif text-4xl font-bold text-slate-950">{formatMentorPricing(mentor)}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-700">
+              {availability.remaining} von {availability.sessionsPerMonth} Sessions diesen Monat verfügbar
             </p>
-            <StripeCheckoutButton
-              payload={{
-                type: "mentor_booking",
-                mentor_id: mentor.id,
-                title: mentor.name,
-                amount_cents: mentor.hourly_rate_cents,
-                starts_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-                cancel_path: `/mentoren/${mentor.id}`,
-              }}
-              className="mt-6 w-full rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white"
-            >
-              Via Stripe buchen
-            </StripeCheckoutButton>
+            <p className="mt-3 text-sm leading-6 text-slate-600">
+              Buche eine 60-Minuten-Session per Stripe ({formatMentorSessionPrice(mentor)} pro Session). Founder erfasst
+              15% Plattform-Provision für die Abrechnung.
+            </p>
+            {availability.isSoldOut ? (
+              <p className="mt-6 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                Dieser Mentor ist für diesen Monat ausgebucht. Schau nächsten Monat wieder vorbei.
+              </p>
+            ) : (
+              <StripeCheckoutButton
+                payload={{
+                  type: "mentor_booking",
+                  mentor_id: mentor.id,
+                  title: mentor.name,
+                  amount_cents: sessionPriceCents,
+                  starts_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+                  cancel_path: `/mentoren/${mentor.id}`,
+                }}
+                className="mt-6 w-full rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white"
+              >
+                Session buchen ({formatMentorSessionPrice(mentor)})
+              </StripeCheckoutButton>
+            )}
           </aside>
         </div>
 
@@ -141,12 +156,7 @@ export default async function MentorProfilePage({ params }) {
                     className="block rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4 transition hover:border-founder-200 hover:bg-founder-50"
                   >
                     <p className="font-bold text-slate-950">{item.name}</p>
-                    <p className="mt-1 text-sm font-semibold text-founder-600">
-                      {new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(
-                        (item.hourly_rate_cents ?? 0) / 100
-                      )}
-                      /h
-                    </p>
+                    <p className="mt-1 text-sm font-semibold text-founder-600">{formatMentorPricing(item)}</p>
                   </Link>
                 </li>
               ))}

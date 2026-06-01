@@ -5,6 +5,12 @@ import { resolveAffiliateForCheckout } from "@/lib/referrals";
 import { sanitizeStripeErrorMessage } from "@/lib/stripe-errors";
 import { FOUNDER_PRO_STRIPE_PRODUCT_ID, resolveFounderProCheckoutPriceId } from "@/lib/stripe-founder-pro";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import {
+  getMentorMonthlyRateCents,
+  getMentorSessionAvailability,
+  getMentorSessionPriceCents,
+  getMentorSessionsPerMonth,
+} from "@/lib/mentors";
 
 function getAppUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -106,20 +112,50 @@ export async function POST(request) {
     }
 
     if (type === "mentor_booking") {
-      const amountCents = asPositiveInteger(body.amount_cents);
       const mentorKey = String(body.mentor_id ?? "").trim();
       const title = String(body.title ?? "Mentor Session").trim();
       const startsAt = body.starts_at ? new Date(body.starts_at).toISOString() : null;
       const cancelPath = body.cancel_path ?? "/mentoren";
 
-      if (!mentorKey || amountCents <= 0) {
-        return NextResponse.json({ error: "Mentor-ID oder Betrag fehlt." }, { status: 400 });
+      if (!mentorKey) {
+        return NextResponse.json({ error: "Mentor-ID fehlt." }, { status: 400 });
       }
 
+      const { data: mentor, error: mentorError } = await adminSupabase
+        .from("mentors")
+        .select("id,name,monthly_rate_cents,hourly_rate_cents,sessions_per_month,is_approved")
+        .eq("id", mentorKey)
+        .maybeSingle();
+
+      if (mentorError || !mentor?.id || !mentor.is_approved) {
+        return NextResponse.json({ error: "Mentor nicht gefunden oder nicht freigeschaltet." }, { status: 404 });
+      }
+
+      const availability = await getMentorSessionAvailability(adminSupabase, mentor);
+      if (availability.isSoldOut) {
+        return NextResponse.json(
+          { error: "Dieser Mentor hat für diesen Monat keine Sessions mehr frei." },
+          { status: 409 }
+        );
+      }
+
+      const amountCents = getMentorSessionPriceCents(mentor);
+      if (amountCents <= 0) {
+        return NextResponse.json({ error: "Ungültiger Mentor-Preis." }, { status: 400 });
+      }
+
+      const clientAmount = asPositiveInteger(body.amount_cents);
+      if (clientAmount > 0 && clientAmount !== amountCents) {
+        return NextResponse.json({ error: "Der Session-Preis stimmt nicht mit dem Mentor-Angebot überein." }, { status: 400 });
+      }
+
+      const sessionsPerMonth = getMentorSessionsPerMonth(mentor);
+      const monthlyRateCents = getMentorMonthlyRateCents(mentor);
       const platformFeeCents = Math.round(amountCents * 0.15);
       const { data: booking, error: bookingError } = await adminSupabase
         .from("mentor_bookings")
         .insert({
+          mentor_id: mentor.id,
           mentor_key: mentorKey,
           mentor_name: title,
           user_id: user.id,
@@ -145,7 +181,10 @@ export async function POST(request) {
             price_data: {
               currency: "eur",
               unit_amount: amountCents,
-              product_data: { name: `Mentor Session: ${title}` },
+              product_data: {
+                name: `Mentor Session: ${title}`,
+                description: `${new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(monthlyRateCents / 100)}/Monat · ${sessionsPerMonth} Sessions`,
+              },
             },
             quantity: 1,
           },

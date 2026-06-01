@@ -150,15 +150,6 @@ export function UserHeaderControls({ variant = "app", onNavigate }) {
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
-      <Link
-        href="/inbox"
-        onClick={onNavigate}
-        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:border-founder-200 hover:text-founder-600"
-      >
-        <MessageCircle className="h-4 w-4" />
-        <span className="hidden sm:inline">Chats</span>
-      </Link>
-
       <div className="relative" ref={menuRef}>
         <button
           type="button"

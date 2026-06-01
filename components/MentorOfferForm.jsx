@@ -4,10 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getOwnProfile } from "@/lib/profiles";
-import { canOfferMentoring, getMentorHourlyRateCap, validateMentorHourlyRate } from "@/lib/rank-system";
+import { canOfferMentoring, getMentorMonthlyRateCap, validateMentorMonthlyRate } from "@/lib/rank-system";
+import { getMentorMonthlyRateCents, getMentorSessionsPerMonth, validateMentorSessionsPerMonth } from "@/lib/mentors";
 import { getRankLabel } from "@/lib/founder-data";
 
-const emptyForm = { name: "", bio: "", experience: "", hourlyRate: "" };
+const emptyForm = { name: "", bio: "", experience: "", monthlyRate: "", sessionsPerMonth: "4" };
 
 export function MentorOfferForm() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -19,7 +20,7 @@ export function MentorOfferForm() {
   const [error, setError] = useState("");
 
   const rank = profile?.current_rank ?? "aspiring";
-  const cap = getMentorHourlyRateCap(rank);
+  const cap = getMentorMonthlyRateCap(rank);
   const eligible = canOfferMentoring(rank);
 
   useEffect(() => {
@@ -36,16 +37,18 @@ export function MentorOfferForm() {
 
       const { data: existing } = await supabase
         .from("mentors")
-        .select("name,bio,experience,hourly_rate_cents")
+        .select("name,bio,experience,monthly_rate_cents,hourly_rate_cents,sessions_per_month")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (existing) {
+        const monthlyCents = getMentorMonthlyRateCents(existing);
         setForm({
           name: existing.name ?? "",
           bio: existing.bio ?? "",
           experience: existing.experience ?? "",
-          hourlyRate: existing.hourly_rate_cents ? String(existing.hourly_rate_cents / 100) : "",
+          monthlyRate: monthlyCents ? String(monthlyCents / 100) : "",
+          sessionsPerMonth: String(getMentorSessionsPerMonth(existing)),
         });
       }
 
@@ -57,10 +60,21 @@ export function MentorOfferForm() {
 
   function handleRateChange(value) {
     setError("");
-    setForm((current) => ({ ...current, hourlyRate: value }));
+    setForm((current) => ({ ...current, monthlyRate: value }));
 
     if (!value.trim()) return;
-    const validation = validateMentorHourlyRate(rank, value);
+    const validation = validateMentorMonthlyRate(rank, value);
+    if (!validation.ok) {
+      setError(validation.message);
+    }
+  }
+
+  function handleSessionsChange(value) {
+    setError("");
+    setForm((current) => ({ ...current, sessionsPerMonth: value }));
+
+    if (!value.trim()) return;
+    const validation = validateMentorSessionsPerMonth(value);
     if (!validation.ok) {
       setError(validation.message);
     }
@@ -76,21 +90,29 @@ export function MentorOfferForm() {
       return;
     }
 
-    const validation = validateMentorHourlyRate(rank, form.hourlyRate);
-    if (!validation.ok) {
-      setError(validation.message);
+    const rateValidation = validateMentorMonthlyRate(rank, form.monthlyRate);
+    if (!rateValidation.ok) {
+      setError(rateValidation.message);
+      return;
+    }
+
+    const sessionsValidation = validateMentorSessionsPerMonth(form.sessionsPerMonth);
+    if (!sessionsValidation.ok) {
+      setError(sessionsValidation.message);
       return;
     }
 
     setSubmitting(true);
 
-    const hourlyRateCents = Math.round(Number(form.hourlyRate) * 100);
+    const monthlyRateCents = Math.round(Number(form.monthlyRate) * 100);
     const payload = {
       user_id: profile.id,
       name: form.name.trim(),
       bio: form.bio.trim(),
       experience: form.experience.trim(),
-      hourly_rate_cents: hourlyRateCents,
+      monthly_rate_cents: monthlyRateCents,
+      hourly_rate_cents: monthlyRateCents,
+      sessions_per_month: sessionsValidation.value,
       is_approved: false,
     };
 
@@ -134,7 +156,7 @@ export function MentorOfferForm() {
         <h2 className="font-serif text-2xl font-bold text-slate-950">Als Mentor anbieten</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Dein aktueller Rang <strong>{getRankLabel(rank)}</strong> berechtigt noch nicht zum Mentoring. Ab{" "}
-          <strong>Builder</strong> kannst du Sessions anbieten (max. 50€/h).
+          <strong>Builder</strong> kannst du Sessions anbieten (max. 50€/Monat).
         </p>
         <Link href="/profile/verify" className="mt-4 inline-flex rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white">
           Rang verifizieren
@@ -147,7 +169,8 @@ export function MentorOfferForm() {
     <form onSubmit={handleSubmit} className="mt-10 rounded-[1.5rem] border border-slate-200 bg-white p-6">
       <h2 className="font-serif text-2xl font-bold text-slate-950">Als Mentor bewerben</h2>
       <p className="mt-2 text-sm text-slate-600">
-        Als <strong>{getRankLabel(rank)}</strong> darfst du maximal <strong>{cap}€/Stunde</strong> verlangen.
+        Als <strong>{getRankLabel(rank)}</strong> darfst du maximal <strong>{cap}€/Monat</strong> verlangen und musst
+        angeben, wie viele Sessions du pro Monat anbietest.
       </p>
 
       {error && <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
@@ -181,16 +204,30 @@ export function MentorOfferForm() {
           />
         </label>
         <label className="block">
-          <span className="text-sm font-bold text-slate-700">Stundensatz (EUR)</span>
+          <span className="text-sm font-bold text-slate-700">Monatspreis (EUR)</span>
           <input
             type="number"
             min="1"
             max={cap}
             step="1"
             className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold"
-            value={form.hourlyRate}
+            value={form.monthlyRate}
             onChange={(event) => handleRateChange(event.target.value)}
             placeholder={`Max. ${cap}`}
+            required
+          />
+        </label>
+        <label className="block">
+          <span className="text-sm font-bold text-slate-700">Sessions pro Monat</span>
+          <input
+            type="number"
+            min="1"
+            max="31"
+            step="1"
+            className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold"
+            value={form.sessionsPerMonth}
+            onChange={(event) => handleSessionsChange(event.target.value)}
+            placeholder="z. B. 4"
             required
           />
         </label>

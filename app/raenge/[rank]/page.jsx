@@ -54,7 +54,7 @@ export default function RankDetailPage({ params }) {
 
               {tier.mentorCap ? (
                 <p className="mt-6 rounded-2xl bg-founder-50 px-4 py-3 text-sm font-semibold text-founder-800">
-                  Als Mentor: max. {tier.mentorCap}€/Stunde
+                  Als Mentor: max. {tier.mentorCap}€/Monat
                 </p>
               ) : null}
 

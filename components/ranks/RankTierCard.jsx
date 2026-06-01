@@ -10,7 +10,7 @@ export function RankTierCard({ tier }) {
           <PublicRankBadge rank={tier.id} size="lg" />
           {tier.mentorCap ? (
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-              Mentor max. {tier.mentorCap}€/h
+              Mentor max. {tier.mentorCap}€/Monat
             </span>
           ) : (
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500">Kein Mentoring</span>

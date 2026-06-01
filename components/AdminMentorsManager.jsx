@@ -2,8 +2,16 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { formatMentorPricing } from "@/lib/mentors";
 
-const emptyMentor = { name: "", bio: "", experience: "", hourly_rate_cents: 0, is_approved: false };
+const emptyMentor = {
+  name: "",
+  bio: "",
+  experience: "",
+  monthly_rate_cents: 0,
+  sessions_per_month: 4,
+  is_approved: false,
+};
 
 export function AdminMentorsManager() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -14,7 +22,10 @@ export function AdminMentorsManager() {
 
   async function load() {
     const [{ data: mentorRows, error: mentorsError }, { data: bookingRows, error: bookingsError }] = await Promise.all([
-      supabase.from("mentors").select("id,name,bio,rating,hourly_rate_cents,is_approved").order("created_at", { ascending: false }),
+      supabase
+        .from("mentors")
+        .select("id,name,bio,rating,monthly_rate_cents,hourly_rate_cents,sessions_per_month,is_approved")
+        .order("created_at", { ascending: false }),
       supabase.from("mentor_bookings").select("mentor_id,mentor_key,status,amount_cents,platform_fee_cents"),
     ]);
 
@@ -36,9 +47,14 @@ export function AdminMentorsManager() {
     event.preventDefault();
     setMessage("");
 
+    const monthlyRateCents = Number(form.monthly_rate_cents) || 0;
+    const sessionsPerMonth = Number(form.sessions_per_month) || 4;
+
     const { error } = await supabase.from("mentors").insert({
       ...form,
-      hourly_rate_cents: Number(form.hourly_rate_cents) || 0,
+      monthly_rate_cents: monthlyRateCents,
+      hourly_rate_cents: monthlyRateCents,
+      sessions_per_month: sessionsPerMonth,
     });
 
     if (error) {
@@ -67,7 +83,8 @@ export function AdminMentorsManager() {
           <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" required />
           <textarea className="min-h-24 w-full rounded-2xl border border-slate-200 px-4 py-3" value={form.bio} onChange={(e) => setForm({ ...form, bio: e.target.value })} placeholder="Bio" />
           <textarea className="min-h-24 w-full rounded-2xl border border-slate-200 px-4 py-3" value={form.experience} onChange={(e) => setForm({ ...form, experience: e.target.value })} placeholder="Erfahrung" />
-          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" type="number" value={form.hourly_rate_cents} onChange={(e) => setForm({ ...form, hourly_rate_cents: e.target.value })} placeholder="Stundensatz in Cent" />
+          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" type="number" value={form.monthly_rate_cents} onChange={(e) => setForm({ ...form, monthly_rate_cents: e.target.value })} placeholder="Monatspreis in Cent" />
+          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3" type="number" min="1" max="31" value={form.sessions_per_month} onChange={(e) => setForm({ ...form, sessions_per_month: e.target.value })} placeholder="Sessions pro Monat" />
         </div>
         {message && <p className="mt-4 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{message}</p>}
         <button className="mt-5 w-full rounded-2xl bg-founder-600 px-5 py-3 font-bold text-white" type="submit">Speichern</button>
@@ -83,6 +100,7 @@ export function AdminMentorsManager() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-founder-600">{mentor.is_approved ? "Freigeschaltet" : "Ausstehend"}</p>
                   <h3 className="mt-2 font-serif text-2xl font-bold text-slate-950">{mentor.name}</h3>
+                  <p className="mt-1 text-sm font-semibold text-founder-600">{formatMentorPricing(mentor)}</p>
                   <p className="mt-2 text-sm text-slate-600">{mentorBookings.length} Buchungen · {new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(fees / 100)} Provision</p>
                 </div>
                 <button className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700" type="button" onClick={() => toggleApproval(mentor)}>
