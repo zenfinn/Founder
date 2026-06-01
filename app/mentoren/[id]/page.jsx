@@ -6,10 +6,10 @@ import { ProfileAvatarWithRank } from "@/components/ProfileAvatarWithRank";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
 import { buildOgImageUrl, buildPageMetadata } from "@/lib/seo";
 import {
+  getMentorSessionAvailability,
+  resolveMentorPricing,
   formatMentorPricing,
   formatMentorSessionPrice,
-  getMentorSessionPriceCents,
-  getMentorSessionAvailability,
 } from "@/lib/mentors";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -52,7 +52,7 @@ export default async function MentorProfilePage({ params }) {
   }
 
   const availability = await getMentorSessionAvailability(adminSupabase, mentor);
-  const sessionPriceCents = getMentorSessionPriceCents(mentor);
+  const { sessionPriceCents } = resolveMentorPricing(mentor);
 
   const { data: similarMentors } = await adminSupabase
     .from("mentors")

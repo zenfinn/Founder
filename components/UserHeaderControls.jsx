@@ -8,7 +8,6 @@ import {
   LayoutDashboard,
   Link2,
   LogOut,
-  MessageCircle,
   Settings,
   ShieldCheck,
   User,
@@ -24,7 +23,6 @@ const settingsLinks = [
   { href: "/profile", label: "Profil anzeigen", Icon: User, description: "Dein öffentliches Profil" },
   { href: "/profile/verify", label: "Rang verifizieren", Icon: ShieldCheck, description: "Dokumente hochladen" },
   { href: "/profile/edit#referral", label: "Referral-Link", Icon: Link2, description: "Persönlichen Link generieren" },
-  { href: "/inbox", label: "Chats", Icon: MessageCircle, description: "Private Nachrichten & Anfragen" },
   { href: "/notifications", label: "Benachrichtigungen", Icon: Bell, description: "System-Alerts" },
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, description: "Deine Übersicht" },
 ];

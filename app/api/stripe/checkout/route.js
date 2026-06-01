@@ -6,10 +6,8 @@ import { sanitizeStripeErrorMessage } from "@/lib/stripe-errors";
 import { FOUNDER_PRO_STRIPE_PRODUCT_ID, resolveFounderProCheckoutPriceId } from "@/lib/stripe-founder-pro";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import {
-  getMentorMonthlyRateCents,
   getMentorSessionAvailability,
-  getMentorSessionPriceCents,
-  getMentorSessionsPerMonth,
+  resolveMentorPricing,
 } from "@/lib/mentors";
 
 function getAppUrl() {
@@ -139,19 +137,17 @@ export async function POST(request) {
         );
       }
 
-      const amountCents = getMentorSessionPriceCents(mentor);
-      if (amountCents <= 0) {
-        return NextResponse.json({ error: "Ungültiger Mentor-Preis." }, { status: 400 });
+      const { monthlyRateCents, sessionsPerMonth, sessionPriceCents } = resolveMentorPricing(mentor);
+      if (sessionPriceCents <= 0 || monthlyRateCents <= 0 || sessionsPerMonth <= 0) {
+        return NextResponse.json({ error: "Ungültiger Mentor-Preis oder Session-Kontingent." }, { status: 400 });
       }
 
       const clientAmount = asPositiveInteger(body.amount_cents);
-      if (clientAmount > 0 && clientAmount !== amountCents) {
+      if (clientAmount > 0 && clientAmount !== sessionPriceCents) {
         return NextResponse.json({ error: "Der Session-Preis stimmt nicht mit dem Mentor-Angebot überein." }, { status: 400 });
       }
 
-      const sessionsPerMonth = getMentorSessionsPerMonth(mentor);
-      const monthlyRateCents = getMentorMonthlyRateCents(mentor);
-      const platformFeeCents = Math.round(amountCents * 0.15);
+      const platformFeeCents = Math.round(sessionPriceCents * 0.15);
       const { data: booking, error: bookingError } = await adminSupabase
         .from("mentor_bookings")
         .insert({
@@ -160,7 +156,7 @@ export async function POST(request) {
           mentor_name: title,
           user_id: user.id,
           starts_at: startsAt,
-          amount_cents: amountCents,
+          amount_cents: sessionPriceCents,
           platform_fee_cents: platformFeeCents,
           status: "pending",
         })
@@ -180,7 +176,7 @@ export async function POST(request) {
           {
             price_data: {
               currency: "eur",
-              unit_amount: amountCents,
+              unit_amount: sessionPriceCents,
               product_data: {
                 name: `Mentor Session: ${title}`,
                 description: `${new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(monthlyRateCents / 100)}/Monat · ${sessionsPerMonth} Sessions`,
