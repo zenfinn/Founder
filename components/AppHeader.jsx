@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { UserHeaderControls } from "@/components/UserHeaderControls";
-import { Calendar, FolderOpen, Home, MessageCircle, Star, Trophy, Users } from "lucide-react";
+import { Calendar, FolderOpen, Home, LayoutGrid, MessageCircle, Star, Trophy, Users } from "lucide-react";
 
 export function AppHeader({ active }) {
   const [open, setOpen] = useState(false);
@@ -13,6 +13,7 @@ export function AppHeader({ active }) {
     { href: "/raenge", label: "Ränge", Icon: Star },
     { href: "/leaderboard", label: "Leaderboard", Icon: Trophy },
     { href: "/community", label: "Community", Icon: Users },
+    { href: "/showcases", label: "Showcases", Icon: LayoutGrid },
     { href: "/resources", label: "Ressourcen", Icon: FolderOpen },
     { href: "/events", label: "Events", Icon: Calendar },
     { href: "/mentoren", label: "Mentoren", Icon: Star },

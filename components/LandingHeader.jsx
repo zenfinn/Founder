@@ -4,12 +4,13 @@ import Link from "next/link";
 import { useState } from "react";
 import { BrandMark } from "@/components/BrandMark";
 import { UserHeaderControls } from "@/components/UserHeaderControls";
-import { BookOpen, Calendar, Menu, Star, Trophy, Users, X } from "lucide-react";
+import { BookOpen, Calendar, LayoutGrid, Menu, Star, Trophy, Users, X } from "lucide-react";
 
 const links = [
   { href: "/raenge", label: "Ränge", Icon: Star },
   { href: "/leaderboard", label: "Leaderboard", Icon: Trophy },
   { href: "/community", label: "Community", Icon: Users },
+  { href: "/showcases", label: "Showcases", Icon: LayoutGrid },
   { href: "/events", label: "Events", Icon: Calendar },
   { href: "/mentoren", label: "Mentoren", Icon: BookOpen },
 ];

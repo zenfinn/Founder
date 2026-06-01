@@ -3,6 +3,7 @@ import Link from "next/link";
 const mainLinks = [
   { href: "/raenge", label: "Ränge" },
   { href: "/community", label: "Community" },
+  { href: "/showcases", label: "Showcases" },
   { href: "/events", label: "Events" },
   { href: "/mentoren", label: "Mentoren" },
   { href: "/leaderboard", label: "Leaderboard" },
