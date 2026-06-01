@@ -7,7 +7,8 @@
     "dev": "WATCHPACK_POLLING=true CHOKIDAR_USEPOLLING=true next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:prod": "npm run lint && npx vercel --prod --yes"
   },
   "dependencies": {
     "@react-oauth/google": "^0.13.5",

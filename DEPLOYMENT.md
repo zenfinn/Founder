@@ -1,5 +1,22 @@
 # Founder Community Deployment
 
+Production: **https://www.joinfounder.forum**
+
+## Schnell deployen (Agent / lokal)
+
+Git push allein reicht nicht — Vercel deployt aus diesem Repo nicht zuverlässig per Webhook. Immer:
+
+```bash
+git add -A
+git commit -m "deine message"
+git push origin main
+npm run deploy:prod
+```
+
+`npm run deploy:prod` = lint + `npx vercel --prod --yes`
+
+Neue Supabase-Migrationen danach im SQL Editor ausführen.
+
 ## Vercel
 
 - Framework Preset: Next.js

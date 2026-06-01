@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import "./globals.css";
 import { inter } from "@/app/fonts";
 import { Analytics } from "@/components/Analytics";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { PwaInstaller } from "@/components/PwaInstaller";
 import { buildOgImageUrl, getPageMetadata, PAGE_SEO, SITE_NAME, SITE_TAGLINE, getBaseUrl } from "@/lib/seo";
@@ -47,6 +48,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="de" className={inter.variable}>
       <head>
+        <GoogleAnalytics />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
         {supabaseHost && (

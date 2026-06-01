@@ -1,0 +1,33 @@
+---
+description: Nach fertigen Features immer commit, push und Vercel Production deployen
+alwaysApply: true
+---
+
+# Deploy-Pipeline (Founder / joinfounder.forum)
+
+Wenn du **sichtbare Features, UI, API-Routen oder Config** fertig implementiert hast, schließe die Aufgabe immer mit dem vollen Release ab — nicht nur mit lokalen Dateiänderungen.
+
+## Standard-Ablauf
+
+1. `npm run lint` (bei größeren Änderungen auch `npm run build`)
+2. `git add -A` — Pfade mit `[id]` in zsh immer quoten oder `git add -A` nutzen
+3. Commit mit kurzer, sachlicher Message (nur wenn der User explizit committen will **oder** die Aufgabe ein fertiges Feature/Fix war, das live gehört)
+4. `git push origin main`
+5. `npx vercel --prod --yes` — GitHub-Webhook deployt nicht zuverlässig; Vercel-CLI ist Pflicht für Production
+
+Production-Domain: **https://www.joinfounder.forum**
+
+## Supabase-Migrationen
+
+Neue Dateien unter `supabase/migrations/` erfordern **zusätzlich** manuelle Ausführung im Supabase SQL Editor (oder `supabase db push`). Das im Abschluss kurz erwähnen.
+
+## Am Ende kurz bestätigen
+
+- Commit-Hash oder Message
+- Push erfolgreich
+- Vercel Deploy **Ready** + Aliased auf joinfounder.forum
+- Offene manuelle Schritte (Migrationen, Env-Vars in Vercel)
+
+## Nicht deployen ohne Abschluss
+
+Keine halbfertigen Deploys. Erst wenn lint/build grün und die Aufgabe erfüllt ist.

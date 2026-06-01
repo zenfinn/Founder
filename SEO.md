@@ -40,7 +40,7 @@ Blockiert: `/admin`, `/dashboard`, `/profile/*`, `/inbox`, `/members/*`, `/api/*
 
 ```bash
 NEXT_PUBLIC_APP_URL=https://www.joinfounder.forum
-NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX  # optional
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-5729Q9T5EG
 ```
 
 ## Analytics Events
