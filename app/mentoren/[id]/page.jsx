@@ -4,6 +4,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { MentorOfferForm } from "@/components/MentorOfferForm";
 import { ProfileAvatarWithRank } from "@/components/ProfileAvatarWithRank";
 import { StripeCheckoutButton } from "@/components/StripeCheckoutButton";
+import { buildOgImageUrl, buildPageMetadata } from "@/lib/seo";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 function formatRate(cents = 0) {
@@ -14,14 +15,25 @@ export async function generateMetadata({ params }) {
   const adminSupabase = createAdminSupabaseClient();
   const { data: mentor } = await adminSupabase
     .from("mentors")
-    .select("name")
+    .select("name, bio, expertise_tags")
     .eq("id", params.id)
     .eq("is_approved", true)
     .maybeSingle();
 
-  return {
-    title: mentor?.name ? `${mentor.name} | Mentoren` : "Mentor",
-  };
+  if (!mentor?.name) {
+    return { title: { absolute: "Mentor nicht gefunden | Founder" }, robots: { index: false } };
+  }
+
+  const description =
+    mentor.bio?.slice(0, 155) ||
+    `Mentor finden Unternehmer: ${mentor.name} – verifizierter Coach bei Founder Community Deutschland.`;
+
+  return buildPageMetadata({
+    path: `/mentoren/${params.id}`,
+    title: `${mentor.name} | Mentor bei Founder Community`,
+    description,
+    ogImage: buildOgImageUrl({ title: mentor.name, subtitle: "Verifizierter Mentor · Founder" }),
+  });
 }
 
 export default async function MentorProfilePage({ params }) {
@@ -36,6 +48,13 @@ export default async function MentorProfilePage({ params }) {
   if (!mentor) {
     notFound();
   }
+
+  const { data: similarMentors } = await adminSupabase
+    .from("mentors")
+    .select("id, name, hourly_rate_cents, expertise_tags")
+    .eq("is_approved", true)
+    .neq("id", mentor.id)
+    .limit(3);
 
   const { data: profile } = mentor.user_id
     ? await adminSupabase
@@ -110,6 +129,31 @@ export default async function MentorProfilePage({ params }) {
             </StripeCheckoutButton>
           </aside>
         </div>
+
+        {(similarMentors ?? []).length > 0 && (
+          <aside className="mx-auto mt-8 max-w-6xl rounded-[2rem] border border-slate-200 bg-white p-6">
+            <h2 className="font-serif text-2xl font-bold text-slate-950">Ähnliche Mentoren</h2>
+            <ul className="mt-4 grid gap-3 sm:grid-cols-3">
+              {similarMentors.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    href={`/mentoren/${item.id}`}
+                    className="block rounded-2xl border border-slate-100 bg-slate-50 px-4 py-4 transition hover:border-founder-200 hover:bg-founder-50"
+                  >
+                    <p className="font-bold text-slate-950">{item.name}</p>
+                    <p className="mt-1 text-sm font-semibold text-founder-600">
+                      {new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(
+                        (item.hourly_rate_cents ?? 0) / 100
+                      )}
+                      /h
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )}
+
         <MentorOfferForm />
       </section>
     </main>

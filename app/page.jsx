@@ -1,10 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { LandingHeader } from "@/components/LandingHeader";
+import { SEO } from "@/components/SEO";
 import { FadeIn, MotionCard } from "@/components/Motion";
 import { LandingJoinCards } from "@/components/landing/LandingJoinCards";
 import { RankBadge } from "@/components/RankBadge";
 import { communityChannels, ranks, sampleEvents } from "@/lib/founder-data";
+import {
+  buildLocalBusinessSchema,
+  buildOrganizationSchema,
+  buildWebSiteSchema,
+  getPageMetadata,
+} from "@/lib/seo";
 import {
   Bot,
   Coins,
@@ -21,6 +28,8 @@ import {
   Youtube,
   Zap,
 } from "lucide-react";
+
+export const metadata = getPageMetadata("home");
 
 const rankIcons = {
   aspiring: Sprout,
@@ -77,6 +86,7 @@ function formatEventDate(value) {
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-slate-50">
+      <SEO jsonLd={[buildOrganizationSchema(), buildWebSiteSchema(), buildLocalBusinessSchema()]} />
       <LandingHeader />
 
       <section className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-20 text-center text-white">
@@ -94,11 +104,11 @@ export default function LandingPage() {
             FOUNDER COMMUNITY GERMANY
           </p>
           <h1 className="font-serif text-5xl font-bold tracking-tight sm:text-7xl">
-            Die verifizierte Community für echte Unternehmer.
+            Gründer Community Deutschland – verifiziertes Unternehmer Netzwerk.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-slate-200">
-            Triff Gründer, Builder und Scaler in geprüften Gruppen, buche Mentoren, entdecke Events und wachse mit einem
-            Netzwerk, das auf echten Unternehmen basiert.
+            Triff verifizierte Gründer, Builder und Scaler in Branchen-Communities wie Reselling, E-Commerce und Trading.
+            Buche Mentoren, entdecke Events und wachse in Deutschlands Founder Community.
           </p>
           <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
             <Link

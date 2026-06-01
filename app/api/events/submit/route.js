@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { sendEmail } from "@/lib/email";
+import { getAdminEmail } from "@/lib/founder-contact";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -52,7 +53,7 @@ export async function POST(request) {
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-    const adminEmail = process.env.ADMIN_EMAIL ?? "admin@founder.example";
+    const adminEmail = getAdminEmail();
 
     await sendEmail({
       to: adminEmail,

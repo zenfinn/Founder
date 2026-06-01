@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Impressum | Founder",
-  description: "Impressum von Zndr Supply – Finn Zender.",
-};
+import { getPageMetadata } from "@/lib/seo";
+
+export const metadata = getPageMetadata("impressum");
 
 export default function ImpressumPage() {
   return (
@@ -21,7 +20,7 @@ export default function ImpressumPage() {
       <section className="mb-6">
         <h2 className="text-xl font-semibold mb-2">Kontakt:</h2>
         <p>Telefon: +49 15903170942</p>
-        <p>E-Mail: zndr.supply@gmail.com</p>
+        <p>E-Mail: joinfounder@gmail.com</p>
       </section>
 
       <section className="mb-6">

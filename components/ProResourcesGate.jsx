@@ -31,7 +31,7 @@ export function ProResourcesGate({ profile, title = "Founder Pro erforderlich", 
       <h2 className="mt-5 font-serif text-2xl font-bold text-slate-950">{title}</h2>
       <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-slate-600">
         {description ??
-          "Ressourcen, Partner-Deals und Rankings sind Teil von Founder Pro. Im Basic-Plan kannst du 1 Community und 1 Untergruppe nutzen."}
+          "Schalte unbegrenzten Zugriff auf alle Tools, Lieferanten und Netzwerke frei."}
       </p>
       <div className="mt-6 flex flex-col items-center gap-3">
         <FounderProUpgradeButton />

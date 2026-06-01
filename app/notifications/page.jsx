@@ -43,6 +43,11 @@ export default async function NotificationsPage() {
                 </span>
                 <h2 className="mt-4 font-serif text-2xl font-bold text-slate-950">{item.title}</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-600">{item.body}</p>
+                {item.link_url && (
+                  <a href={item.link_url} className="mt-4 inline-flex text-sm font-bold text-founder-600 hover:underline">
+                    Öffnen →
+                  </a>
+                )}
                 <p className="mt-3 text-xs font-semibold text-slate-400">
                   {new Intl.DateTimeFormat("de-DE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(item.created_at))}
                 </p>

@@ -28,7 +28,7 @@ SMTP_SECURE=false
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=Founder <no-reply@founder.example>
-ADMIN_EMAIL=admin@founder.example
+ADMIN_EMAIL=joinfounder@gmail.com
 ```
 
 ## Stripe Webhook

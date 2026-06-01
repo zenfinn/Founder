@@ -3,6 +3,9 @@ import { AuthForm } from "@/components/AuthForm";
 import { BrandMark } from "@/components/BrandMark";
 import { ReferralCapture } from "@/components/ReferralCapture";
 import { RegisterProIntent } from "@/components/RegisterProIntent";
+import { getPageMetadata } from "@/lib/seo";
+
+export const metadata = getPageMetadata("register");
 
 export default function RegisterPage({ searchParams }) {
   const requestedRank = searchParams?.rank ?? searchParams?.rang ?? "aspiring";

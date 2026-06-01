@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { MessageCircle } from "lucide-react";
 
-export function MessageRequestForm({ recipientId, recipientName, pendingRequest = null }) {
+export function MessageRequestForm({ recipientId, recipientName, pendingRequest = null, onSent }) {
   const [message, setMessage] = useState("");
   const [status, setStatus] = useState(pendingRequest ? "pending" : "idle");
   const [error, setError] = useState("");
@@ -23,11 +23,16 @@ export function MessageRequestForm({ recipientId, recipientName, pendingRequest 
 
       const payload = await response.json();
       if (!response.ok) {
+        if (payload.conversationId) {
+          window.location.href = `/inbox?chat=${payload.conversationId}`;
+          return;
+        }
         throw new Error(payload.error ?? "Anfrage konnte nicht gesendet werden.");
       }
 
       setStatus("pending");
       setMessage("");
+      onSent?.();
     } catch (submitError) {
       setError(submitError.message);
     } finally {

@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Link2,
   LogOut,
+  MessageCircle,
   Settings,
   ShieldCheck,
   User,
@@ -23,7 +24,8 @@ const settingsLinks = [
   { href: "/profile", label: "Profil anzeigen", Icon: User, description: "Dein öffentliches Profil" },
   { href: "/profile/verify", label: "Rang verifizieren", Icon: ShieldCheck, description: "Dokumente hochladen" },
   { href: "/profile/edit#referral", label: "Referral-Link", Icon: Link2, description: "Persönlichen Link generieren" },
-  { href: "/notifications", label: "Benachrichtigungen", Icon: Bell, description: "Inbox & Alerts" },
+  { href: "/inbox", label: "Chats", Icon: MessageCircle, description: "Private Nachrichten & Anfragen" },
+  { href: "/notifications", label: "Benachrichtigungen", Icon: Bell, description: "System-Alerts" },
   { href: "/dashboard", label: "Dashboard", Icon: LayoutDashboard, description: "Deine Übersicht" },
 ];
 
@@ -148,6 +150,15 @@ export function UserHeaderControls({ variant = "app", onNavigate }) {
 
   return (
     <div className="flex items-center gap-2 sm:gap-3">
+      <Link
+        href="/inbox"
+        onClick={onNavigate}
+        className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-bold text-slate-700 shadow-sm transition hover:border-founder-200 hover:text-founder-600"
+      >
+        <MessageCircle className="h-4 w-4" />
+        <span className="hidden sm:inline">Chats</span>
+      </Link>
+
       <div className="relative" ref={menuRef}>
         <button
           type="button"

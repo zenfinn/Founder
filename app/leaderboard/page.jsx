@@ -1,20 +1,15 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { PublicRankBadge } from "@/components/public/PublicRankBadge";
 import { getProfileInitial } from "@/lib/profiles";
+import { getPageMetadata } from "@/lib/seo";
 import { createPublicSupabaseClient, fetchActivityLeaderboard, getISOWeekLabel } from "@/lib/public-profile";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Leaderboard",
-  description: "Top 20 Founder Mitglieder nach Community-Aktivität diese Woche.",
-  openGraph: {
-    title: "Founder Leaderboard",
-    description: "Die aktivsten Mitglieder der Founder Community.",
-  },
-};
+export const metadata = getPageMetadata("leaderboard");
 
 export default async function LeaderboardPage() {
   const supabase = createPublicSupabaseClient();
@@ -40,10 +35,11 @@ export default async function LeaderboardPage() {
 
       <section className="px-4 py-10">
         <div className="mx-auto max-w-3xl">
+          <Breadcrumbs items={[{ name: "Leaderboard", href: "/leaderboard" }]} />
           <div className="rounded-[2rem] bg-founder-600 px-6 py-8 text-center text-white shadow-soft">
             <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-100">Founder Leaderboard</p>
             <h1 className="mt-3 font-serif text-3xl font-bold sm:text-4xl">
-              Woche {week}/{year}
+              Die aktivsten Unternehmer – Woche {week}/{year}
             </h1>
             <p className="mt-3 text-sm text-founder-100">Top 20 nach Community-Aktivitäts-Score</p>
           </div>

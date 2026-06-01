@@ -3,10 +3,11 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { trackEvent } from "@/components/Analytics";
 import { readStoredReferralCode } from "@/components/ReferralCapture";
+import { sanitizeStripeErrorMessage } from "@/lib/stripe-errors";
 
-const founderProStripePriceOrProductId =
-  process.env.NEXT_PUBLIC_FOUNDER_PRO_STRIPE_PRICE_OR_PRODUCT_ID ?? "price_1TZXveIFneIajosQok3B8fgO";
+export const FOUNDER_PRO_PRODUCT_ID = "prod_UYfGh1P7PJkCin";
 
 export function FounderProUpgradeButton({
   label = "Jetzt upgraden",
@@ -15,6 +16,8 @@ export function FounderProUpgradeButton({
   cancelPath = "/#pro",
   unauthenticatedPath = "/login",
   onboardingDiscount = false,
+  showError = true,
+  stripeProductId = FOUNDER_PRO_PRODUCT_ID,
 }) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -24,34 +27,49 @@ export function FounderProUpgradeButton({
   async function startCheckout() {
     setLoading(true);
     setError("");
+    trackEvent("pro_upgrade_click", { location: cancelPath });
 
     const { data } = await supabase.auth.getSession();
     if (!data.session) {
+      setLoading(false);
       router.push(unauthenticatedPath);
       return;
     }
 
-    const response = await fetch("/api/stripe/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        type: "founder_pro",
-        stripe_price_or_product_id: founderProStripePriceOrProductId,
-        referral_code: readStoredReferralCode(),
-        onboarding_discount: onboardingDiscount,
-        cancel_path: cancelPath,
-      }),
-    });
+    try {
+      const response = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "founder_pro",
+          stripe_product_id: stripeProductId,
+          referral_code: readStoredReferralCode(),
+          onboarding_discount: onboardingDiscount,
+          cancel_path: cancelPath,
+        }),
+      });
 
-    const payload = await response.json();
+      const payload = await response.json().catch(() => ({}));
 
-    if (!response.ok || !payload.url) {
+      if (!response.ok || !payload.url) {
+        setLoading(false);
+        if (showError) {
+          setError(sanitizeStripeErrorMessage(payload.error ?? "Checkout konnte nicht gestartet werden."));
+        } else {
+          console.error("Founder Pro checkout failed");
+        }
+        return;
+      }
+
+      window.location.href = payload.url;
+    } catch (checkoutError) {
       setLoading(false);
-      setError(payload.error ?? "Checkout konnte nicht gestartet werden.");
-      return;
+      if (showError) {
+        setError(sanitizeStripeErrorMessage(checkoutError));
+      } else {
+        console.error("Founder Pro checkout failed");
+      }
     }
-
-    window.location.href = payload.url;
   }
 
   return (
@@ -59,7 +77,7 @@ export function FounderProUpgradeButton({
       <button type="button" onClick={startCheckout} disabled={loading} className={className}>
         {loading ? "Checkout startet..." : label}
       </button>
-      {error && <p className={errorClassName}>{error}</p>}
+      {showError && error && <p className={errorClassName}>{error}</p>}
     </div>
   );
 }

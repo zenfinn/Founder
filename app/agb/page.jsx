@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "AGB | Founder",
-  description: "Allgemeine Geschäftsbedingungen von Zndr Supply.",
-};
+import { getPageMetadata } from "@/lib/seo";
+
+export const metadata = getPageMetadata("agb");
 
 export default function AgbPage() {
   return (

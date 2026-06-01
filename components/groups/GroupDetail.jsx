@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AppHeader } from "@/components/AppHeader";
 import { GroupTabs } from "@/components/groups/GroupTabs";
+import { RelatedCommunities } from "@/components/groups/RelatedCommunities";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getGroupById, joinGroup } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
@@ -12,7 +13,8 @@ import { ArrowLeft } from "lucide-react";
 
 function GroupDetailContent({ groupId }) {
   const searchParams = useSearchParams();
-  const initialTab = searchParams.get("tab") ?? "chat";
+  const rawTab = searchParams.get("tab") ?? "chat";
+  const initialTab = rawTab === "ranking" ? "resources" : rawTab;
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [group, setGroup] = useState(null);
   const [error, setError] = useState("");
@@ -67,7 +69,12 @@ function GroupDetailContent({ groupId }) {
         </div>
       )}
 
-      {group && <GroupTabs group={group} initialTab={initialTab} />}
+      {group && (
+        <>
+          <GroupTabs group={group} initialTab={initialTab} />
+          <RelatedCommunities currentSlug={group.slug} />
+        </>
+      )}
     </>
   );
 }

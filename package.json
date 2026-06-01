@@ -15,6 +15,7 @@
     "@supabase/auth-ui-shared": "^0.1.8",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.104.0",
+    "@vercel/og": "^0.6.8",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.39.0",
     "jspdf": "^4.2.1",

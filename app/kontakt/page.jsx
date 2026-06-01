@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Kontakt | Founder",
-  description: "Kontakt zu Zndr Supply – Finn Zender.",
-};
+import { getPageMetadata } from "@/lib/seo";
+
+export const metadata = getPageMetadata("kontakt");
 
 export default function KontaktPage() {
   return (
@@ -26,8 +25,8 @@ export default function KontaktPage() {
         <h2 className="text-xl font-semibold mb-4">Direkte Erreichbarkeit:</h2>
         <p className="mb-2">
           <strong>E-Mail:</strong>{" "}
-          <a href="mailto:zndr.supply@gmail.com" className="text-blue-400 underline">
-            zndr.supply@gmail.com
+          <a href="mailto:joinfounder@gmail.com" className="text-blue-400 underline">
+            joinfounder@gmail.com
           </a>
         </p>
         <p>

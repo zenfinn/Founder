@@ -1,27 +1,69 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { GroupChat } from "@/components/groups/GroupChat";
 import { ResourceRanking } from "@/components/groups/ResourceRanking";
 import { CommunityWins } from "@/components/groups/CommunityWins";
 import { GroupSubgroups } from "@/components/groups/GroupSubgroups";
 import { SubgroupDirectory } from "@/components/groups/SubgroupDirectory";
-import { BarChart3, Layers3, MessageCircle, Trophy, Users } from "lucide-react";
+import { GroupVideochat } from "@/components/groups/GroupVideochat";
+import { ProResourcesTabOverlay } from "@/components/groups/ProResourcesTabOverlay";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { getOwnProfile } from "@/lib/profiles";
+import { isFounderPro } from "@/lib/membership";
+import { FolderOpen, Layers3, Lock, MessageCircle, Trophy, Users, Video } from "lucide-react";
 
 const tabs = [
   { id: "chat", label: "Chat", Icon: MessageCircle },
-  { id: "ranking", label: "Rankings", Icon: BarChart3 },
+  { id: "videochat", label: "Videochat", Icon: Video },
+  { id: "resources", label: "Ressourcen", Icon: FolderOpen, requiresPro: true },
   { id: "wins", label: "Wins", Icon: Trophy },
   { id: "subgroups", label: "Untergruppen", Icon: Layers3 },
 ];
 
+function normalizeTabId(tab) {
+  if (tab === "ranking") return "resources";
+  return tab;
+}
+
 export function GroupTabs({ group, initialTab = "chat" }) {
-  const [activeTab, setActiveTab] = useState(initialTab);
+  const supabase = useMemo(() => createBrowserSupabaseClient(), []);
+  const [activeTab, setActiveTab] = useState(() => normalizeTabId(initialTab));
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
+  const proAccess = isFounderPro(profile);
+  const groupId = group?.id;
 
   useEffect(() => {
-    setActiveTab(initialTab);
+    setActiveTab(normalizeTabId(initialTab));
   }, [initialTab]);
-  const groupId = group?.id;
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadProfile() {
+      try {
+        const { data } = await supabase.auth.getSession();
+        const userId = data.session?.user?.id;
+        if (!userId) {
+          if (active) setProfile(null);
+          return;
+        }
+
+        const nextProfile = await getOwnProfile(supabase, userId);
+        if (active) setProfile(nextProfile);
+      } finally {
+        if (active) setProfileLoading(false);
+      }
+    }
+
+    loadProfile();
+
+    return () => {
+      active = false;
+    };
+  }, [supabase]);
 
   return (
     <div className="space-y-6">
@@ -39,21 +81,26 @@ export function GroupTabs({ group, initialTab = "chat" }) {
           </div>
 
           <nav className="flex gap-2 overflow-x-auto rounded-full bg-slate-100/80 p-1">
-            {tabs.map(({ id, label, Icon }) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => setActiveTab(id)}
-                className={`inline-flex min-w-fit items-center gap-2 rounded-full px-5 py-3 text-sm font-bold transition-all duration-200 ${
-                  activeTab === id
-                    ? "bg-slate-950 text-white shadow-md shadow-slate-950/15"
-                    : "text-slate-600 hover:bg-white hover:text-slate-950"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </button>
-            ))}
+            {tabs.map(({ id, label, Icon, requiresPro }) => {
+              const locked = requiresPro && !profileLoading && !proAccess;
+
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => setActiveTab(id)}
+                  className={`inline-flex min-w-fit items-center gap-2 rounded-full px-5 py-3 text-sm font-bold transition-all duration-200 ${
+                    activeTab === id
+                      ? "bg-slate-950 text-white shadow-md shadow-slate-950/15"
+                      : "text-slate-600 hover:bg-white hover:text-slate-950"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  {label}
+                  {locked && <Lock className="h-3.5 w-3.5 opacity-80" aria-hidden />}
+                </button>
+              );
+            })}
           </nav>
         </div>
       </div>
@@ -67,7 +114,16 @@ export function GroupTabs({ group, initialTab = "chat" }) {
           </p>
         )}
         {groupId && activeTab === "chat" && <GroupChat groupId={groupId} group={group} />}
-        {groupId && activeTab === "ranking" && <ResourceRanking groupId={groupId} />}
+        {groupId && activeTab === "videochat" && <GroupVideochat groupId={groupId} group={group} />}
+        {groupId && activeTab === "resources" && profileLoading && (
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-sm font-semibold text-slate-600">
+            Zugriff wird geprüft...
+          </div>
+        )}
+        {groupId && activeTab === "resources" && !profileLoading && !proAccess && (
+          <ProResourcesTabOverlay cancelPath={`/community/${groupId}?tab=resources`} />
+        )}
+        {groupId && activeTab === "resources" && !profileLoading && proAccess && <ResourceRanking groupId={groupId} />}
         {groupId && activeTab === "wins" && <CommunityWins groupId={groupId} />}
         {groupId && activeTab === "subgroups" && <GroupSubgroups groupId={groupId} />}
       </div>

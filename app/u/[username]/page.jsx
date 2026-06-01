@@ -3,24 +3,19 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { BrandMark } from "@/components/BrandMark";
+import { SEO } from "@/components/SEO";
 import { PublicProfileAvatar } from "@/components/public/PublicProfileAvatar";
 import { PublicRankBadge } from "@/components/public/PublicRankBadge";
 import { PublicSocialLinks } from "@/components/public/PublicSocialLinks";
 import { getRankLabel } from "@/lib/founder-data";
+import { buildPersonSchema, buildProfileMetadata } from "@/lib/seo";
 import {
   createPublicSupabaseClient,
   fetchProfilePostCount,
   fetchPublicProfile,
   formatDisplayName,
-  getAppBaseUrl,
 } from "@/lib/public-profile";
 
-function buildProfileDescription(profile, displayName) {
-  const parts = [`Verifizierter ${getRankLabel(profile?.current_rank ?? "aspiring")} bei Founder 🇩🇪`];
-  if (profile?.company_name) parts.push(profile.company_name);
-  if (profile?.bio?.trim()) parts.push(profile.bio.trim());
-  return parts.join(" · ");
-}
 
 export async function generateMetadata({ params }) {
   const username = params.username;
@@ -29,44 +24,13 @@ export async function generateMetadata({ params }) {
 
   if (!profile) {
     return {
-      title: "Profil nicht gefunden",
+      title: { absolute: "Profil nicht gefunden | Founder" },
       description: "Dieses Founder Profil ist nicht öffentlich oder existiert nicht.",
+      robots: { index: false, follow: false },
     };
   }
 
-  const displayName = formatDisplayName(profile, username);
-  const description = buildProfileDescription(profile, displayName);
-  const baseUrl = getAppBaseUrl();
-  const profileUrl = `${baseUrl}/u/${username}`;
-  const imageUrl = profile.avatar_url || `${baseUrl}/founder-icon.svg`;
-
-  return {
-    title: `${displayName} (@${username})`,
-    description,
-    alternates: { canonical: profileUrl },
-    openGraph: {
-      title: `${displayName} – Founder 🇩🇪`,
-      description,
-      url: profileUrl,
-      siteName: "Founder",
-      locale: "de_DE",
-      type: "profile",
-      images: [
-        {
-          url: imageUrl,
-          width: 512,
-          height: 512,
-          alt: `${displayName} – Founder Profil`,
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: `${displayName} – Founder 🇩🇪`,
-      description,
-      images: [imageUrl],
-    },
-  };
+  return buildProfileMetadata(profile, username);
 }
 
 export default async function PublicProfilePage({ params }) {
@@ -84,6 +48,7 @@ export default async function PublicProfilePage({ params }) {
 
   return (
     <main className="min-h-screen bg-slate-50">
+      <SEO jsonLd={buildPersonSchema(profile, username)} />
       <header className="border-b border-slate-200 bg-white px-4 py-4">
         <div className="mx-auto max-w-6xl">
           <Link href="/">

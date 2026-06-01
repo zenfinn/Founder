@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { AuthForm } from "@/components/AuthForm";
 import { BrandMark } from "@/components/BrandMark";
+import { getPageMetadata } from "@/lib/seo";
+
+export const metadata = getPageMetadata("login");
 
 export default function LoginPage() {
   return (

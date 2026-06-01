@@ -1,7 +1,6 @@
-export const metadata = {
-  title: "Datenschutzerklärung | Founder",
-  description: "Datenschutzerklärung von Zndr Supply – Finn Zender.",
-};
+import { getPageMetadata } from "@/lib/seo";
+
+export const metadata = getPageMetadata("datenschutz");
 
 export default function DatenschutzPage() {
   return (
@@ -25,7 +24,7 @@ export default function DatenschutzPage() {
         <p>Zndr Supply</p>
         <p>Im Mühlenfeld 15</p>
         <p>66687 Wadern</p>
-        <p>E-Mail: zndr.supply@gmail.com</p>
+        <p>E-Mail: joinfounder@gmail.com</p>
       </section>
 
       <section className="mb-6">

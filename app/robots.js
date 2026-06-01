@@ -1,12 +1,29 @@
+import { getBaseUrl } from "@/lib/seo";
+
 export default function robots() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/admin", "/api"],
-    },
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/admin",
+          "/admin/",
+          "/dashboard",
+          "/profile/edit",
+          "/profile/verify",
+          "/inbox",
+          "/members/",
+          "/notifications",
+          "/affiliate",
+          "/payment/",
+          "/api/",
+        ],
+      },
+    ],
     sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

@@ -2,9 +2,9 @@ import { NextResponse } from "next/server";
 import { createStripeClient } from "@/lib/stripe";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { resolveAffiliateForCheckout } from "@/lib/referrals";
+import { sanitizeStripeErrorMessage } from "@/lib/stripe-errors";
+import { FOUNDER_PRO_STRIPE_PRODUCT_ID, resolveFounderProCheckoutPriceId } from "@/lib/stripe-founder-pro";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-
-const founderProPriceId = process.env.NEXT_PUBLIC_FOUNDER_PRO_STRIPE_PRICE_OR_PRODUCT_ID ?? "price_1TZXveIFneIajosQok3B8fgO";
 
 function getAppUrl() {
   return process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -162,7 +162,9 @@ export async function POST(request) {
       return NextResponse.json({ url: session.url });
     }
 
-    const founderProPrice = body.stripe_price_or_product_id ?? founderProPriceId;
+    const founderProPriceOrProduct =
+      body.stripe_price_or_product_id ?? body.stripe_product_id ?? FOUNDER_PRO_STRIPE_PRODUCT_ID;
+    const founderProPrice = await resolveFounderProCheckoutPriceId(stripe, founderProPriceOrProduct);
     const onboardingCouponId = process.env.STRIPE_FOUNDER_PRO_ONBOARDING_COUPON_ID?.trim();
     const wantsOnboardingDiscount = body.onboarding_discount === true;
 
@@ -210,6 +212,6 @@ export async function POST(request) {
     return NextResponse.json({ url: session.url });
   } catch (error) {
     console.error("Stripe checkout error", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: sanitizeStripeErrorMessage(error) }, { status: 500 });
   }
 }

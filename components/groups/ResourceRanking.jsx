@@ -1,11 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, ExternalLink, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { getOwnProfile } from "@/lib/profiles";
-import { ProResourcesGate } from "@/components/ProResourcesGate";
-import { createResource, getResourceRankings, upsertResourceVote } from "@/lib/groups";
+import { canManageResource } from "@/lib/founder-contact";
+import { getResourceRankings, upsertResourceVote } from "@/lib/groups";
 import {
   defaultResourceType,
   getResourceTypeLabel,
@@ -16,16 +15,18 @@ import {
 } from "@/lib/resource-types";
 
 const emptyForm = { title: "", url: "", type: defaultResourceType };
+const SUBMIT_SUCCESS_MESSAGE = "Vielen Dank! Deine Ressource wurde zur Überprüfung eingereicht.";
 
 export function ResourceRanking({ groupId }) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
   const [resources, setResources] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [notice, setNotice] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const selectedType = getResourceTypeMeta(form.type);
   const canSubmit = Boolean(user && form.title.trim() && isValidResourceUrl(form.url) && form.type);
@@ -46,9 +47,6 @@ export function ResourceRanking({ groupId }) {
       const { data } = await supabase.auth.getSession();
       const currentUser = data.session?.user ?? null;
       setUser(currentUser);
-      if (currentUser) {
-        setProfile(await getOwnProfile(supabase, currentUser.id));
-      }
       await loadResources();
     }
 
@@ -59,6 +57,7 @@ export function ResourceRanking({ groupId }) {
   async function handleVote(resourceId, voteType) {
     if (!user) return;
     setNotice("");
+    setSuccess("");
 
     try {
       await upsertResourceVote(supabase, { resourceId, userId: user.id, voteType });
@@ -72,18 +71,35 @@ export function ResourceRanking({ groupId }) {
     event.preventDefault();
     if (!canSubmit) return;
     setNotice("");
+    setSuccess("");
     setSubmitting(true);
 
     try {
-      await createResource(supabase, {
-        groupId,
-        userId: user.id,
-        title: form.title.trim(),
-        url: normalizeResourceUrl(form.url),
-        type: form.type,
+      const response = await fetch("/api/resources/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          group_id: groupId,
+          title: form.title.trim(),
+          url: normalizeResourceUrl(form.url),
+          type: form.type,
+        }),
       });
+
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Ressource konnte nicht eingereicht werden.");
+      }
+
       setForm(emptyForm);
-      await loadResources();
+
+      if (payload.live) {
+        await loadResources();
+        setSuccess("Ressource wurde veröffentlicht.");
+      } else {
+        setSuccess(SUBMIT_SUCCESS_MESSAGE);
+      }
     } catch (error) {
       setNotice(error.message);
     } finally {
@@ -91,19 +107,43 @@ export function ResourceRanking({ groupId }) {
     }
   }
 
+  async function handleDelete(resourceId) {
+    if (!user) return;
+    setNotice("");
+    setSuccess("");
+    setDeletingId(resourceId);
+
+    try {
+      const response = await fetch(`/api/resources/${resourceId}`, { method: "DELETE" });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Ressource konnte nicht gelöscht werden.");
+      }
+
+      await loadResources();
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
   return (
-    <ProResourcesGate profile={profile}>
     <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="rounded-[2rem] border border-slate-200 bg-white p-4 sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
-            <h2 className="font-serif text-3xl font-bold text-slate-950">Ressourcen-Ranking</h2>
+            <h2 className="font-serif text-3xl font-bold text-slate-950">Premium-Ressourcen</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">
               Kuratierte Founder-Ressourcen: SaaS, Blueprints, Supplier, Media & Communities — bewertet von der Gruppe.
             </p>
           </div>
         </div>
 
+        {success && (
+          <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{success}</p>
+        )}
         {notice && <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{notice}</p>}
 
         <div className="mt-6 space-y-3">
@@ -114,6 +154,11 @@ export function ResourceRanking({ groupId }) {
 
           {resources.map((resource, index) => {
             const typeMeta = getResourceTypeMeta(resource.type);
+            const canDelete = canManageResource({
+              userEmail: user?.email,
+              userId: user?.id,
+              authorId: resource.user_id,
+            });
 
             return (
               <article key={resource.id} className="flex flex-col gap-4 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -133,7 +178,7 @@ export function ResourceRanking({ groupId }) {
                   </a>
                 </div>
 
-                <div className="flex shrink-0 gap-2">
+                <div className="flex shrink-0 items-center gap-2">
                   <button type="button" onClick={() => handleVote(resource.id, "up")} className="inline-flex items-center gap-1 rounded-2xl bg-white px-4 py-2 text-sm font-bold text-emerald-700">
                     <ArrowUp className="h-4 w-4" />
                     {resource.upvotes}
@@ -142,6 +187,17 @@ export function ResourceRanking({ groupId }) {
                     <ArrowDown className="h-4 w-4" />
                     {resource.downvotes}
                   </button>
+                  {canDelete && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(resource.id)}
+                      disabled={deletingId === resource.id}
+                      aria-label="Ressource löschen"
+                      className="inline-flex items-center justify-center rounded-2xl p-2 text-slate-400 transition hover:bg-white hover:text-red-600 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </article>
             );
@@ -208,10 +264,9 @@ export function ResourceRanking({ groupId }) {
           disabled={!canSubmit || submitting}
           className="mt-5 w-full rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-founder-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
         >
-          {submitting ? "Wird erstellt..." : "Ressource erstellen"}
+          {submitting ? "Wird eingereicht..." : "Ressource einreichen"}
         </button>
       </form>
     </section>
-    </ProResourcesGate>
   );
 }

@@ -1,11 +1,10 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
+  --font-inter: "Inter", system-ui, sans-serif;
 }
 
 * {
@@ -17,7 +16,7 @@ body {
   min-height: 100vh;
   background: #ffffff;
   color: #0a0a0a;
-  font-family: Inter, system-ui, sans-serif;
+  font-family: var(--font-inter), Inter, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
