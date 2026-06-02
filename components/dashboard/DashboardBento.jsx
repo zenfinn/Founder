@@ -7,7 +7,6 @@ import { FeedAvatar } from "@/components/FeedAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { DashboardOnboardingSteps } from "@/components/DashboardOnboardingSteps";
 import { BentoTile } from "@/components/dashboard/BentoTile";
-import { DashboardBottomNav } from "@/components/dashboard/DashboardBottomNav";
 import { getProfileWelcomeName, isFounderPro } from "@/lib/membership";
 import { writeDashboardVariant } from "@/lib/dashboard-variant";
 import {
@@ -55,13 +54,10 @@ export function DashboardBento({
   const nextMentor = mentors[0];
 
   return (
-    <main
-      className="min-h-screen bg-[#050505] pb-28 text-neutral-100"
-      onMouseMove={handleMouseMove}
-    >
+    <>
       <FounderProIntentHandler />
 
-      <div className="mx-auto max-w-7xl px-4 pb-6 pt-8 md:px-6 md:pt-10">
+      <div className="mx-auto max-w-7xl px-4 pb-6 pt-2 md:px-6" onMouseMove={handleMouseMove}>
         <div className="mb-6 flex items-center justify-between gap-4">
           <p className="text-xs font-medium uppercase tracking-[0.24em] text-neutral-500">Founder</p>
           <button
@@ -215,8 +211,6 @@ export function DashboardBento({
           </BentoTile>
         </div>
       </div>
-
-      <DashboardBottomNav active="/dashboard" />
-    </main>
+    </>
   );
 }

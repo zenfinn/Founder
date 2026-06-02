@@ -13,8 +13,8 @@ import {
   Upload,
   X,
 } from "lucide-react";
-import { AppHeader } from "@/components/AppHeader";
 import { PublicRankBadge } from "@/components/public/PublicRankBadge";
+import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { canPostShowcase } from "@/lib/showcases";
 import { getOwnProfile } from "@/lib/profiles";
@@ -363,50 +363,50 @@ export function ShowcasesView() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      <AppHeader active="/showcases" />
-      <section className="px-4 py-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-bold uppercase tracking-[0.2em] text-founder-600">Showcases</p>
-              <h1 className="mt-2 font-serif text-4xl font-bold text-slate-950">Projekte & Launches der Community</h1>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Teile dein Produkt, deinen Shop oder dein Projekt. Starter+ können posten – alle können liken und kommentieren.
-              </p>
-            </div>
-            {canPost ? (
-              <button type="button" onClick={() => setShowCreate(true)} className="inline-flex items-center gap-2 rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white">
-                <Plus className="h-4 w-4" />
-                Showcase posten
-              </button>
-            ) : viewerId ? (
-              <Link href="/profile/verify" className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-700">
-                Ab Starter posten
-              </Link>
-            ) : (
-              <Link href="/login" className="rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white">
-                Einloggen
-              </Link>
-            )}
-          </div>
+    <>
+      <CockpitPage
+        eyebrow="Showcases"
+        title="Projekte & Launches der Community"
+        description="Teile dein Produkt, deinen Shop oder dein Projekt. Starter+ können posten – alle können liken und kommentieren."
+      >
+        <div className="flex flex-wrap justify-end gap-2">
+          {canPost ? (
+            <button
+              type="button"
+              onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#1a3aad] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2f61df]"
+            >
+              <Plus className="h-4 w-4" />
+              Showcase posten
+            </button>
+          ) : viewerId ? (
+            <Link href="/profile/verify" className="rounded-xl border border-[#1a3aad]/40 px-5 py-3 text-sm font-bold text-neutral-200">
+              Ab Starter posten
+            </Link>
+          ) : (
+            <Link href="/login" className="rounded-xl bg-[#1a3aad] px-5 py-3 text-sm font-bold text-white">
+              Einloggen
+            </Link>
+          )}
+        </div>
 
+        <CockpitPanel>
           {loading ? (
-            <p className="mt-10 text-sm font-semibold text-slate-500">Showcases werden geladen…</p>
+            <p className="text-sm font-semibold text-neutral-400">Showcases werden geladen…</p>
           ) : showcases.length === 0 ? (
-            <div className="mt-10 rounded-[1.5rem] border border-dashed border-slate-200 bg-white p-10 text-center">
-              <p className="font-serif text-2xl font-bold text-slate-950">Noch keine Showcases</p>
-              <p className="mt-2 text-sm text-slate-600">Sei der Erste, der ein Projekt teilt.</p>
+            <div className="rounded-xl border border-dashed border-[#1a3aad]/30 p-10 text-center">
+              <p className="font-serif text-2xl font-bold text-white">Noch keine Showcases</p>
+              <p className="mt-2 text-sm text-neutral-400">Sei der Erste, der ein Projekt teilt.</p>
             </div>
           ) : (
-            <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4 sm:grid-cols-2">
               {showcases.map((item) => (
                 <ShowcaseCard key={item.id} item={item} onOpen={setSelected} onUpvote={handleUpvote} upvoting={upvoting} />
               ))}
             </div>
           )}
-        </div>
-      </section>
+        </CockpitPanel>
+      </CockpitPage>
 
       {selected && <ShowcaseDetailModal item={selected} onClose={() => setSelected(null)} onUpvote={handleUpvote} upvoting={upvoting} viewerId={viewerId} />}
       {showCreate && (
@@ -415,6 +415,6 @@ export function ShowcasesView() {
           onCreated={(showcase) => setShowcases((current) => [showcase, ...current])}
         />
       )}
-    </main>
+    </>
   );
 }

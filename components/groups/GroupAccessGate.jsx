@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AppHeader } from "@/components/AppHeader";
 import { FounderProUpgradeButton } from "@/components/FounderProUpgradeButton";
+import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
 import { GroupDetail } from "@/components/groups/GroupDetail";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { CheckCircle, Lock, ShieldCheck } from "lucide-react";
@@ -34,33 +34,27 @@ function isFounderProProfile(profile) {
 
 function FounderProPaywall() {
   return (
-    <main className="min-h-screen bg-slate-50">
-      <AppHeader active="/community" />
-      <section className="px-4 py-12">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-founder-600 p-6 text-white shadow-2xl shadow-founder-950/20 sm:p-10">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15">
-            <Lock className="h-7 w-7" />
-          </div>
-          <p className="mt-6 text-sm font-bold uppercase tracking-[0.22em] text-founder-100">Founder Pro erforderlich</p>
-          <h1 className="mt-3 font-serif text-4xl font-bold tracking-tight sm:text-6xl">Founder Pro – 14,99€ / Monat</h1>
-          <p className="mt-5 max-w-2xl text-base leading-7 text-founder-50">
-            Diese Gruppe ist Teil des nativen Founder-Pro-Bereichs. Upgrade jetzt, um Chat, Ressourcen-Ranking und
-            Community Wins freizuschalten.
-          </p>
-
-          <div className="mt-8 grid gap-3 md:grid-cols-2">
-            {proBenefits.map((benefit) => (
-              <div key={benefit} className="flex gap-3 rounded-2xl bg-white/10 p-4 text-sm font-semibold text-white">
-                <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-founder-100" />
-                {benefit}
-              </div>
-            ))}
-          </div>
-
-          <FounderProUpgradeButton />
+    <CockpitPage eyebrow="Founder Pro" title="Founder Pro – 14,99€ / Monat" description="Diese Gruppe ist Teil des nativen Founder-Pro-Bereichs.">
+      <CockpitPanel className="border-[#1a3aad]/50 bg-[#1a3aad]/20">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-[#1a3aad]/40">
+          <Lock className="h-7 w-7 text-white" />
         </div>
-      </section>
-    </main>
+        <p className="mt-6 max-w-2xl text-base leading-7 text-neutral-200">
+          Upgrade jetzt, um Chat, Ressourcen-Ranking und Community Wins freizuschalten.
+        </p>
+
+        <div className="mt-8 grid gap-3 md:grid-cols-2">
+          {proBenefits.map((benefit) => (
+            <div key={benefit} className="flex gap-3 rounded-xl border border-[#1a3aad]/30 p-4 text-sm font-semibold text-neutral-100">
+              <CheckCircle className="mt-0.5 h-5 w-5 shrink-0 text-[#5b8cff]" />
+              {benefit}
+            </div>
+          ))}
+        </div>
+
+        <FounderProUpgradeButton />
+      </CockpitPanel>
+    </CockpitPage>
   );
 }
 
@@ -138,29 +132,27 @@ export function GroupAccessGate({ groupId }) {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
-        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-sm font-semibold text-slate-600">
-          <ShieldCheck className="h-5 w-5 text-founder-600" />
-          Founder-Pro-Zugriff wird geprüft...
-        </div>
-      </main>
+      <CockpitPage>
+        <CockpitPanel>
+          <div className="flex items-center gap-3 text-sm font-semibold text-neutral-400">
+            <ShieldCheck className="h-5 w-5 text-[#1a3aad]" />
+            Founder-Pro-Zugriff wird geprüft...
+          </div>
+        </CockpitPanel>
+      </CockpitPage>
     );
   }
 
   if (error) {
     return (
-      <main className="min-h-screen bg-slate-50">
-        <AppHeader active="/community" />
-        <section className="px-4 py-12">
-          <div className="mx-auto max-w-3xl rounded-[2rem] border border-red-100 bg-red-50 p-6 text-red-800">
-            <p className="font-bold">Paywall konnte nicht geprüft werden.</p>
-            <p className="mt-2 text-sm leading-6">{error}</p>
-            <Link href="/community" className="mt-5 inline-flex rounded-2xl bg-white px-5 py-3 text-sm font-bold text-red-800">
-              Zur Community
-            </Link>
-          </div>
-        </section>
-      </main>
+      <CockpitPage title="Paywall konnte nicht geprüft werden.">
+        <CockpitPanel>
+          <p className="text-sm leading-6 text-red-300">{error}</p>
+          <Link href="/community" className="mt-5 inline-flex rounded-xl border border-[#1a3aad] px-5 py-3 text-sm font-bold text-white">
+            Zur Community
+          </Link>
+        </CockpitPanel>
+      </CockpitPage>
     );
   }
 

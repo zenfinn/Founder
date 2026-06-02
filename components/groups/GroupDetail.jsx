@@ -3,9 +3,9 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { AppHeader } from "@/components/AppHeader";
 import { GroupTabs } from "@/components/groups/GroupTabs";
 import { RelatedCommunities } from "@/components/groups/RelatedCommunities";
+import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getGroupById, joinGroup } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
@@ -81,26 +81,23 @@ function GroupDetailContent({ groupId }) {
 
 export function GroupDetail({ groupId }) {
   return (
-    <main className="min-h-screen bg-slate-50">
-      <AppHeader active="/community" />
-      <section className="px-4 py-6">
-        <div className="mx-auto max-w-7xl">
-          <Link href="/community" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-founder-600">
-            <ArrowLeft className="h-4 w-4" />
-            Zurück zur Community
-          </Link>
+    <CockpitPage>
+      <Link href="/community" className="mb-4 inline-flex items-center gap-2 text-sm font-bold text-[#5b8cff]">
+        <ArrowLeft className="h-4 w-4" />
+        Zurück zur Community
+      </Link>
 
+      <CockpitPanel className="!p-0 md:!p-0">
+        <div className="p-5 md:p-6">
           <Suspense
             fallback={
-              <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-sm font-semibold text-slate-600">
-                Gruppe wird geladen...
-              </div>
+              <div className="text-sm font-semibold text-neutral-400">Gruppe wird geladen...</div>
             }
           >
             <GroupDetailContent groupId={groupId} />
           </Suspense>
         </div>
-      </section>
-    </main>
+      </CockpitPanel>
+    </CockpitPage>
   );
 }

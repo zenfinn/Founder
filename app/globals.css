@@ -24,3 +24,129 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* Cockpit — global dark fintech theme for logged-in app shell */
+[data-cockpit="true"] {
+  color-scheme: dark;
+}
+
+[data-cockpit="true"] .bg-slate-50,
+[data-cockpit="true"] .bg-slate-100,
+[data-cockpit="true"] .bg-white,
+[data-cockpit="true"] .bg-white\/80,
+[data-cockpit="true"] .bg-white\/90 {
+  background-color: rgba(15, 15, 15, 0.88) !important;
+}
+
+[data-cockpit="true"] .bg-founder-50,
+[data-cockpit="true"] .bg-emerald-50,
+[data-cockpit="true"] .bg-red-50 {
+  background-color: rgba(26, 58, 173, 0.12) !important;
+}
+
+[data-cockpit="true"] .bg-founder-600 {
+  background-color: #1a3aad !important;
+}
+
+[data-cockpit="true"] .text-slate-950,
+[data-cockpit="true"] .text-slate-900,
+[data-cockpit="true"] .text-slate-800 {
+  color: #f5f5f5 !important;
+}
+
+[data-cockpit="true"] .text-slate-700,
+[data-cockpit="true"] .text-slate-600,
+[data-cockpit="true"] .text-slate-500 {
+  color: #a3a3a3 !important;
+}
+
+[data-cockpit="true"] .text-slate-400 {
+  color: #737373 !important;
+}
+
+[data-cockpit="true"] .text-founder-600,
+[data-cockpit="true"] .text-founder-700,
+[data-cockpit="true"] .text-founder-800 {
+  color: #5b8cff !important;
+}
+
+[data-cockpit="true"] .border-slate-200,
+[data-cockpit="true"] .border-slate-100,
+[data-cockpit="true"] .border-slate-300 {
+  border-color: rgba(26, 58, 173, 0.28) !important;
+}
+
+[data-cockpit="true"] .border-founder-200 {
+  border-color: rgba(26, 58, 173, 0.45) !important;
+}
+
+[data-cockpit="true"] .shadow-sm,
+[data-cockpit="true"] .shadow-md,
+[data-cockpit="true"] .shadow-xl,
+[data-cockpit="true"] .shadow-2xl,
+[data-cockpit="true"] .shadow-soft {
+  box-shadow: none !important;
+}
+
+[data-cockpit="true"] .hover\:-translate-y-1:hover {
+  transform: none !important;
+}
+
+[data-cockpit="true"] .hover\:bg-slate-50:hover,
+[data-cockpit="true"] .hover\:bg-white:hover {
+  background-color: rgba(26, 58, 173, 0.08) !important;
+}
+
+[data-cockpit="true"] .hover\:bg-founder-50:hover,
+[data-cockpit="true"] .hover\:bg-founder-100:hover {
+  background-color: rgba(26, 58, 173, 0.18) !important;
+}
+
+[data-cockpit="true"] input,
+[data-cockpit="true"] textarea,
+[data-cockpit="true"] select {
+  background-color: rgba(10, 10, 10, 0.9) !important;
+  color: #f5f5f5 !important;
+  border-color: rgba(26, 58, 173, 0.35) !important;
+}
+
+[data-cockpit="true"] input::placeholder,
+[data-cockpit="true"] textarea::placeholder {
+  color: #737373 !important;
+}
+
+[data-cockpit="true"] .cockpit-header-controls button,
+[data-cockpit="true"] .cockpit-header-controls > a {
+  border-color: rgba(26, 58, 173, 0.35) !important;
+  background-color: rgba(15, 15, 15, 0.85) !important;
+  color: #e5e5e5 !important;
+}
+
+[data-cockpit="true"] .cockpit-header-controls [class*="bg-white"] {
+  background-color: rgba(12, 12, 12, 0.95) !important;
+  border-color: rgba(26, 58, 173, 0.35) !important;
+}
+
+[data-cockpit="true"] .cockpit-header-controls [class*="text-slate"] {
+  color: #d4d4d4 !important;
+}
+
+[data-cockpit="true"] .cockpit-header-controls [class*="hover:bg-slate-50"]:hover {
+  background-color: rgba(26, 58, 173, 0.12) !important;
+}
+
+[data-cockpit="true"] article.rounded-\[1\.75rem\],
+[data-cockpit="true"] article.rounded-\[1\.5rem\],
+[data-cockpit="true"] .rounded-\[2rem\],
+[data-cockpit="true"] .rounded-\[1\.5rem\] {
+  backdrop-filter: blur(8px);
+}
+
+[data-cockpit="true"] .text-emerald-800 {
+  color: #6ee7b7 !important;
+}
+
+[data-cockpit="true"] .text-red-700 {
+  color: #fca5a5 !important;
+}
+
