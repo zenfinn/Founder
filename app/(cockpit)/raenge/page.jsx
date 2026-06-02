@@ -7,11 +7,7 @@ import { buildFaqSchema, getPageMetadata, RANK_FAQS } from "@/lib/seo";
 
 export const metadata = getPageMetadata("raenge");
 
-const primaryRankIds = ["aspiring", "starter", "builder"];
-
 export default function RaengePage() {
-  const primaryTiers = rankTiers.filter((tier) => primaryRankIds.includes(tier.id));
-
   return (
     <>
       <SEO jsonLd={buildFaqSchema(RANK_FAQS)} />
@@ -27,15 +23,9 @@ export default function RaengePage() {
           >
             Kostenlos starten
           </Link>
-          <Link
-            href="/raenge/scaler"
-            className="inline-flex px-5 py-3 text-sm font-semibold text-[#5b8cff] transition hover:text-[#1a3aad]"
-          >
-            Scaler & Elite →
-          </Link>
         </div>
 
-        {primaryTiers.map((tier) => (
+        {rankTiers.map((tier) => (
           <CockpitPanel key={tier.id}>
             <RankTierCard tier={tier} variant="bento" />
           </CockpitPanel>
