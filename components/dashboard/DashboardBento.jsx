@@ -7,6 +7,8 @@ import { FeedAvatar } from "@/components/FeedAvatar";
 import { RankBadge } from "@/components/RankBadge";
 import { DashboardOnboardingSteps } from "@/components/DashboardOnboardingSteps";
 import { BentoTile } from "@/components/dashboard/BentoTile";
+import { PrioritySignalsWidget } from "@/components/dashboard/PrioritySignalsWidget";
+import { useOnboardingStatus } from "@/components/dashboard/useOnboardingStatus";
 import { getProfileWelcomeName, isFounderPro } from "@/lib/membership";
 import { writeDashboardVariant } from "@/lib/dashboard-variant";
 import {
@@ -52,6 +54,14 @@ export function DashboardBento({
   const proMember = isFounderPro(profile);
   const primaryCommunity = communities[0];
   const nextMentor = mentors[0];
+  const { progress: onboardingProgress, complete: onboardingComplete } = useOnboardingStatus({
+    userId,
+    profile,
+    verificationStatus,
+    communitiesCount: communities.length,
+    subgroupsCount: subgroups.length,
+  });
+  const communityGroupIds = communities.map((group) => group.id);
 
   return (
     <>
@@ -199,15 +209,19 @@ export function DashboardBento({
           </BentoTile>
 
           <BentoTile className="md:col-span-6" delay={0.36} parallax={parallax} depth={5}>
-            <div className="[&_*]:border-[#1a3aad]/25 [&_.rounded-\\[2rem\\]]:rounded-2xl [&_.bg-white]:bg-[#141414] [&_.text-slate-950]:text-white [&_.text-slate-600]:text-neutral-400 [&_.text-slate-500]:text-neutral-500 [&_.text-founder-600]:text-[#1a3aad] [&_.bg-founder-600]:bg-[#1a3aad] [&_.border-slate-200]:border-[#1a3aad]/25">
-              <DashboardOnboardingSteps
-                userId={userId}
-                profile={profile}
-                verificationStatus={verificationStatus}
-                communitiesCount={communities.length}
-                subgroupsCount={subgroups.length}
-              />
-            </div>
+            {onboardingComplete || onboardingProgress >= 100 ? (
+              <PrioritySignalsWidget embedded userId={userId} communityGroupIds={communityGroupIds} />
+            ) : (
+              <div className="[&_*]:border-[#1a3aad]/25 [&_.rounded-\\[2rem\\]]:rounded-2xl [&_.bg-white]:bg-[#141414] [&_.text-slate-950]:text-white [&_.text-slate-600]:text-neutral-400 [&_.text-slate-500]:text-neutral-500 [&_.text-founder-600]:text-[#1a3aad] [&_.bg-founder-600]:bg-[#1a3aad] [&_.border-slate-200]:border-[#1a3aad]/25">
+                <DashboardOnboardingSteps
+                  userId={userId}
+                  profile={profile}
+                  verificationStatus={verificationStatus}
+                  communitiesCount={communities.length}
+                  subgroupsCount={subgroups.length}
+                />
+              </div>
+            )}
           </BentoTile>
         </div>
       </div>
