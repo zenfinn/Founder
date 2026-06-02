@@ -5,7 +5,7 @@ import { Analytics } from "@/components/Analytics";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { PwaInstaller } from "@/components/PwaInstaller";
-import { buildOgImageUrl, getPageMetadata, PAGE_SEO, SITE_NAME, SITE_TAGLINE, getBaseUrl } from "@/lib/seo";
+import { buildOgImageUrl, getPageMetadata, OG_IMAGE_URL, PAGE_SEO, SITE_NAME, SITE_TAGLINE, getBaseUrl } from "@/lib/seo";
 
 const homeMeta = getPageMetadata("home");
 
@@ -72,7 +72,13 @@ export default function RootLayout({ children }) {
         )}
         <link rel="preconnect" href="https://js.stripe.com" />
         <link rel="dns-prefetch" href="https://js.stripe.com" />
-        <meta property="og:image" content={buildOgImageUrl({ title: SITE_NAME, subtitle: SITE_TAGLINE })} />
+        <meta property="og:image" content={OG_IMAGE_URL} />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:type" content="image/png" />
+        <meta property="og:image:alt" content="Founder – Die verifizierte Community für deutsche Unternehmer" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={OG_IMAGE_URL} />
       </head>
       <body className={`${inter.className} antialiased`}>
         <div className="flex min-h-screen flex-col">
