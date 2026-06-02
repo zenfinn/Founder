@@ -8,10 +8,13 @@ import { GlobeBackground } from "@/components/cockpit/GlobeBackground";
 
 export function CockpitShell({ children }) {
   return (
-    <div data-cockpit="true" className="cockpit-root relative min-h-screen bg-[#050505] pb-28 text-neutral-100">
+    <div
+      data-cockpit="true"
+      className="cockpit-root relative isolate flex min-h-dvh flex-col bg-[#050505] text-neutral-100"
+    >
       <GlobeBackground />
 
-      <header className="relative z-20 flex items-center justify-between px-4 py-4 md:px-6">
+      <header className="relative z-20 flex shrink-0 items-center justify-between px-4 py-4 md:px-6">
         <Link href="/dashboard" className="opacity-90 transition hover:opacity-100">
           <BrandMark />
         </Link>
@@ -20,7 +23,8 @@ export function CockpitShell({ children }) {
         </div>
       </header>
 
-      <div className="relative z-10">{children}</div>
+      <main className="relative z-10 min-h-0 flex-1 pb-28">{children}</main>
+
       <CockpitBottomNav />
     </div>
   );

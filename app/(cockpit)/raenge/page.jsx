@@ -7,7 +7,11 @@ import { buildFaqSchema, getPageMetadata, RANK_FAQS } from "@/lib/seo";
 
 export const metadata = getPageMetadata("raenge");
 
+const primaryRankIds = ["aspiring", "starter", "builder"];
+
 export default function RaengePage() {
+  const primaryTiers = rankTiers.filter((tier) => primaryRankIds.includes(tier.id));
+
   return (
     <>
       <SEO jsonLd={buildFaqSchema(RANK_FAQS)} />
@@ -16,16 +20,26 @@ export default function RaengePage() {
         title="Rang-System: Aspiring bis Elite"
         description="Registrieren reicht für den Start. Jeder höhere Rang braucht genau ein Nachweis-Dokument — transparent für verifizierte Gründer."
       >
-        <CockpitPanel className="flex flex-wrap gap-3">
-          <Link href="/register?rank=aspiring" className="inline-flex rounded-xl bg-[#1a3aad] px-6 py-3 text-sm font-bold text-white">
+        <div className="flex flex-wrap justify-end gap-2">
+          <Link
+            href="/register?rank=aspiring"
+            className="inline-flex bg-[#1a3aad] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2f61df]"
+          >
             Kostenlos starten
           </Link>
-        </CockpitPanel>
-        <div className="space-y-4">
-          {rankTiers.map((tier) => (
-            <RankTierCard key={tier.id} tier={tier} />
-          ))}
+          <Link
+            href="/raenge/scaler"
+            className="inline-flex px-5 py-3 text-sm font-semibold text-[#5b8cff] transition hover:text-[#1a3aad]"
+          >
+            Scaler & Elite →
+          </Link>
         </div>
+
+        {primaryTiers.map((tier) => (
+          <CockpitPanel key={tier.id}>
+            <RankTierCard tier={tier} variant="bento" />
+          </CockpitPanel>
+        ))}
       </CockpitPage>
     </>
   );

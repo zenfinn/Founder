@@ -57,7 +57,7 @@ export default function RankDetailPage({ params }) {
 
           <Link
             href={`/register?rank=${tier.id}`}
-            className="mt-6 inline-flex rounded-xl bg-[#1a3aad] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#2f61df]"
+            className="mt-6 inline-flex w-full items-center justify-center bg-[#1a3aad] px-6 py-3.5 text-sm font-bold text-white transition hover:bg-[#2f61df] sm:w-auto"
           >
             Jetzt bewerben
           </Link>
