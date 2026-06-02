@@ -5,7 +5,7 @@ import { Analytics } from "@/components/Analytics";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { ConditionalFooter } from "@/components/ConditionalFooter";
 import { PwaInstaller } from "@/components/PwaInstaller";
-import { buildOgImageUrl, getPageMetadata, OG_IMAGE_URL, PAGE_SEO, SITE_NAME, SITE_TAGLINE, getBaseUrl } from "@/lib/seo";
+import { getPageMetadata, OG_IMAGE_URL, PAGE_SEO, SITE_NAME, getBaseUrl } from "@/lib/seo";
 
 const homeMeta = getPageMetadata("home");
 

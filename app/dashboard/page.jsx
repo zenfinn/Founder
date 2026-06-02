@@ -10,7 +10,7 @@ export default function DashboardPage({ searchParams }) {
   return (
     <>
       <ReferralCapture referralCode={searchParams?.ref} />
-      <DashboardClient />
+      <DashboardClient initialVariant={searchParams?.dashboard} />
     </>
   );
 }
