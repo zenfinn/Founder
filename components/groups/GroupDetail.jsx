@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { GroupTabs } from "@/components/groups/GroupTabs";
 import { RelatedCommunities } from "@/components/groups/RelatedCommunities";
-import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
+import { CockpitPage } from "@/components/cockpit/CockpitPage";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getGroupById, joinGroup } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
@@ -57,16 +57,10 @@ function GroupDetailContent({ groupId }) {
 
   return (
     <>
-      {loading && (
-        <div className="rounded-[2rem] border border-slate-200 bg-white p-8 text-sm font-semibold text-slate-600">
-          Gruppe wird geladen...
-        </div>
-      )}
+      {loading && <p className="text-sm font-semibold text-neutral-500">Gruppe wird geladen…</p>}
 
       {error && (
-        <div className="rounded-[2rem] border border-red-100 bg-red-50 p-8 text-sm font-semibold text-red-700">
-          {error}
-        </div>
+        <p className="border border-red-500/30 px-4 py-3 text-sm font-semibold text-red-300">{error}</p>
       )}
 
       {group && (
@@ -87,17 +81,9 @@ export function GroupDetail({ groupId }) {
         Zurück zur Community
       </Link>
 
-      <CockpitPanel className="!p-0 md:!p-0">
-        <div className="p-5 md:p-6">
-          <Suspense
-            fallback={
-              <div className="text-sm font-semibold text-neutral-400">Gruppe wird geladen...</div>
-            }
-          >
-            <GroupDetailContent groupId={groupId} />
-          </Suspense>
-        </div>
-      </CockpitPanel>
+      <Suspense fallback={<div className="text-sm font-semibold text-neutral-400">Gruppe wird geladen…</div>}>
+        <GroupDetailContent groupId={groupId} />
+      </Suspense>
     </CockpitPage>
   );
 }
