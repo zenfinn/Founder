@@ -19,6 +19,9 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { canPostShowcase } from "@/lib/showcases";
 import { getOwnProfile } from "@/lib/profiles";
 
+/** Poster names hidden until more members post showcases. */
+const SHOW_SHOWCASE_POSTER = false;
+
 function formatDate(value) {
   return new Intl.DateTimeFormat("de-DE", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(value));
 }
@@ -68,16 +71,22 @@ function ShowcaseCard({ item, onOpen, onUpvote, upvoting }) {
           <SocialLink href={item.tiktokUrl} label="TikTok" Icon={ExternalLink} />
           <SocialLink href={item.linkedinUrl} label="LinkedIn" Icon={Linkedin} />
         </div>
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
-          <div className="flex min-w-0 items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-founder-600 text-xs font-bold text-white">
-              {(item.author?.displayName ?? "F").charAt(0)}
+        <div
+          className={`flex items-center gap-3 border-t border-slate-100 pt-3 ${
+            SHOW_SHOWCASE_POSTER ? "justify-between" : "justify-end"
+          }`}
+        >
+          {SHOW_SHOWCASE_POSTER ? (
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-founder-600 text-xs font-bold text-white">
+                {(item.author?.displayName ?? "F").charAt(0)}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-bold text-slate-900">{item.author?.displayName ?? "Founder"}</p>
+                <PublicRankBadge rank={item.author?.rank ?? "aspiring"} size="sm" />
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-bold text-slate-900">{item.author?.displayName ?? "Founder"}</p>
-              <PublicRankBadge rank={item.author?.rank ?? "aspiring"} size="sm" />
-            </div>
-          </div>
+          ) : null}
           <p className="shrink-0 text-xs font-semibold text-slate-400">{formatDate(item.createdAt)}</p>
         </div>
         <div className="flex items-center gap-4">
