@@ -124,6 +124,15 @@ function ShowcaseCard({ item, onOpen, onUpvote, upvoting, canDelete, onDelete, d
             {item.commentCount}
           </span>
         </div>
+        {item.previewComments?.length > 0 ? (
+          <div className="space-y-1 border-t border-slate-100 pt-2">
+            {item.previewComments.map((comment) => (
+              <p key={comment.id} className="text-xs leading-5 text-slate-500">
+                {`„${comment.content}"`}
+              </p>
+            ))}
+          </div>
+        ) : null}
       </div>
     </article>
   );
@@ -220,17 +229,23 @@ function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId, canD
             <div className="mt-4 space-y-3">
               {comments.map((comment) => (
                 <article key={comment.id} className="rounded-2xl bg-slate-50 px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-founder-600 text-xs font-bold text-white">
-                      {comment.author.displayName.charAt(0)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">{comment.author.displayName}</p>
-                      <PublicRankBadge rank={comment.author.rank} size="sm" />
-                    </div>
-                    <p className="ml-auto text-xs text-slate-400">{formatDate(comment.createdAt)}</p>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">{comment.content}</p>
+                  {comment.isSeeded ? (
+                    <p className="text-sm leading-6 text-slate-700">{`„${comment.content}"`}</p>
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-founder-600 text-xs font-bold text-white">
+                          {comment.author.displayName.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">{comment.author.displayName}</p>
+                          <PublicRankBadge rank={comment.author.rank} size="sm" />
+                        </div>
+                        <p className="ml-auto text-xs text-slate-400">{formatDate(comment.createdAt)}</p>
+                      </div>
+                      <p className="mt-2 text-sm leading-6 text-slate-700">{comment.content}</p>
+                    </>
+                  )}
                 </article>
               ))}
             </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDisplayShowcaseComments } from "@/lib/showcase-display";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -23,21 +24,24 @@ export async function GET(_request, { params }) {
 
     const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
 
+    const realComments = (comments ?? []).map((row) => {
+      const author = profileById.get(row.user_id);
+      return {
+        id: row.id,
+        content: row.content,
+        createdAt: row.created_at,
+        isSeeded: false,
+        author: {
+          id: row.user_id,
+          displayName: author?.display_name ?? author?.username ?? "Founder",
+          avatarUrl: author?.avatar_url ?? "",
+          rank: author?.current_rank ?? "aspiring",
+        },
+      };
+    });
+
     return NextResponse.json({
-      comments: (comments ?? []).map((row) => {
-        const author = profileById.get(row.user_id);
-        return {
-          id: row.id,
-          content: row.content,
-          createdAt: row.created_at,
-          author: {
-            id: row.user_id,
-            displayName: author?.display_name ?? author?.username ?? "Founder",
-            avatarUrl: author?.avatar_url ?? "",
-            rank: author?.current_rank ?? "aspiring",
-          },
-        };
-      }),
+      comments: getDisplayShowcaseComments(params.id, realComments),
     });
   } catch (error) {
     console.error("GET /api/showcases/[id]/comments", error);

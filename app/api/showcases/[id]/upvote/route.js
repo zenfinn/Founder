@@ -39,17 +39,18 @@ export async function POST(_request, { params }) {
       if (error) throw error;
     }
 
-    const [{ data: showcase, error }, { data: newest }] = await Promise.all([
+    const [{ data: showcase, error }, { data: ordered }] = await Promise.all([
       adminSupabase.from("showcases").select("upvotes").eq("id", showcaseId).single(),
-      adminSupabase.from("showcases").select("id").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      adminSupabase.from("showcases").select("id").order("created_at", { ascending: false }).limit(60),
     ]);
 
     if (error) throw error;
 
-    const isNewest = newest?.id === showcaseId;
+    const listIndex = (ordered ?? []).findIndex((row) => row.id === showcaseId);
+    const listPosition = listIndex >= 0 ? listIndex : null;
 
     return NextResponse.json({
-      upvotes: getDisplayShowcaseUpvotes(showcaseId, showcase.upvotes ?? 0, { isNewest }),
+      upvotes: getDisplayShowcaseUpvotes(showcaseId, showcase.upvotes ?? 0, { listIndex: listPosition }),
       viewerHasUpvoted: !existing,
     });
   } catch (error) {
