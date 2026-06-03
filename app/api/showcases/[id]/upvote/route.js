@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDisplayShowcaseUpvotes } from "@/lib/showcase-display";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -38,16 +39,17 @@ export async function POST(_request, { params }) {
       if (error) throw error;
     }
 
-    const { data: showcase, error } = await adminSupabase
-      .from("showcases")
-      .select("upvotes")
-      .eq("id", showcaseId)
-      .single();
+    const [{ data: showcase, error }, { data: newest }] = await Promise.all([
+      adminSupabase.from("showcases").select("upvotes").eq("id", showcaseId).single(),
+      adminSupabase.from("showcases").select("id").order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    ]);
 
     if (error) throw error;
 
+    const isNewest = newest?.id === showcaseId;
+
     return NextResponse.json({
-      upvotes: showcase.upvotes ?? 0,
+      upvotes: getDisplayShowcaseUpvotes(showcaseId, showcase.upvotes ?? 0, { isNewest }),
       viewerHasUpvoted: !existing,
     });
   } catch (error) {

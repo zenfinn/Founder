@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getDisplayShowcaseUpvotes } from "@/lib/showcase-display";
 import { canPostShowcase, mapShowcaseRow, normalizeShowcaseUrl } from "@/lib/showcases";
 import { getOwnProfile } from "@/lib/profiles";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -27,11 +28,12 @@ async function enrichShowcases(adminSupabase, rows, viewerId) {
   }, {});
   const upvotedIds = new Set((viewerUpvotes.data ?? []).map((row) => row.showcase_id));
 
-  return rows.map((row) =>
+  return rows.map((row, index) =>
     mapShowcaseRow(row, {
       author: profileById.get(row.user_id) ?? null,
       commentCount: commentCounts[row.id] ?? 0,
       viewerHasUpvoted: upvotedIds.has(row.id),
+      upvotes: getDisplayShowcaseUpvotes(row.id, row.upvotes ?? 0, { isNewest: index === 0 }),
     })
   );
 }
