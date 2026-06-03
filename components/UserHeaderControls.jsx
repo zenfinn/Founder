@@ -127,18 +127,24 @@ export function UserHeaderControls({ variant = "app", onNavigate }) {
         <Link
           href="/login"
           onClick={onNavigate}
-          className="rounded-full border border-slate-200 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-founder-200 hover:text-founder-600"
+          className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+            variant === "landing"
+              ? "bg-founder-600 text-white hover:bg-founder-700"
+              : "border border-slate-200 text-slate-700 hover:border-founder-200 hover:text-founder-600"
+          }`}
         >
-          Login
+          Einloggen
         </Link>
         <Link
           href="/register"
           onClick={onNavigate}
-          className={`rounded-full px-4 py-2 text-sm font-bold text-white transition ${
-            variant === "landing" ? "bg-founder-600 hover:bg-founder-700" : "bg-founder-600 hover:bg-founder-700"
+          className={`rounded-full px-4 py-2 text-sm font-bold transition ${
+            variant === "landing"
+              ? "border border-slate-200 text-slate-700 hover:border-founder-200 hover:text-founder-600"
+              : "bg-founder-600 text-white hover:bg-founder-700"
           }`}
         >
-          {variant === "landing" ? "Kostenlos starten" : "Kostenlos starten"}
+          Kostenlos starten
         </Link>
       </div>
     );

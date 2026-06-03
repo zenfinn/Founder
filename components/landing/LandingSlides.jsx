@@ -179,14 +179,23 @@ export function LandingSlides({ memberCount = 500 }) {
                   <p className="mx-auto mt-6 max-w-2xl text-lg text-founder-100 sm:text-xl">
                     Die verifizierte Community für echte Unternehmer
                   </p>
-                  <div className="mt-10 flex flex-col justify-center gap-3 sm:flex-row">
-                    <Link href="/register" className="rounded-2xl bg-white px-7 py-4 text-base font-bold text-founder-600">
-                      Kostenlos starten
+                  <div className="mt-10 flex flex-col items-center gap-3">
+                    <Link href="/login" className="w-full max-w-xs rounded-2xl bg-white px-7 py-4 text-base font-bold text-founder-600 sm:w-auto">
+                      Einloggen
                     </Link>
-                    <button type="button" onClick={() => goTo("next")} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/40 px-7 py-4 text-base font-bold text-white">
-                      Mehr erfahren
-                      <ChevronRight className="h-4 w-4" />
-                    </button>
+                    <div className="flex flex-col justify-center gap-3 sm:flex-row">
+                      <Link href="/register" className="rounded-2xl border border-white/40 px-7 py-3.5 text-sm font-bold text-white">
+                        Kostenlos starten
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => goTo("next")}
+                        className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/40 px-7 py-3.5 text-sm font-bold text-white"
+                      >
+                        Mehr erfahren
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.6 }} className="mt-12 inline-flex">
                     <ArrowDown className="h-6 w-6 text-founder-100" />

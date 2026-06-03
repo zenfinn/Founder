@@ -110,19 +110,27 @@ export default function LandingPage() {
             Triff verifizierte Gründer, Builder und Scaler in Branchen-Communities wie Reselling, E-Commerce und Trading.
             Buche Mentoren, entdecke Events und wachse in Deutschlands Founder Community.
           </p>
-          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-9 flex flex-col items-center gap-3">
             <Link
-              href="/register"
-              className="rounded-2xl bg-founder-600 px-7 py-4 text-center text-base font-bold text-white transition hover:bg-founder-700"
+              href="/login"
+              className="w-full max-w-xs rounded-2xl bg-founder-600 px-7 py-4 text-center text-base font-bold text-white transition hover:bg-founder-700 sm:w-auto sm:min-w-[220px]"
             >
-              Kostenlos starten
+              Einloggen
             </Link>
-            <Link
-              href="/raenge"
-              className="rounded-2xl border border-white/70 bg-white/10 px-7 py-4 text-center text-base font-bold text-white backdrop-blur transition hover:bg-white/20"
-            >
-              So funktioniert es
-            </Link>
+            <div className="flex w-full max-w-md flex-col justify-center gap-3 sm:flex-row">
+              <Link
+                href="/register"
+                className="rounded-2xl border border-white/70 bg-white/10 px-7 py-3.5 text-center text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                Kostenlos starten
+              </Link>
+              <Link
+                href="/raenge"
+                className="rounded-2xl border border-white/70 bg-white/10 px-7 py-3.5 text-center text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                So funktioniert es
+              </Link>
+            </div>
           </div>
         </div>
       </section>
