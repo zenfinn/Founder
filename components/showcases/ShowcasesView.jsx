@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Plus,
   ThumbsUp,
+  Trash2,
   Upload,
   X,
 } from "lucide-react";
@@ -42,12 +43,26 @@ function SocialLink({ href, label, Icon }) {
   );
 }
 
-function ShowcaseCard({ item, onOpen, onUpvote, upvoting }) {
+function ShowcaseCard({ item, onOpen, onUpvote, upvoting, canDelete, onDelete, deleting }) {
   return (
     <article
-      className="cursor-pointer overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:border-founder-200 hover:shadow-md"
+      className="relative cursor-pointer overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:border-founder-200 hover:shadow-md"
       onClick={() => onOpen(item)}
     >
+      {canDelete ? (
+        <button
+          type="button"
+          aria-label="Showcase löschen"
+          disabled={deleting === item.id}
+          onClick={(event) => {
+            event.stopPropagation();
+            onDelete(item);
+          }}
+          className="absolute right-3 top-3 z-10 rounded-full border border-slate-200 bg-white/95 p-2 text-slate-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      ) : null}
       <div className="relative aspect-[4/3] bg-slate-100">
         <Image src={item.imageUrl} alt={item.title} fill className="object-cover" unoptimized />
       </div>
@@ -114,7 +129,7 @@ function ShowcaseCard({ item, onOpen, onUpvote, upvoting }) {
   );
 }
 
-function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId }) {
+function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId, canDelete, onDelete, deleting }) {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -152,11 +167,24 @@ function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId }) {
         className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-[2rem] bg-white shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="sticky top-0 flex items-center justify-between border-b border-slate-100 bg-white px-5 py-4">
-          <h2 className="font-serif text-2xl font-bold text-slate-950">{item.title}</h2>
-          <button type="button" onClick={onClose} className="rounded-full border border-slate-200 p-2 text-slate-500">
-            <X className="h-4 w-4" />
-          </button>
+        <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4">
+          <h2 className="min-w-0 flex-1 font-serif text-2xl font-bold text-slate-950">{item.title}</h2>
+          <div className="flex shrink-0 items-center gap-2">
+            {canDelete ? (
+              <button
+                type="button"
+                disabled={deleting === item.id}
+                onClick={() => onDelete(item)}
+                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-3 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+              >
+                <Trash2 className="h-4 w-4" />
+                Löschen
+              </button>
+            ) : null}
+            <button type="button" onClick={onClose} className="rounded-full border border-slate-200 p-2 text-slate-500">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
         <div className="relative aspect-video bg-slate-100">
           <Image src={item.imageUrl} alt={item.title} fill className="object-cover" unoptimized />
@@ -331,6 +359,12 @@ export function ShowcasesView() {
   const [selected, setSelected] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [upvoting, setUpvoting] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+
+  const canDeleteShowcase = useCallback(
+    (item) => Boolean(viewerId && item?.userId && item.userId === viewerId),
+    [viewerId]
+  );
 
   const load = useCallback(async () => {
     const response = await fetch("/api/showcases", { cache: "no-store" });
@@ -369,6 +403,25 @@ export function ShowcasesView() {
       setSelected((current) => (current?.id === item.id ? { ...current, upvotes: payload.upvotes, viewerHasUpvoted: payload.viewerHasUpvoted } : current));
     }
     setUpvoting(null);
+  }
+
+  async function handleDelete(item) {
+    if (!canDeleteShowcase(item)) return;
+    if (!window.confirm(`„${item.title}" wirklich löschen? Das kann nicht rückgängig gemacht werden.`)) {
+      return;
+    }
+
+    setDeleting(item.id);
+    const response = await fetch(`/api/showcases/${item.id}`, { method: "DELETE" });
+    const payload = await response.json().catch(() => ({}));
+
+    if (response.ok) {
+      setShowcases((current) => current.filter((entry) => entry.id !== item.id));
+      setSelected((current) => (current?.id === item.id ? null : current));
+    } else {
+      window.alert(payload.error ?? "Showcase konnte nicht gelöscht werden.");
+    }
+    setDeleting(null);
   }
 
   return (
@@ -410,14 +463,34 @@ export function ShowcasesView() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               {showcases.map((item) => (
-                <ShowcaseCard key={item.id} item={item} onOpen={setSelected} onUpvote={handleUpvote} upvoting={upvoting} />
+                <ShowcaseCard
+                  key={item.id}
+                  item={item}
+                  onOpen={setSelected}
+                  onUpvote={handleUpvote}
+                  upvoting={upvoting}
+                  canDelete={canDeleteShowcase(item)}
+                  onDelete={handleDelete}
+                  deleting={deleting}
+                />
               ))}
             </div>
           )}
         </CockpitPanel>
       </CockpitPage>
 
-      {selected && <ShowcaseDetailModal item={selected} onClose={() => setSelected(null)} onUpvote={handleUpvote} upvoting={upvoting} viewerId={viewerId} />}
+      {selected && (
+        <ShowcaseDetailModal
+          item={selected}
+          onClose={() => setSelected(null)}
+          onUpvote={handleUpvote}
+          upvoting={upvoting}
+          viewerId={viewerId}
+          canDelete={canDeleteShowcase(selected)}
+          onDelete={handleDelete}
+          deleting={deleting}
+        />
+      )}
       {showCreate && (
         <CreateShowcaseForm
           onClose={() => setShowCreate(false)}
