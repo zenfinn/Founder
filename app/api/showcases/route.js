@@ -4,7 +4,13 @@ import {
   getDisplayShowcaseUpvotes,
   getShowcasePreviewComments,
 } from "@/lib/showcase-display";
-import { canPostShowcase, mapShowcaseRow, normalizeShowcaseUrl } from "@/lib/showcases";
+import {
+  buildShowcaseImageFields,
+  canPostShowcase,
+  mapShowcaseRow,
+  normalizeShowcaseUrl,
+  parseShowcaseImageUrls,
+} from "@/lib/showcases";
 import { getOwnProfile } from "@/lib/profiles";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -92,17 +98,17 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const title = String(body.title ?? "").trim();
     const description = String(body.description ?? "").trim().slice(0, 150);
-    const imageUrl = String(body.image_url ?? "").trim();
+    const imageUrls = parseShowcaseImageUrls(body);
 
-    if (!title || !description || !imageUrl) {
-      return NextResponse.json({ error: "Titel, Beschreibung und Bild sind Pflicht." }, { status: 400 });
+    if (!title || !description || !imageUrls.length) {
+      return NextResponse.json({ error: "Titel, Beschreibung und mindestens ein Bild sind Pflicht." }, { status: 400 });
     }
 
     const payload = {
       user_id: user.id,
       title,
       description,
-      image_url: imageUrl,
+      ...buildShowcaseImageFields(imageUrls),
       website_url: normalizeShowcaseUrl(body.website_url),
       instagram_url: normalizeShowcaseUrl(body.instagram_url),
       tiktok_url: normalizeShowcaseUrl(body.tiktok_url),

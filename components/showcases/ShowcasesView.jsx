@@ -1,21 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ExternalLink,
   Instagram,
   Linkedin,
   MessageCircle,
+  Pencil,
   Plus,
   ThumbsUp,
   Trash2,
-  Upload,
   X,
 } from "lucide-react";
 import { PublicRankBadge } from "@/components/public/PublicRankBadge";
 import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
+import { ShowcaseFormModal } from "@/components/showcases/ShowcaseFormModal";
+import { ShowcaseImageCarousel } from "@/components/showcases/ShowcaseImageCarousel";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { canPostShowcase } from "@/lib/showcases";
 import { getOwnProfile } from "@/lib/profiles";
@@ -43,29 +44,45 @@ function SocialLink({ href, label, Icon }) {
   );
 }
 
-function ShowcaseCard({ item, onOpen, onUpvote, upvoting, canDelete, onDelete, deleting }) {
+function OwnerActions({ item, onEdit, onDelete, deleting }) {
+  return (
+    <div className="absolute right-3 top-3 z-10 flex gap-2">
+      <button
+        type="button"
+        aria-label="Showcase bearbeiten"
+        disabled={deleting === item.id}
+        onClick={(event) => {
+          event.stopPropagation();
+          onEdit(item);
+        }}
+        className="rounded-full border border-slate-200 bg-white/95 p-2 text-slate-500 shadow-sm transition hover:border-[#1a3aad]/40 hover:text-[#1a3aad] disabled:opacity-50"
+      >
+        <Pencil className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        aria-label="Showcase löschen"
+        disabled={deleting === item.id}
+        onClick={(event) => {
+          event.stopPropagation();
+          onDelete(item);
+        }}
+        className="rounded-full border border-slate-200 bg-white/95 p-2 text-slate-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+      >
+        <Trash2 className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+function ShowcaseCard({ item, onOpen, onUpvote, upvoting, canManage, onEdit, onDelete, deleting }) {
   return (
     <article
       className="relative cursor-pointer overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition hover:border-founder-200 hover:shadow-md"
       onClick={() => onOpen(item)}
     >
-      {canDelete ? (
-        <button
-          type="button"
-          aria-label="Showcase löschen"
-          disabled={deleting === item.id}
-          onClick={(event) => {
-            event.stopPropagation();
-            onDelete(item);
-          }}
-          className="absolute right-3 top-3 z-10 rounded-full border border-slate-200 bg-white/95 p-2 text-slate-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      ) : null}
-      <div className="relative aspect-[4/3] bg-slate-100">
-        <Image src={item.imageUrl} alt={item.title} fill className="object-cover" unoptimized />
-      </div>
+      {canManage ? <OwnerActions item={item} onEdit={onEdit} onDelete={onDelete} deleting={deleting} /> : null}
+      <ShowcaseImageCarousel images={item.imageUrls ?? [item.imageUrl]} alt={item.title} />
       <div className="space-y-3 p-4">
         <h2 className="font-serif text-xl font-bold text-slate-950">{item.title}</h2>
         <p className="line-clamp-2 text-sm leading-6 text-slate-600">{item.description}</p>
@@ -138,7 +155,17 @@ function ShowcaseCard({ item, onOpen, onUpvote, upvoting, canDelete, onDelete, d
   );
 }
 
-function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId, canDelete, onDelete, deleting }) {
+function ShowcaseDetailModal({
+  item,
+  onClose,
+  onUpvote,
+  upvoting,
+  viewerId,
+  canManage,
+  onEdit,
+  onDelete,
+  deleting,
+}) {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -179,25 +206,37 @@ function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId, canD
         <div className="sticky top-0 flex items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4">
           <h2 className="min-w-0 flex-1 font-serif text-2xl font-bold text-slate-950">{item.title}</h2>
           <div className="flex shrink-0 items-center gap-2">
-            {canDelete ? (
-              <button
-                type="button"
-                disabled={deleting === item.id}
-                onClick={() => onDelete(item)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-3 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
-              >
-                <Trash2 className="h-4 w-4" />
-                Löschen
-              </button>
+            {canManage ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onEdit(item)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#1a3aad]/30 px-3 py-2 text-sm font-bold text-[#1a3aad] transition hover:bg-founder-50"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Bearbeiten
+                </button>
+                <button
+                  type="button"
+                  disabled={deleting === item.id}
+                  onClick={() => onDelete(item)}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-red-200 px-3 py-2 text-sm font-bold text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Löschen
+                </button>
+              </>
             ) : null}
             <button type="button" onClick={onClose} className="rounded-full border border-slate-200 p-2 text-slate-500">
               <X className="h-4 w-4" />
             </button>
           </div>
         </div>
-        <div className="relative aspect-video bg-slate-100">
-          <Image src={item.imageUrl} alt={item.title} fill className="object-cover" unoptimized />
-        </div>
+        <ShowcaseImageCarousel
+          images={item.imageUrls ?? [item.imageUrl]}
+          alt={item.title}
+          aspectClassName="aspect-video"
+        />
         <div className="space-y-4 p-5 sm:p-6">
           <p className="text-base leading-7 text-slate-700">{item.description}</p>
           {item.websiteUrl && (
@@ -277,94 +316,6 @@ function ShowcaseDetailModal({ item, onClose, onUpvote, upvoting, viewerId, canD
   );
 }
 
-function CreateShowcaseForm({ onCreated, onClose }) {
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    website_url: "",
-    instagram_url: "",
-    tiktok_url: "",
-    linkedin_url: "",
-  });
-  const [imageUrl, setImageUrl] = useState("");
-  const [uploading, setUploading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
-
-  async function handleUpload(event) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError("");
-    const body = new FormData();
-    body.append("file", file);
-    const response = await fetch("/api/showcases/upload", { method: "POST", body });
-    const payload = await response.json();
-    if (!response.ok) {
-      setError(payload.error ?? "Upload fehlgeschlagen.");
-    } else {
-      setImageUrl(payload.image_url);
-    }
-    setUploading(false);
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setSubmitting(true);
-    setError("");
-    const response = await fetch("/api/showcases", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, image_url: imageUrl }),
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      setError(payload.error ?? "Showcase konnte nicht erstellt werden.");
-    } else {
-      onCreated(payload.showcase);
-      onClose();
-    }
-    setSubmitting(false);
-  }
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onClick={onClose}>
-      <form
-        className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl"
-        onClick={(event) => event.stopPropagation()}
-        onSubmit={handleSubmit}
-      >
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif text-2xl font-bold text-slate-950">Showcase posten</h2>
-          <button type="button" onClick={onClose}>
-            <X className="h-5 w-5" />
-          </button>
-        </div>
-        {error && <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{error}</p>}
-        <div className="mt-5 space-y-4">
-          <label className="block">
-            <span className="text-sm font-bold text-slate-700">Bild</span>
-            <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-300 px-4 py-8 text-sm font-bold text-slate-600">
-              <Upload className="h-4 w-4" />
-              {uploading ? "Wird hochgeladen…" : imageUrl ? "Bild ausgewählt ✓" : "Bild hochladen"}
-              <input type="file" accept="image/*" className="hidden" onChange={handleUpload} />
-            </label>
-          </label>
-          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold" placeholder="Titel" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
-          <textarea className="min-h-24 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold" placeholder="Beschreibung (max. 150 Zeichen)" maxLength={150} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
-          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold" placeholder="Website URL" value={form.website_url} onChange={(e) => setForm({ ...form, website_url: e.target.value })} />
-          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold" placeholder="Instagram URL" value={form.instagram_url} onChange={(e) => setForm({ ...form, instagram_url: e.target.value })} />
-          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold" placeholder="TikTok URL" value={form.tiktok_url} onChange={(e) => setForm({ ...form, tiktok_url: e.target.value })} />
-          <input className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold" placeholder="LinkedIn URL" value={form.linkedin_url} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} />
-        </div>
-        <button type="submit" disabled={submitting || !imageUrl} className="mt-6 w-full rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50">
-          {submitting ? "Wird veröffentlicht…" : "Showcase veröffentlichen"}
-        </button>
-      </form>
-    </div>
-  );
-}
-
 export function ShowcasesView() {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [showcases, setShowcases] = useState([]);
@@ -373,10 +324,11 @@ export function ShowcasesView() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
+  const [editing, setEditing] = useState(null);
   const [upvoting, setUpvoting] = useState(null);
   const [deleting, setDeleting] = useState(null);
 
-  const canDeleteShowcase = useCallback(
+  const canManageShowcase = useCallback(
     (item) => Boolean(viewerId && item?.userId && item.userId === viewerId),
     [viewerId]
   );
@@ -401,6 +353,20 @@ export function ShowcasesView() {
     });
   }, [load, supabase]);
 
+  function upsertShowcase(showcase) {
+    setShowcases((current) => {
+      const previous = current.find((entry) => entry.id === showcase.id);
+      const merged = {
+        ...showcase,
+        viewerHasUpvoted: previous?.viewerHasUpvoted ?? showcase.viewerHasUpvoted ?? false,
+      };
+      const index = current.findIndex((entry) => entry.id === showcase.id);
+      if (index === -1) return [merged, ...current];
+      return current.map((entry) => (entry.id === showcase.id ? merged : entry));
+    });
+    setSelected((current) => (current?.id === showcase.id ? { ...current, ...showcase } : current));
+  }
+
   async function handleUpvote(item) {
     if (!viewerId) {
       window.location.href = "/login";
@@ -415,13 +381,15 @@ export function ShowcasesView() {
           entry.id === item.id ? { ...entry, upvotes: payload.upvotes, viewerHasUpvoted: payload.viewerHasUpvoted } : entry
         );
       setShowcases(updater);
-      setSelected((current) => (current?.id === item.id ? { ...current, upvotes: payload.upvotes, viewerHasUpvoted: payload.viewerHasUpvoted } : current));
+      setSelected((current) =>
+        current?.id === item.id ? { ...current, upvotes: payload.upvotes, viewerHasUpvoted: payload.viewerHasUpvoted } : current
+      );
     }
     setUpvoting(null);
   }
 
   async function handleDelete(item) {
-    if (!canDeleteShowcase(item)) return;
+    if (!canManageShowcase(item)) return;
     if (!window.confirm(`„${item.title}" wirklich löschen? Das kann nicht rückgängig gemacht werden.`)) {
       return;
     }
@@ -433,10 +401,16 @@ export function ShowcasesView() {
     if (response.ok) {
       setShowcases((current) => current.filter((entry) => entry.id !== item.id));
       setSelected((current) => (current?.id === item.id ? null : current));
+      setEditing((current) => (current?.id === item.id ? null : current));
     } else {
       window.alert(payload.error ?? "Showcase konnte nicht gelöscht werden.");
     }
     setDeleting(null);
+  }
+
+  function handleEdit(item) {
+    setSelected(null);
+    setEditing(item);
   }
 
   return (
@@ -444,7 +418,7 @@ export function ShowcasesView() {
       <CockpitPage
         eyebrow="Showcases"
         title="Projekte & Launches der Community"
-        description="Teile dein Produkt, deinen Shop oder dein Projekt. Starter+ können posten – alle können liken und kommentieren."
+        description="Teile dein Produkt, deinen Shop oder dein Projekt. Bis zu 3 Bilder pro Showcase — Starter+ können posten."
       >
         <div className="flex flex-wrap justify-end gap-2">
           {canPost ? (
@@ -484,7 +458,8 @@ export function ShowcasesView() {
                   onOpen={setSelected}
                   onUpvote={handleUpvote}
                   upvoting={upvoting}
-                  canDelete={canDeleteShowcase(item)}
+                  canManage={canManageShowcase(item)}
+                  onEdit={handleEdit}
                   onDelete={handleDelete}
                   deleting={deleting}
                 />
@@ -501,15 +476,21 @@ export function ShowcasesView() {
           onUpvote={handleUpvote}
           upvoting={upvoting}
           viewerId={viewerId}
-          canDelete={canDeleteShowcase(selected)}
+          canManage={canManageShowcase(selected)}
+          onEdit={handleEdit}
           onDelete={handleDelete}
           deleting={deleting}
         />
       )}
       {showCreate && (
-        <CreateShowcaseForm
-          onClose={() => setShowCreate(false)}
-          onCreated={(showcase) => setShowcases((current) => [showcase, ...current])}
+        <ShowcaseFormModal mode="create" onClose={() => setShowCreate(false)} onSaved={upsertShowcase} />
+      )}
+      {editing && (
+        <ShowcaseFormModal
+          mode="edit"
+          showcase={editing}
+          onClose={() => setEditing(null)}
+          onSaved={upsertShowcase}
         />
       )}
     </>
