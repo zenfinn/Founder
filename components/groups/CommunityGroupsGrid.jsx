@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
-import { ArrowRight, Check, Lock, Search, Users } from "lucide-react";
+import { Lock, Search, Users } from "lucide-react";
 import { getMembershipLimitMessage } from "@/lib/membership";
 
 export function CommunityGroupsGrid({ initialPayload = null }) {
@@ -128,15 +128,8 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
             key={group.id}
             className="group flex h-full flex-col rounded-[1.75rem] border border-slate-200 bg-white p-6 transition hover:-translate-y-1 hover:border-founder-200 hover:shadow-xl hover:shadow-founder-950/5"
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-founder-600 text-white">
-                <CommunityCategoryIcon category={group.category} />
-              </div>
-              {group.is_member ? (
-                <Check className="h-5 w-5 text-emerald-600" />
-              ) : (
-                <ArrowRight className="h-5 w-5 text-slate-300" />
-              )}
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-founder-600 text-white">
+              <CommunityCategoryIcon category={group.category} />
             </div>
             <p className="mt-5 text-xs font-bold uppercase tracking-[0.18em] text-founder-600">{group.category}</p>
             <h2 className="mt-2 font-serif text-3xl font-bold text-slate-950">{group.name}</h2>
