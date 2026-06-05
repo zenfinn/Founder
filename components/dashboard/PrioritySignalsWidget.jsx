@@ -15,7 +15,14 @@ function TileLabel({ icon: Icon, children }) {
   );
 }
 
-export function PrioritySignalsWidget({ userId, communityGroupIds, embedded = false }) {
+export function PrioritySignalsWidget({ userId, communityGroupIds, embedded = false, copy }) {
+  const labels = copy ?? {
+    prioritySignals: "Priority Signale",
+    prioritySignalsHint: "Aktuelle Community-Diskussionen und DMs.",
+    prioritySignalsEmpty: "Noch keine Signale — starte einen Chat oder tritt einer Community bei.",
+    openAllChats: "Alle Chats öffnen",
+    loading: "Lädt…",
+  };
   const [signals, setSignals] = useState([]);
   const [loading, setLoading] = useState(true);
   const groupIdsKey = useMemo(() => communityGroupIds.join(","), [communityGroupIds]);
@@ -50,10 +57,10 @@ export function PrioritySignalsWidget({ userId, communityGroupIds, embedded = fa
 
   const content = (
     <>
-      <TileLabel icon={Radio}>Priority Signale</TileLabel>
-      <p className="mt-3 text-sm text-neutral-500">Aktuelle Community-Diskussionen und DMs.</p>
+      <TileLabel icon={Radio}>{labels.prioritySignals}</TileLabel>
+      <p className="mt-2 text-xs text-neutral-500">{labels.prioritySignalsHint}</p>
 
-      <div className="mt-4 flex-1">
+      <div className="mt-3 min-h-0 flex-1">
         {loading ? (
           <ul className="space-y-2" aria-hidden>
             {[0, 1, 2, 3].map((item) => (
@@ -64,7 +71,7 @@ export function PrioritySignalsWidget({ userId, communityGroupIds, embedded = fa
             ))}
           </ul>
         ) : signals.length === 0 ? (
-          <p className="py-2 text-sm text-neutral-500">Noch keine Signale — starte einen Chat oder tritt einer Community bei.</p>
+          <p className="py-2 text-xs text-neutral-500">{labels.prioritySignalsEmpty}</p>
         ) : (
           <ul className="divide-y divide-[#1a3aad]/15">
             {signals.map((signal) => (
@@ -84,8 +91,8 @@ export function PrioritySignalsWidget({ userId, communityGroupIds, embedded = fa
         )}
       </div>
 
-      <Link href="/inbox" className="mt-4 inline-flex text-sm font-semibold text-[#1a3aad] transition hover:text-[#2f61df]">
-        Alle Chats öffnen
+      <Link href="/inbox" className="mt-3 inline-flex text-xs font-semibold text-[#1a3aad] transition hover:text-[#2f61df]">
+        {labels.openAllChats}
       </Link>
     </>
   );

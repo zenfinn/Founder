@@ -2,7 +2,14 @@
 
 import { motion } from "framer-motion";
 
-export function BentoTile({ children, className = "", delay = 0, parallax = { x: 0, y: 0 }, depth = 4 }) {
+export function BentoTile({
+  children,
+  className = "",
+  delay = 0,
+  parallax = { x: 0, y: 0 },
+  depth = 4,
+  compact = false,
+}) {
   const offsetX = parallax.x * depth;
   const offsetY = parallax.y * depth;
 
@@ -14,7 +21,11 @@ export function BentoTile({ children, className = "", delay = 0, parallax = { x:
       className={className}
     >
       <div style={{ transform: `translate(${offsetX}px, ${offsetY}px)` }}>
-        <div className="flex h-full flex-col rounded-2xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-5 transition-colors hover:border-[#1a3aad]/70">
+        <div
+          className={`flex h-full flex-col rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] transition-colors hover:border-[#1a3aad]/70 ${
+            compact ? "p-3" : "rounded-2xl p-5"
+          }`}
+        >
           {children}
         </div>
       </div>
