@@ -191,7 +191,7 @@ function ShowcaseDetailModal({
     });
     const payload = await response.json();
     if (response.ok) {
-      setComments((current) => [...current, payload.comment]);
+      setComments((current) => [...current, { ...payload.comment, isSeeded: false }]);
       setCommentText("");
     }
     setSubmitting(false);

@@ -43,7 +43,7 @@ async function enrichShowcases(adminSupabase, rows, viewerId) {
     return mapShowcaseRow(row, {
       author: profileById.get(row.user_id) ?? null,
       commentCount: getDisplayCommentCount(row.id, actualCommentCount),
-      previewComments: getShowcasePreviewComments(row.id, actualCommentCount),
+      previewComments: getShowcasePreviewComments(row.id),
       viewerHasUpvoted: upvotedIds.has(row.id),
       upvotes: getDisplayShowcaseUpvotes(row.id, row.upvotes ?? 0, { listIndex: index }),
     });

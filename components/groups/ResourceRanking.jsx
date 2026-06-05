@@ -31,9 +31,9 @@ export function ResourceRanking({ groupId }) {
   const selectedType = getResourceTypeMeta(form.type);
   const canSubmit = Boolean(user && form.title.trim() && isValidResourceUrl(form.url) && form.type);
 
-  async function loadResources() {
+  async function loadResources(currentUser = user) {
     try {
-      const rows = await getResourceRankings(supabase, groupId);
+      const rows = await getResourceRankings(supabase, groupId, { viewerId: currentUser?.id ?? null });
       setResources(rows);
     } catch (error) {
       setNotice(error.message);
@@ -47,7 +47,7 @@ export function ResourceRanking({ groupId }) {
       const { data } = await supabase.auth.getSession();
       const currentUser = data.session?.user ?? null;
       setUser(currentUser);
-      await loadResources();
+      await loadResources(currentUser);
     }
 
     boot();
@@ -55,7 +55,10 @@ export function ResourceRanking({ groupId }) {
   }, [groupId, supabase]);
 
   async function handleVote(resourceId, voteType) {
-    if (!user) return;
+    if (!user) {
+      setNotice("Bitte einloggen, um zu voten.");
+      return;
+    }
     setNotice("");
     setSuccess("");
 
@@ -179,11 +182,27 @@ export function ResourceRanking({ groupId }) {
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2">
-                  <button type="button" onClick={() => handleVote(resource.id, "up")} className="inline-flex items-center gap-1 rounded-2xl bg-white px-4 py-2 text-sm font-bold text-emerald-700">
+                  <button
+                    type="button"
+                    onClick={() => handleVote(resource.id, "up")}
+                    className={`inline-flex items-center gap-1 rounded-2xl px-4 py-2 text-sm font-bold ${
+                      resource.viewerVote === "up"
+                        ? "bg-emerald-100 text-emerald-800 ring-2 ring-emerald-300"
+                        : "bg-white text-emerald-700"
+                    }`}
+                  >
                     <ArrowUp className="h-4 w-4" />
                     {resource.upvotes}
                   </button>
-                  <button type="button" onClick={() => handleVote(resource.id, "down")} className="inline-flex items-center gap-1 rounded-2xl bg-white px-4 py-2 text-sm font-bold text-red-700">
+                  <button
+                    type="button"
+                    onClick={() => handleVote(resource.id, "down")}
+                    className={`inline-flex items-center gap-1 rounded-2xl px-4 py-2 text-sm font-bold ${
+                      resource.viewerVote === "down"
+                        ? "bg-red-100 text-red-800 ring-2 ring-red-300"
+                        : "bg-white text-red-700"
+                    }`}
+                  >
                     <ArrowDown className="h-4 w-4" />
                     {resource.downvotes}
                   </button>

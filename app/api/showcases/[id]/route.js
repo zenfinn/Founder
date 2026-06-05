@@ -90,7 +90,7 @@ export async function PATCH(request, { params }) {
 
     const showcase = mapShowcaseRow(data, {
       commentCount: getDisplayCommentCount(showcaseId, actualCommentCount),
-      previewComments: getShowcasePreviewComments(showcaseId, actualCommentCount),
+      previewComments: getShowcasePreviewComments(showcaseId),
       upvotes: getDisplayShowcaseUpvotes(showcaseId, data.upvotes ?? 0, { listIndex }),
       viewerHasUpvoted: false,
     });
