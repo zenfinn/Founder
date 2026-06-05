@@ -28,6 +28,13 @@ export const dashboardI18n = {
     prioritySignalsHint: "Community-Diskussionen und DMs.",
     prioritySignalsEmpty: "Noch keine Signale — starte einen Chat oder tritt einer Community bei.",
     openAllChats: "Alle Chats öffnen",
+    categoryExplore: "Öffnen",
+    categories: {
+      "real-estate": "Immobilien",
+      "traditional-services": "Klassische Services",
+      "web-design": "Web Design",
+      "e-commerce": "E-Commerce",
+    },
   },
   en: {
     brand: "Founder",
@@ -56,6 +63,13 @@ export const dashboardI18n = {
     prioritySignalsHint: "Community discussions and DMs.",
     prioritySignalsEmpty: "No signals yet — start a chat or join a community.",
     openAllChats: "Open all chats",
+    categoryExplore: "Open",
+    categories: {
+      "real-estate": "Real Estate",
+      "traditional-services": "Traditional Services",
+      "web-design": "Web Design",
+      "e-commerce": "E-Commerce",
+    },
   },
 };
 

@@ -3,29 +3,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
 import {
   ArrowDown,
   ArrowLeft,
   ArrowRight,
-  Bot,
   Calendar,
   ChevronRight,
-  Coins,
   Crown,
   Flame,
   Gem,
-  Globe,
   LayoutGrid,
-  Package,
   ShieldCheck,
-  ShoppingBag,
   Sprout,
   Star,
-  Store,
-  TrendingUp,
   Users,
-  Video,
-  Youtube,
   Zap,
 } from "lucide-react";
 import { LandingHeader } from "@/components/LandingHeader";
@@ -37,20 +29,6 @@ import { buildLocalBusinessSchema, buildOrganizationSchema, buildWebSiteSchema }
 const SLIDE_COUNT = 8;
 
 const rankIcons = { aspiring: Sprout, starter: Zap, builder: Flame, scaler: Gem, elite: Crown };
-const groupIcons = {
-  Reselling: ShoppingBag,
-  Dropshipping: Package,
-  "E-Commerce": Store,
-  "Amazon FBA": Package,
-  "TikTok Creator": Video,
-  "TikTok Shop": ShoppingBag,
-  "KI Creator": Bot,
-  Trading: TrendingUp,
-  "Memecoin Trading": Coins,
-  "YouTube Automation": Youtube,
-  "Digital Business": Globe,
-};
-
 const testimonials = [
   {
     name: "Jonas Weber",
@@ -288,16 +266,13 @@ export function LandingSlides({ memberCount = 500 }) {
                 <div className="mx-auto max-w-6xl">
                   <h2 className="text-center font-serif text-4xl font-bold">Deine Branche. Dein Netzwerk.</h2>
                   <div className="mt-8 grid max-h-[52vh] gap-3 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
-                    {groups.map((group, i) => {
-                      const Icon = groupIcons[group.category] ?? Globe;
-                      return (
+                    {groups.map((group, i) => (
                         <motion.div key={group.slug} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.05 }} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                          <Icon className="h-6 w-6 text-founder-600" />
+                          <CommunityCategoryIcon category={group.category} className="h-6 w-6 text-founder-600" />
                           <p className="mt-3 font-bold">{group.name}</p>
                           <p className="text-xs text-slate-500">{group.member_count.toLocaleString("de-DE")} Mitglieder</p>
                         </motion.div>
-                      );
-                    })}
+                    ))}
                   </div>
                 </div>
               </SlideShell>

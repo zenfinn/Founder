@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Layers, Lock, Search, Users } from "lucide-react";
+import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
+import { ArrowRight, Check, Lock, Search, Users } from "lucide-react";
 import { getMembershipLimitMessage } from "@/lib/membership";
 
 export function CommunityGroupsGrid({ initialPayload = null }) {
@@ -129,7 +130,7 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-founder-600 text-white">
-                <Layers className="h-6 w-6" />
+                <CommunityCategoryIcon category={group.category} />
               </div>
               {group.is_member ? (
                 <Check className="h-5 w-5 text-emerald-600" />

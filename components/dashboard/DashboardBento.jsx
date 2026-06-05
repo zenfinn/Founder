@@ -11,14 +11,15 @@ import { PrioritySignalsWidget } from "@/components/dashboard/PrioritySignalsWid
 import { useDashboardLocale } from "@/components/dashboard/useDashboardLocale";
 import { useOnboardingStatus } from "@/components/dashboard/useOnboardingStatus";
 import { getProfileWelcomeName, isFounderPro } from "@/lib/membership";
+import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
 import { writeDashboardVariant } from "@/lib/dashboard-variant";
+import { getDashboardMainCategories } from "@/lib/community-categories";
 import {
   ArrowUpRight,
   LayoutGrid,
   MessageSquare,
   Radio,
   UserRound,
-  Users,
 } from "lucide-react";
 
 function TileLabel({ icon: Icon, children }) {
@@ -37,6 +38,25 @@ function QuickLinkCard({ href, icon: Icon, title, subtitle, action }) {
       className="flex min-w-[9.5rem] shrink-0 snap-start flex-col rounded-xl border border-[#1a3aad]/25 bg-[#0f0f0f] p-3 transition hover:border-[#1a3aad]/60"
     >
       <TileLabel icon={Icon}>{title}</TileLabel>
+      <p className="mt-2 line-clamp-2 text-xs leading-4 text-neutral-400">{subtitle}</p>
+      <span className="mt-2 inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#1a3aad]">
+        {action}
+        <ArrowUpRight className="h-3 w-3" />
+      </span>
+    </Link>
+  );
+}
+
+function CategoryQuickLinkCard({ href, category, title, subtitle, action }) {
+  return (
+    <Link
+      href={href}
+      className="flex min-w-[8.75rem] shrink-0 snap-start flex-col rounded-xl border border-[#1a3aad]/25 bg-[#0f0f0f] p-3 transition hover:border-[#1a3aad]/60"
+    >
+      <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
+        <CommunityCategoryIcon category={category} className="h-3 w-3 text-[#1a3aad]" strokeWidth={2} />
+        {title}
+      </div>
       <p className="mt-2 line-clamp-2 text-xs leading-4 text-neutral-400">{subtitle}</p>
       <span className="mt-2 inline-flex items-center gap-0.5 text-[11px] font-semibold text-[#1a3aad]">
         {action}
@@ -73,12 +93,7 @@ export function DashboardBento({
   });
   const communityGroupIds = communities.map((group) => group.id);
 
-  const communitiesSubtitle =
-    communities.length === 0
-      ? copy.communitiesEmpty
-      : communities.length === 1
-        ? communities[0].name
-        : copy.communitiesActive(communities.length);
+  const mainCategories = getDashboardMainCategories();
 
   const mentoringSubtitle = nextMentor
     ? (nextMentor.mentor_name ?? copy.mentoring)
@@ -118,13 +133,19 @@ export function DashboardBento({
         </header>
 
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <QuickLinkCard
-            href={primaryCommunity ? `/community/${primaryCommunity.id}` : "/community"}
-            icon={Users}
-            title={copy.communities}
-            subtitle={communitiesSubtitle}
-            action={copy.discoverCommunity}
-          />
+          {mainCategories.map((category) => {
+            const joinedGroup = communities.find((group) => group.slug === category.slug);
+            return (
+              <CategoryQuickLinkCard
+                key={category.slug}
+                href={joinedGroup ? `/community/${joinedGroup.id}` : "/community"}
+                category={category.category}
+                title={copy.categories[category.slug] ?? category.name}
+                subtitle={category.description}
+                action={copy.categoryExplore}
+              />
+            );
+          })}
           <QuickLinkCard
             href="/showcases"
             icon={LayoutGrid}

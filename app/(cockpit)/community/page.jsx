@@ -29,7 +29,7 @@ export default async function CommunityPage() {
     <CockpitPage
       eyebrow="Community"
       title="Branchen-Communities für Gründer"
-      description="Reselling, E-Commerce, Amazon FBA, TikTok Creator und mehr — Chat, Ressourcen und Wins für verifizierte Unternehmer."
+      description="Real Estate, E-Commerce, Web Design, Traditional Services und mehr — Chat, Ressourcen und Wins für verifizierte Unternehmer."
     >
       <CockpitPanel className="!p-0 md:!p-0">
         <div className="p-5 md:p-6">

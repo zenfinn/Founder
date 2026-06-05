@@ -11,14 +11,15 @@ const industries = [
   "Reselling",
   "Dropshipping",
   "E-Commerce",
-  "Amazon FBA",
+  "Real Estate",
   "TikTok Creator",
   "TikTok Shop",
   "KI Creator",
   "Trading",
   "Memecoin Trading",
   "YouTube Automation",
-  "Digital Business",
+  "Traditional Services",
+  "Web Design",
 ];
 
 export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {

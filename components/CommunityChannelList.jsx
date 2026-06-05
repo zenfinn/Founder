@@ -3,39 +3,15 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
 import { communityChannels } from "@/lib/founder-data";
+import { getCommunityCategoryStyle } from "@/lib/community-categories";
 import { RankBadge } from "@/components/RankBadge";
-import { Bot, Coins, Globe, Package, ShoppingBag, Store, TrendingUp, Video, Youtube } from "lucide-react";
 
 const categoryStyles = {
   Allgemein: "bg-slate-100 text-slate-700",
   "Wins & Erfolge": "bg-emerald-50 text-emerald-700",
-  Reselling: "bg-amber-50 text-amber-700",
-  Dropshipping: "bg-blue-50 text-blue-700",
-  "E-Commerce": "bg-indigo-50 text-indigo-700",
-  "Amazon FBA": "bg-amber-50 text-amber-700",
-  "TikTok Creator": "bg-fuchsia-50 text-fuchsia-700",
-  "TikTok Shop": "bg-pink-50 text-pink-700",
-  "KI Creator": "bg-violet-50 text-violet-700",
-  Trading: "bg-red-50 text-red-700",
-  "Memecoin Trading": "bg-orange-50 text-orange-700",
-  "YouTube Automation": "bg-rose-50 text-rose-700",
-  "Digital Business": "bg-cyan-50 text-cyan-700",
   "Founder Pro": "bg-founder-50 text-founder-700",
-};
-
-const groupIcons = {
-  Reselling: ShoppingBag,
-  Dropshipping: Package,
-  "E-Commerce": Store,
-  "Amazon FBA": Package,
-  "TikTok Creator": Video,
-  "TikTok Shop": ShoppingBag,
-  "KI Creator": Bot,
-  Trading: TrendingUp,
-  "Memecoin Trading": Coins,
-  "YouTube Automation": Youtube,
-  "Digital Business": Globe,
 };
 
 function normalizeChannel(channel) {
@@ -83,9 +59,6 @@ export function CommunityChannelList() {
   return (
     <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
       {channels.map((channel) => (
-        (() => {
-          const Icon = groupIcons[channel.category] ?? Globe;
-          return (
         <Link
           key={channel.slug}
           href="/community"
@@ -93,13 +66,13 @@ export function CommunityChannelList() {
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-founder-600 text-white">
-              <Icon className="h-6 w-6" />
+              <CommunityCategoryIcon category={channel.category} />
             </div>
             <RankBadge rank={channel.min_rank} />
           </div>
           <span
             className={`mt-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-              categoryStyles[channel.category] ?? "bg-slate-100 text-slate-700"
+              categoryStyles[channel.category] ?? getCommunityCategoryStyle(channel.category)
             }`}
           >
             {channel.category}
@@ -116,8 +89,6 @@ export function CommunityChannelList() {
           <p className="mt-4 text-sm font-semibold text-slate-500">{channel.member_count.toLocaleString("de-DE")} Mitglieder</p>
           <p className="mt-5 text-sm font-bold text-founder-600">Channel öffnen</p>
         </Link>
-          );
-        })()
       ))}
     </div>
   );

@@ -12,22 +12,8 @@ import {
   buildWebSiteSchema,
   getPageMetadata,
 } from "@/lib/seo";
-import {
-  Bot,
-  Coins,
-  Crown,
-  Flame,
-  Gem,
-  Globe,
-  Package,
-  ShoppingBag,
-  Sprout,
-  Store,
-  TrendingUp,
-  Video,
-  Youtube,
-  Zap,
-} from "lucide-react";
+import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
+import { Crown, Flame, Gem, Sprout, Zap } from "lucide-react";
 
 export const metadata = getPageMetadata("home");
 
@@ -37,20 +23,6 @@ const rankIcons = {
   builder: Flame,
   scaler: Gem,
   elite: Crown,
-};
-
-const groupIcons = {
-  Reselling: ShoppingBag,
-  Dropshipping: Package,
-  "E-Commerce": Store,
-  "Amazon FBA": Package,
-  "TikTok Creator": Video,
-  "TikTok Shop": ShoppingBag,
-  "KI Creator": Bot,
-  Trading: TrendingUp,
-  "Memecoin Trading": Coins,
-  "YouTube Automation": Youtube,
-  "Digital Business": Globe,
 };
 
 const testimonials = [
@@ -255,10 +227,9 @@ export default function LandingPage() {
             {communityChannels
               .filter((group) => !group.requires_founder_pro)
               .map((group) => {
-                const Icon = groupIcons[group.category] ?? Globe;
                 return (
                   <MotionCard key={group.slug} className="rounded-[1.5rem] border border-slate-200 bg-white p-5">
-                    <Icon className="h-8 w-8 text-founder-600" />
+                    <CommunityCategoryIcon category={group.category} className="h-8 w-8 text-founder-600" />
                     <h3 className="mt-4 font-serif text-2xl font-bold text-slate-950">{group.name}</h3>
                     <p className="mt-2 text-sm font-semibold text-slate-500">
                       {group.member_count.toLocaleString("de-DE")} Mitglieder
