@@ -3,7 +3,6 @@ export const DASHBOARD_LOCALES = ["de", "en"];
 export const dashboardI18n = {
   de: {
     brand: "Founder",
-    classicLayout: "Klassisch",
     liveChat: "Live-Chat",
     liveChatHint: "Aktuelle Signale aus deinen Communities.",
     openChat: "Chat öffnen",
@@ -38,7 +37,6 @@ export const dashboardI18n = {
   },
   en: {
     brand: "Founder",
-    classicLayout: "Classic",
     liveChat: "Live Chat",
     liveChatHint: "Latest signals from your communities.",
     openChat: "Open chat",

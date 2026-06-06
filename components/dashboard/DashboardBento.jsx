@@ -12,7 +12,6 @@ import { useDashboardLocale } from "@/components/dashboard/useDashboardLocale";
 import { useOnboardingStatus } from "@/components/dashboard/useOnboardingStatus";
 import { getProfileWelcomeName, isFounderPro } from "@/lib/membership";
 import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
-import { writeDashboardVariant } from "@/lib/dashboard-variant";
 import { getDashboardMainCategories } from "@/lib/community-categories";
 import {
   ArrowUpRight,
@@ -75,7 +74,6 @@ export function DashboardBento({
   mentors,
   subgroups,
   loading,
-  onSwitchClassic,
 }) {
   const { locale, setLocale, copy } = useDashboardLocale("de");
 
@@ -120,16 +118,6 @@ export function DashboardBento({
             </div>
           </div>
           <DashboardLanguageSwitcher locale={locale} onChange={setLocale} />
-          <button
-            type="button"
-            onClick={() => {
-              writeDashboardVariant("classic");
-              onSwitchClassic();
-            }}
-            className="hidden shrink-0 text-[11px] font-medium text-neutral-500 transition hover:text-[#1a3aad] sm:inline"
-          >
-            {copy.classicLayout}
-          </button>
         </header>
 
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -216,17 +204,6 @@ export function DashboardBento({
             )}
           </BentoTile>
         </div>
-
-        <button
-          type="button"
-          onClick={() => {
-            writeDashboardVariant("classic");
-            onSwitchClassic();
-          }}
-          className="mt-3 w-full text-center text-[11px] font-medium text-neutral-500 transition hover:text-[#1a3aad] sm:hidden"
-        >
-          {copy.classicLayout}
-        </button>
       </div>
     </>
   );
