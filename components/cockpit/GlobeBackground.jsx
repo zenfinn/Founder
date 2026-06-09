@@ -64,17 +64,17 @@ function rotateY(point, angle) {
   };
 }
 
-function project(point, width, height, scale) {
+function project(point, width, height, scale, centerY) {
   const perspective = 2.8 / (2.8 + point.z);
   return {
     x: width * 0.5 + point.x * scale * perspective,
-    y: height * 0.42 + point.y * scale * perspective,
+    y: height * centerY + point.y * scale * perspective,
     depth: point.z,
     alpha: 0.15 + (point.z + 1) * 0.35,
   };
 }
 
-export function GlobeBackground() {
+export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntensity = 1 }) {
   const canvasRef = useRef(null);
   const geometryRef = useRef(null);
 
@@ -109,7 +109,7 @@ export function GlobeBackground() {
           started = false;
           continue;
         }
-        const p = project(rotated, width, height, scale);
+        const p = project(rotated, width, height, scale, centerY);
         if (!started) {
           ctx.moveTo(p.x, p.y);
           started = true;
@@ -124,16 +124,16 @@ export function GlobeBackground() {
       const { meridians, parallels, nodes } = geometryRef.current;
       const width = window.innerWidth;
       const height = window.innerHeight;
-      const scale = Math.min(width, height) * 0.34;
+      const scale = Math.min(width, height) * scaleFactor;
       const delta = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
       if (!reducedMotion) rotation += delta * 0.18;
 
       ctx.clearRect(0, 0, width, height);
 
-      const gradient = ctx.createRadialGradient(width * 0.5, height * 0.42, scale * 0.1, width * 0.5, height * 0.42, scale * 1.1);
-      gradient.addColorStop(0, "rgba(26, 58, 173, 0.14)");
-      gradient.addColorStop(0.55, "rgba(26, 58, 173, 0.04)");
+      const gradient = ctx.createRadialGradient(width * 0.5, height * centerY, scale * 0.1, width * 0.5, height * centerY, scale * 1.1);
+      gradient.addColorStop(0, `rgba(26, 58, 173, ${0.14 * glowIntensity})`);
+      gradient.addColorStop(0.55, `rgba(26, 58, 173, ${0.04 * glowIntensity})`);
       gradient.addColorStop(1, "rgba(5, 5, 5, 0)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
@@ -151,7 +151,7 @@ export function GlobeBackground() {
       for (const node of nodes) {
         const rotated = rotateY(node, rotation);
         if (rotated.z < -0.1) continue;
-        const p = project(rotated, width, height, scale);
+        const p = project(rotated, width, height, scale, centerY);
         const glow = 0.55 + Math.sin(now * 0.002 + node.pulse) * 0.25;
         ctx.beginPath();
         ctx.fillStyle = `rgba(47, 97, 223, ${p.alpha * glow})`;
@@ -170,7 +170,7 @@ export function GlobeBackground() {
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
     };
-  }, []);
+  }, [scaleFactor, centerY, glowIntensity]);
 
   return (
     <canvas

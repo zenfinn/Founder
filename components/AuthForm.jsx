@@ -22,7 +22,7 @@ const industries = [
   "Web Design",
 ];
 
-export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
+export function AuthForm({ mode = "login", requestedRank = "aspiring", compact = false }) {
   const router = useRouter();
   const supabase = createBrowserSupabaseClient();
   const [name, setName] = useState("");
@@ -133,14 +133,18 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
     setMessage(error ? error.message : "Wenn ein Account existiert, wurde eine Passwort-E-Mail versendet.");
   }
 
+  const fieldClass =
+    "mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100";
+  const labelClass = compact ? "text-xs font-semibold text-slate-700" : "text-sm font-semibold text-slate-700";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className={compact ? "space-y-3" : "space-y-4"}>
       {isRegister && (
         <>
           <label className="block">
-            <span className="text-sm font-semibold text-slate-700">Name</span>
+            <span className={labelClass}>Name</span>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100"
+              className={fieldClass}
               autoComplete="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -150,9 +154,9 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
         </>
       )}
       <label className="block">
-        <span className="text-sm font-semibold text-slate-700">E-Mail</span>
+        <span className={labelClass}>E-Mail</span>
         <input
-          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100"
+          className={fieldClass}
           type="email"
           autoComplete="email"
           value={email}
@@ -163,18 +167,18 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
       {isRegister && (
         <>
           <label className="block">
-            <span className="text-sm font-semibold text-slate-700">Unternehmensname</span>
+            <span className={labelClass}>Unternehmensname</span>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100"
+              className={fieldClass}
               value={companyName}
               onChange={(event) => setCompanyName(event.target.value)}
               required
             />
           </label>
           <label className="block">
-            <span className="text-sm font-semibold text-slate-700">Branche</span>
+            <span className={labelClass}>Branche</span>
             <select
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100"
+              className={fieldClass}
               value={industry}
               onChange={(event) => setIndustry(event.target.value)}
               required
@@ -185,24 +189,24 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
             </select>
           </label>
           <label className="block">
-            <span className="text-sm font-semibold text-slate-700">Geschätzter Jahresumsatz</span>
+            <span className={labelClass}>Geschätzter Jahresumsatz</span>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100"
+              className={fieldClass}
               placeholder="z.B. 50.000 EUR"
               value={estimatedAnnualRevenue}
               onChange={(event) => setEstimatedAnnualRevenue(event.target.value)}
               required
             />
           </label>
-          <div className="rounded-2xl bg-founder-50 px-4 py-3 text-sm font-semibold text-founder-800">
+          <div className="rounded-xl bg-founder-50 px-3 py-2 text-xs font-semibold text-founder-800">
             Gewünschter Rang: {requestedRank}
           </div>
         </>
       )}
       <label className="block">
-        <span className="text-sm font-semibold text-slate-700">Passwort</span>
+        <span className={labelClass}>Passwort</span>
         <input
-          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-base outline-none transition focus:border-founder-600 focus:ring-4 focus:ring-founder-100"
+          className={fieldClass}
           type="password"
           autoComplete={isRegister ? "new-password" : "current-password"}
           minLength={8}
@@ -212,13 +216,13 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring" }) {
         />
       </label>
       {!isRegister && (
-        <button onClick={handlePasswordReset} className="text-sm font-bold text-founder-600" type="button">
+        <button onClick={handlePasswordReset} className="text-xs font-bold text-founder-600" type="button">
           Passwort vergessen?
         </button>
       )}
-      {message && <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{message}</p>}
+      {message && <p className="rounded-xl bg-red-50 px-3 py-2 text-xs font-medium text-red-700">{message}</p>}
       <button
-        className="w-full rounded-2xl bg-founder-600 px-5 py-3 text-base font-bold text-white transition hover:bg-founder-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-founder-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-founder-700 disabled:cursor-not-allowed disabled:opacity-60"
         type="submit"
         disabled={loading}
       >
