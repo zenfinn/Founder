@@ -57,9 +57,6 @@ export async function middleware(request) {
       .maybeSingle();
 
     if (profile?.system_role === "owner" || profile?.system_role === "admin") {
-      if (pathname === "/") {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-      }
       return response;
     }
   }
