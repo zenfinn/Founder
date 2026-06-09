@@ -1,12 +1,11 @@
-import { WaitlistPage } from "@/components/waitlist/WaitlistPage";
+import { redirect } from "next/navigation";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export const metadata = {
-  title: "Founder – Waitlist | Early Access für verifizierte Gründer",
-  description:
-    "Trag dich in die Founder Waitlist ein. Limitierte Plätze für Deutschlands verifizierte Gründer-Community.",
-  robots: { index: true, follow: true },
-};
+export default async function HomePage() {
+  const supabase = createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-export default function HomePage() {
-  return <WaitlistPage />;
+  redirect(user ? "/dashboard" : "/login");
 }
