@@ -1,7 +1,7 @@
 "use client";
 
 import { AuthGuard } from "@/components/AuthGuard";
-import { DashboardBento } from "@/components/dashboard/DashboardBento";
+import { DashboardHub } from "@/components/dashboard/DashboardHub";
 import { useDashboardData } from "@/components/dashboard/useDashboardData";
 
 export function DashboardClient() {
@@ -9,7 +9,7 @@ export function DashboardClient() {
 
   return (
     <AuthGuard>
-      <DashboardBento {...data} />
+      <DashboardHub {...data} />
     </AuthGuard>
   );
 }

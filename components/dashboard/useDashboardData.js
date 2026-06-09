@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { getUserCommunities, getUserMentorBookings, getUserSubgroups } from "@/lib/groups";
+import { FOUNDER_LOUNGE_FALLBACK, FOUNDER_LOUNGE_SLUG } from "@/lib/dashboard-lounge";
+import { getAllApprovedResources, getUserCommunities, getUserMentorBookings, getUserSubgroups } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
+import { filterResourcesForMembership } from "@/lib/membership";
 
 const fallbackPosts = [
   {
@@ -38,6 +40,8 @@ export function useDashboardData() {
   const [communities, setCommunities] = useState([]);
   const [mentors, setMentors] = useState([]);
   const [subgroups, setSubgroups] = useState([]);
+  const [loungeGroup, setLoungeGroup] = useState(FOUNDER_LOUNGE_FALLBACK);
+  const [resourcePreview, setResourcePreview] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -70,6 +74,32 @@ export function useDashboardData() {
       setCommunities(communityRows);
       setMentors(mentorRows);
       setSubgroups(subgroupRows);
+
+      const { data: loungeRow } = await supabase
+        .from("groups")
+        .select("id,name,category,slug,description,min_rank,requires_founder_pro,member_count")
+        .eq("slug", FOUNDER_LOUNGE_SLUG)
+        .maybeSingle();
+
+      const resolvedLounge =
+        loungeRow ??
+        communityRows[0] ??
+        (
+          await supabase
+            .from("groups")
+            .select("id,name,category,slug,description,min_rank,requires_founder_pro,member_count")
+            .eq("requires_founder_pro", false)
+            .order("member_count", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        ).data;
+
+      setLoungeGroup(resolvedLounge ?? FOUNDER_LOUNGE_FALLBACK);
+
+      const memberGroupIds = communityRows.map((group) => group.id);
+      const allResources = await getAllApprovedResources(supabase);
+      const visibleResources = filterResourcesForMembership(allResources, memberGroupIds, profileData);
+      setResourcePreview(visibleResources.slice(0, 4));
 
       const { data: feedPosts } = await supabase
         .from("posts")
@@ -112,6 +142,8 @@ export function useDashboardData() {
     communities,
     mentors,
     subgroups,
+    loungeGroup,
+    resourcePreview,
     loading,
   };
 }

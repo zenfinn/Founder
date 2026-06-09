@@ -20,7 +20,8 @@ function formatMessageTime(value) {
   return new Intl.DateTimeFormat("de-DE", { hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-export function GroupChat({ groupId, group }) {
+export function GroupChat({ groupId, group, variant = "default" }) {
+  const isDashboard = variant === "dashboard";
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const scrollRef = useRef(null);
   const [user, setUser] = useState(null);
@@ -175,20 +176,35 @@ export function GroupChat({ groupId, group }) {
   }
 
   if (loading) {
-    return <p className="py-8 text-sm font-semibold tracking-wide text-neutral-500">Chat wird geladen…</p>;
+    return (
+      <p className={`font-semibold tracking-wide text-neutral-500 ${isDashboard ? "py-6 text-sm" : "py-8 text-sm"}`}>
+        Chat wird geladen…
+      </p>
+    );
   }
 
   return (
     <>
-      <section className="flex flex-col">
-        <div ref={scrollRef} className="h-[min(62vh,560px)] space-y-4 overflow-y-auto py-1">
+      <section className={`flex flex-col ${isDashboard ? "min-h-0 flex-1" : ""}`}>
+        <div
+          ref={scrollRef}
+          className={
+            isDashboard
+              ? "min-h-0 flex-1 space-y-3 overflow-y-auto py-2"
+              : "h-[min(62vh,560px)] space-y-4 overflow-y-auto py-1"
+          }
+        >
           {displayMessages.map((message) => {
             const isOwn = !message.isSeed && message.author_id === user?.id;
             const displayName = message.profile?.display_name || message.profile?.username || "Founder Mitglied";
             const rank = message.profile?.current_rank ?? "aspiring";
 
             const avatar = (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden border border-[#1a3aad]/40 bg-[#0a0a0a] font-serif text-sm font-bold text-white">
+              <div
+                className={`flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden bg-[#141414] font-serif text-sm font-bold text-white ${
+                  isDashboard ? "rounded-full ring-1 ring-white/10" : "border border-[#1a3aad]/40 bg-[#0a0a0a]"
+                }`}
+              >
                 {!message.isSeed && message.profile?.avatar_url ? (
                   <Image
                     src={message.profile.avatar_url}
@@ -205,7 +221,7 @@ export function GroupChat({ groupId, group }) {
             );
 
             return (
-              <article key={message.id} className={`flex gap-3 ${isOwn ? "flex-row-reverse" : ""}`}>
+              <article key={message.id} className={`flex gap-2.5 ${isOwn ? "flex-row-reverse" : ""}`}>
                 {message.isSeed ? (
                   <div title={displayName}>{avatar}</div>
                 ) : (
@@ -220,7 +236,7 @@ export function GroupChat({ groupId, group }) {
                 )}
 
                 <div className={`max-w-[min(100%,640px)] ${isOwn ? "items-end text-right" : ""}`}>
-                  <div className={`mb-1.5 flex flex-wrap items-center gap-2 ${isOwn ? "justify-end" : ""}`}>
+                  <div className={`mb-1 flex flex-wrap items-center gap-2 ${isOwn ? "justify-end" : ""}`}>
                     {message.isSeed ? (
                       <span className="font-semibold text-white">{displayName}</span>
                     ) : (
@@ -237,8 +253,18 @@ export function GroupChat({ groupId, group }) {
                       {formatMessageTime(message.created_at)}
                     </span>
                   </div>
-                  <div className="border border-[#1a3aad] bg-[#0a0a0a] px-4 py-3 text-sm leading-6">
-                    <p className="whitespace-pre-wrap text-neutral-300">{message.content}</p>
+                  <div
+                    className={
+                      isDashboard
+                        ? isOwn
+                          ? "rounded-2xl rounded-tr-md bg-[#1a3aad]/25 px-3.5 py-2.5 text-sm leading-6"
+                          : "rounded-2xl rounded-tl-md bg-white/[0.05] px-3.5 py-2.5 text-sm leading-6 ring-1 ring-white/[0.06]"
+                        : "border border-[#1a3aad] bg-[#0a0a0a] px-4 py-3 text-sm leading-6"
+                    }
+                  >
+                    <p className={`whitespace-pre-wrap ${isDashboard ? "text-neutral-200" : "text-neutral-300"}`}>
+                      {message.content}
+                    </p>
                   </div>
                 </div>
               </article>
@@ -250,8 +276,17 @@ export function GroupChat({ groupId, group }) {
           <p className="mt-3 border border-red-500/30 px-4 py-3 text-sm font-semibold text-red-300">{notice}</p>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-4 border-t border-[#1a3aad]/25 pt-4">
-          <div className="flex items-end gap-2 border border-[#1a3aad]/35 bg-[#0a0a0a] p-2">
+        <form
+          onSubmit={handleSubmit}
+          className={isDashboard ? "mt-3 shrink-0 pt-2" : "mt-4 border-t border-[#1a3aad]/25 pt-4"}
+        >
+          <div
+            className={
+              isDashboard
+                ? "flex items-end gap-2 rounded-2xl bg-white/[0.04] p-2 ring-1 ring-white/[0.08]"
+                : "flex items-end gap-2 border border-[#1a3aad]/35 bg-[#0a0a0a] p-2"
+            }
+          >
             <textarea
               value={messageText}
               onChange={(event) => setMessageText(event.target.value)}
@@ -268,7 +303,11 @@ export function GroupChat({ groupId, group }) {
             <button
               type="submit"
               disabled={sending || !messageText.trim()}
-              className="inline-flex h-11 w-11 shrink-0 items-center justify-center border border-[#1a3aad] bg-[#1a3aad] text-white transition hover:bg-[#2f61df] disabled:cursor-not-allowed disabled:opacity-40"
+              className={
+                isDashboard
+                  ? "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1a3aad] text-white transition hover:bg-[#2f61df] disabled:cursor-not-allowed disabled:opacity-40"
+                  : "inline-flex h-11 w-11 shrink-0 items-center justify-center border border-[#1a3aad] bg-[#1a3aad] text-white transition hover:bg-[#2f61df] disabled:cursor-not-allowed disabled:opacity-40"
+              }
             >
               <Send className="h-4 w-4" />
             </button>
