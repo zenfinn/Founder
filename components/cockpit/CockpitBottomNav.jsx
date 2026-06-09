@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Calendar, FolderOpen, Home, LayoutGrid, MessageCircle, Sparkles, Star, Users } from "lucide-react";
+import { FolderOpen, Home, LayoutGrid, MessageCircle, Sparkles, Star, Users } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", Icon: Home, match: (path) => path === "/dashboard" },
@@ -12,7 +12,6 @@ const navItems = [
   { href: "/showcases", label: "Showcases", Icon: LayoutGrid, match: (path) => path.startsWith("/showcases") },
   { href: "/raenge", label: "Ränge", Icon: Star, match: (path) => path.startsWith("/raenge") },
   { href: "/mentoren", label: "Mentoren", Icon: Sparkles, match: (path) => path.startsWith("/mentoren") },
-  { href: "/events", label: "Events", Icon: Calendar, match: (path) => path.startsWith("/events") },
 ];
 
 export function CockpitBottomNav() {

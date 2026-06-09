@@ -17,7 +17,7 @@ import {
   groupTemplates,
 } from "@/lib/founder-data";
 
-const tabs = ["Chat", "Mentoren", "Ressourcen", "Events", "Vorlagen"];
+const tabs = ["Chat", "Mentoren", "Ressourcen", "Vorlagen"];
 const resourceCategories = ["Discord-Gruppen", "Telegram-Kanäle", "YouTube-Kanäle", "Kurse", "Tools"];
 
 function formatPrice(priceCents = 0) {

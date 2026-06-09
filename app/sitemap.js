@@ -14,7 +14,6 @@ export default async function sitemap() {
     { path: "/raenge/elite", priority: 0.7, changeFrequency: "monthly" },
     { path: "/community", priority: 0.8, changeFrequency: "weekly" },
     { path: "/showcases", priority: 0.8, changeFrequency: "weekly" },
-    { path: "/events", priority: 0.8, changeFrequency: "weekly" },
     { path: "/mentoren", priority: 0.8, changeFrequency: "weekly" },
     { path: "/leaderboard", priority: 0.7, changeFrequency: "daily" },
     { path: "/register", priority: 0.8, changeFrequency: "monthly" },

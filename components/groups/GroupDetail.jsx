@@ -7,7 +7,7 @@ import { GroupTabs } from "@/components/groups/GroupTabs";
 import { RelatedCommunities } from "@/components/groups/RelatedCommunities";
 import { CockpitPage } from "@/components/cockpit/CockpitPage";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { getGroupById, joinGroup } from "@/lib/groups";
+import { getGroupById, isUserGroupMember, joinGroup } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
 import { ArrowLeft } from "lucide-react";
 
@@ -33,10 +33,10 @@ function GroupDetailContent({ groupId }) {
           setError("Gruppe nicht gefunden.");
           return;
         }
-        setGroup(groupData);
-
         const { data: sessionData } = await supabase.auth.getSession();
         const user = sessionData.session?.user;
+        let isMember = false;
+
         if (user) {
           const profile = await getOwnProfile(supabase, user.id);
           try {
@@ -44,7 +44,10 @@ function GroupDetailContent({ groupId }) {
           } catch {
             // Limit erreicht oder bereits Mitglied – Gruppe trotzdem anzeigen
           }
+          isMember = await isUserGroupMember(supabase, groupId, user.id);
         }
+
+        setGroup({ ...groupData, is_member: isMember });
       } catch (loadError) {
         setError(loadError.message);
       } finally {

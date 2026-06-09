@@ -4,7 +4,6 @@ const mainLinks = [
   { href: "/raenge", label: "Ränge" },
   { href: "/community", label: "Community" },
   { href: "/showcases", label: "Showcases" },
-  { href: "/events", label: "Events" },
   { href: "/mentoren", label: "Mentoren" },
   { href: "/leaderboard", label: "Leaderboard" },
   { href: "/register", label: "Kostenlos starten" },

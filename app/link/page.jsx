@@ -4,7 +4,6 @@ import { BrandMark } from "@/components/BrandMark";
 const linkButtons = [
   { href: "/register", label: "Kostenlos beitreten", arrow: true },
   { href: "/community", label: "Community Wins ansehen", arrow: true },
-  { href: "/events", label: "Events diese Woche", arrow: true },
   { href: "/leaderboard", label: "Leaderboard", arrow: true },
 ];
 

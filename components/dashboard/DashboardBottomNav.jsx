@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, FolderOpen, Home, LayoutGrid, MessageCircle, Sparkles, Users } from "lucide-react";
+import { FolderOpen, Home, LayoutGrid, MessageCircle, Sparkles, Users } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", Icon: Home },
@@ -10,7 +10,6 @@ const navItems = [
   { href: "/resources", label: "Ressourcen", Icon: FolderOpen },
   { href: "/showcases", label: "Showcases", Icon: LayoutGrid },
   { href: "/mentoren", label: "Mentoren", Icon: Sparkles },
-  { href: "/events", label: "Events", Icon: Calendar },
 ];
 
 export function DashboardBottomNav({ active = "/dashboard" }) {

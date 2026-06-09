@@ -10,13 +10,13 @@ import { GroupVideochat } from "@/components/groups/GroupVideochat";
 import { ProResourcesTabOverlay } from "@/components/groups/ProResourcesTabOverlay";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getOwnProfile } from "@/lib/profiles";
-import { isFounderPro } from "@/lib/membership";
+import { canAccessGroupResources, isFounderPro } from "@/lib/membership";
 import { Lock, Users } from "lucide-react";
 
 const tabs = [
   { id: "chat", label: "Chat" },
   { id: "videochat", label: "Videochat" },
-  { id: "resources", label: "Ressourcen", requiresPro: true },
+  { id: "resources", label: "Ressourcen" },
   { id: "wins", label: "Wins" },
   { id: "subgroups", label: "Untergruppen" },
 ];
@@ -33,6 +33,8 @@ export function GroupTabs({ group, initialTab = "chat" }) {
   const [profileLoading, setProfileLoading] = useState(true);
 
   const proAccess = isFounderPro(profile);
+  const isGroupMember = Boolean(group?.is_member);
+  const canViewResources = canAccessGroupResources(profile, isGroupMember);
   const groupId = group?.id;
 
   useEffect(() => {
@@ -84,8 +86,8 @@ export function GroupTabs({ group, initialTab = "chat" }) {
         </div>
 
         <nav className="flex flex-wrap gap-x-6 gap-y-2" aria-label="Gruppenbereiche">
-          {tabs.map(({ id, label, requiresPro }) => {
-            const locked = requiresPro && !profileLoading && !proAccess;
+          {tabs.map(({ id, label }) => {
+            const locked = id === "resources" && !profileLoading && !canViewResources;
             const isActive = activeTab === id;
 
             return (
@@ -120,10 +122,16 @@ export function GroupTabs({ group, initialTab = "chat" }) {
         {groupId && activeTab === "resources" && profileLoading && (
           <p className="text-sm font-semibold text-neutral-500">Zugriff wird geprüft...</p>
         )}
-        {groupId && activeTab === "resources" && !profileLoading && !proAccess && (
-          <ProResourcesTabOverlay cancelPath={`/community/${groupId}?tab=resources`} />
+        {groupId && activeTab === "resources" && !profileLoading && !canViewResources && (
+          <ProResourcesTabOverlay
+            cancelPath={`/community/${groupId}?tab=resources`}
+            variant={isGroupMember ? "pro" : "join"}
+            groupId={groupId}
+          />
         )}
-        {groupId && activeTab === "resources" && !profileLoading && proAccess && <ResourceRanking groupId={groupId} />}
+        {groupId && activeTab === "resources" && !profileLoading && canViewResources && (
+          <ResourceRanking groupId={groupId} />
+        )}
         {groupId && activeTab === "wins" && <CommunityWins groupId={groupId} />}
         {groupId && activeTab === "subgroups" && <GroupSubgroups groupId={groupId} />}
       </div>
