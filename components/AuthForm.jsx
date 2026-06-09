@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { ensureGlobalLoungeMembership } from "@/lib/dashboard-lounge";
 import { sanitizeProfilePayload } from "@/lib/profiles";
 import { readStoredReferralCode } from "@/components/ReferralCapture";
 import { FOUNDER_PRO_INTENT_KEY } from "@/components/RegisterProIntent";
@@ -96,6 +97,8 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
         setLoading(false);
         return;
       }
+
+      await ensureGlobalLoungeMembership(supabase, data.user.id);
 
       await fetch("/api/auth/welcome", {
         method: "POST",

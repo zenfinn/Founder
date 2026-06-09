@@ -4,7 +4,7 @@ export const dashboardI18n = {
   de: {
     brand: "Founder",
     liveChat: "Live-Chat",
-    liveChatHint: "Der zentrale Chat für alle Founder — Fragen, Wins und Austausch.",
+    liveChatHint: "Der globale Chat für alle Founder — branchenübergreifend, für jedes Mitglied.",
     openChat: "Chat öffnen",
     loading: "Lädt…",
     communities: "Communities",
@@ -38,7 +38,7 @@ export const dashboardI18n = {
   en: {
     brand: "Founder",
     liveChat: "Live Chat",
-    liveChatHint: "The central chat for all founders — questions, wins and exchange.",
+    liveChatHint: "The global chat for all founders — cross-industry, for every member.",
     openChat: "Open chat",
     loading: "Loading…",
     communities: "Communities",

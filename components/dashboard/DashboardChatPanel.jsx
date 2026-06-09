@@ -4,7 +4,7 @@ import Link from "next/link";
 import { GroupChat } from "@/components/groups/GroupChat";
 import { DashboardOnboardingSteps } from "@/components/DashboardOnboardingSteps";
 import { useOnboardingStatus } from "@/components/dashboard/useOnboardingStatus";
-import { Hash, Users } from "lucide-react";
+import { Globe, Users } from "lucide-react";
 
 export function DashboardChatPanel({
   loungeGroup,
@@ -30,9 +30,9 @@ export function DashboardChatPanel({
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3 md:px-5">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <Hash className="h-4 w-4 shrink-0 text-[#5b8cff]" />
+            <Globe className="h-4 w-4 shrink-0 text-[#5b8cff]" />
             <h1 className="truncate font-serif text-lg font-bold text-white md:text-xl">
-              {loungeGroup?.name ?? "Gründer Lounge"}
+              {loungeGroup?.name ?? "Alle Gründer"}
             </h1>
           </div>
           <p className="mt-0.5 truncate text-xs text-neutral-500">
@@ -40,18 +40,19 @@ export function DashboardChatPanel({
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          <span className="inline-flex items-center gap-1 rounded-full border border-[#1a3aad]/40 bg-[#1a3aad]/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5b8cff]">
+            Global
+          </span>
           <span className="hidden items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-medium text-neutral-400 sm:inline-flex">
             <Users className="h-3 w-3" />
             {loungeGroup?.member_count?.toLocaleString("de-DE") ?? "—"}
           </span>
-          {loungeGroup?.id ? (
-            <Link
-              href={`/community/${loungeGroup.id}`}
-              className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-neutral-300 transition hover:border-[#1a3aad]/50 hover:text-white"
-            >
-              Community
-            </Link>
-          ) : null}
+          <Link
+            href="/community"
+            className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[11px] font-semibold text-neutral-300 transition hover:border-[#1a3aad]/50 hover:text-white"
+          >
+            Branchen
+          </Link>
         </div>
       </header>
 

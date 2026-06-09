@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, Calendar, LayoutGrid, Sparkles, Users } from "lucide-react";
+import { isGlobalLounge } from "@/lib/dashboard-lounge";
+import { ArrowUpRight, Calendar, Sparkles, Users } from "lucide-react";
 
 function WidgetShell({ title, href, action, children }) {
   return (
@@ -44,11 +45,14 @@ export function DashboardWidgets({
   return (
     <aside className="flex w-full shrink-0 flex-col gap-3 lg:w-72">
       <WidgetShell title={copy.communities} href="/community" action={copy.discoverCommunity}>
-        {communities.length === 0 ? (
+        {communities.filter((group) => !isGlobalLounge(group)).length === 0 ? (
           <p className="px-2 text-xs leading-5 text-neutral-500">{copy.communitiesEmpty}</p>
         ) : (
           <div className="space-y-0.5">
-            {communities.slice(0, 4).map((group) => (
+            {communities
+              .filter((group) => !isGlobalLounge(group))
+              .slice(0, 4)
+              .map((group) => (
               <WidgetLink
                 key={group.id}
                 href={`/community/${group.id}`}

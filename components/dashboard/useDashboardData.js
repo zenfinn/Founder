@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { FOUNDER_LOUNGE_FALLBACK, FOUNDER_LOUNGE_SLUG } from "@/lib/dashboard-lounge";
+import {
+  ensureGlobalLoungeMembership,
+  fetchGlobalLoungeGroup,
+  FOUNDER_LOUNGE_FALLBACK,
+} from "@/lib/dashboard-lounge";
 import { getAllApprovedResources, getUserCommunities, getUserMentorBookings, getUserSubgroups } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
 import { filterResourcesForMembership } from "@/lib/membership";
@@ -75,26 +79,9 @@ export function useDashboardData() {
       setMentors(mentorRows);
       setSubgroups(subgroupRows);
 
-      const { data: loungeRow } = await supabase
-        .from("groups")
-        .select("id,name,category,slug,description,min_rank,requires_founder_pro,member_count")
-        .eq("slug", FOUNDER_LOUNGE_SLUG)
-        .maybeSingle();
-
-      const resolvedLounge =
-        loungeRow ??
-        communityRows[0] ??
-        (
-          await supabase
-            .from("groups")
-            .select("id,name,category,slug,description,min_rank,requires_founder_pro,member_count")
-            .eq("requires_founder_pro", false)
-            .order("member_count", { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        ).data;
-
-      setLoungeGroup(resolvedLounge ?? FOUNDER_LOUNGE_FALLBACK);
+      await ensureGlobalLoungeMembership(supabase, user.id);
+      const resolvedLounge = (await fetchGlobalLoungeGroup(supabase)) ?? FOUNDER_LOUNGE_FALLBACK;
+      setLoungeGroup(resolvedLounge);
 
       const memberGroupIds = communityRows.map((group) => group.id);
       const allResources = await getAllApprovedResources(supabase);
