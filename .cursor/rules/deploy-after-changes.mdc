@@ -1,11 +1,13 @@
 ---
-description: Nach fertigen Features immer commit, push und Vercel Production deployen
+description: Nach JEDER Aufgabe mit Code-Änderungen immer commit, push und Vercel Production deployen
 alwaysApply: true
 ---
 
 # Deploy-Pipeline (Founder / joinfounder.forum)
 
-Wenn du **sichtbare Features, UI, API-Routen oder Config** fertig implementiert hast, schließe die Aufgabe immer mit dem vollen Release ab — nicht nur mit lokalen Dateiänderungen.
+**Standard:** Jede abgeschlossene Aufgabe mit Dateiänderungen endet mit Commit → Push → Production-Deploy. Keine lokalen Änderungen zurücklassen.
+
+Wenn du **Features, UI, API-Routen, Config oder Migrationen** implementiert hast, schließe die Aufgabe immer mit dem vollen Release ab — nicht nur mit lokalen Dateiänderungen.
 
 ## Standard-Ablauf
 
