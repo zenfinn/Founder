@@ -205,7 +205,7 @@ export function ResourceRanking({ groupId }) {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[#1a3aad] px-3 py-1 text-xs font-bold text-white">#{index + 1}</span>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${typeMeta?.badgeClass ?? "bg-slate-100 text-slate-700"}`}
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${typeMeta?.badgeClass ?? "bg-white/10 text-neutral-300 ring-1 ring-white/10"}`}
                     >
                       {getResourceTypeLabel(resource.type)}
                     </span>

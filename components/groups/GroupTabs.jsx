@@ -109,7 +109,9 @@ export function GroupTabs({ group, initialTab = "chat" }) {
         </nav>
       </header>
 
-      {groupId && <SubgroupDirectory groupId={groupId} onBrowseAll={() => setActiveTab("subgroups")} variant="terminal" />}
+      {groupId && (activeTab === "chat" || activeTab === "videochat") && (
+        <SubgroupDirectory groupId={groupId} onBrowseAll={() => setActiveTab("subgroups")} variant="terminal" />
+      )}
 
       <div className="min-h-[560px]">
         {!groupId && (
