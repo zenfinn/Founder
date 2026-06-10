@@ -14,7 +14,7 @@ import { ArrowLeft } from "lucide-react";
 function GroupDetailContent({ groupId }) {
   const searchParams = useSearchParams();
   const rawTab = searchParams.get("tab") ?? "chat";
-  const initialTab = rawTab === "ranking" ? "resources" : rawTab;
+  const initialTab = rawTab === "ranking" || rawTab === "tools" ? "resources" : rawTab;
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [group, setGroup] = useState(null);
   const [error, setError] = useState("");

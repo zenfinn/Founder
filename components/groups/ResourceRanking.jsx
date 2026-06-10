@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { canManageResource } from "@/lib/founder-contact";
-import { getResourceRankings, upsertResourceVote } from "@/lib/groups";
+import { upsertResourceVote } from "@/lib/groups";
 import {
   defaultResourceType,
   getResourceTypeLabel,
@@ -35,10 +35,18 @@ export function ResourceRanking({ groupId }) {
   const selectedType = getResourceTypeMeta(form.type);
   const canSubmit = Boolean(user && form.title.trim() && isValidResourceUrl(form.url) && form.type);
 
-  async function loadResources(currentUser = user) {
+  async function loadResources() {
     try {
-      const rows = await getResourceRankings(supabase, groupId, { viewerId: currentUser?.id ?? null });
-      setResources(rows);
+      const response = await fetch(`/api/resources/community?groupId=${encodeURIComponent(groupId)}`, {
+        cache: "no-store",
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Tools konnten nicht geladen werden.");
+      }
+
+      setResources(payload.tools ?? []);
     } catch (error) {
       setNotice(error.message);
     } finally {
@@ -51,7 +59,7 @@ export function ResourceRanking({ groupId }) {
       const { data } = await supabase.auth.getSession();
       const currentUser = data.session?.user ?? null;
       setUser(currentUser);
-      await loadResources(currentUser);
+      await loadResources();
     }
 
     boot();
