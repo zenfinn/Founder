@@ -27,11 +27,31 @@ export function DashboardHub({
     loungeGroup,
   };
 
+  const chatPanel = (
+    <DashboardChatPanel
+      loungeGroup={loungeGroup}
+      userId={userId}
+      profile={profile}
+      verificationStatus={verificationStatus}
+      communitiesCount={communities.length}
+      copy={copy}
+    />
+  );
+
   return (
     <>
       <FounderProIntentHandler />
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 px-4 md:gap-4 md:px-6 lg:h-[calc(100dvh-8rem)] lg:min-h-0">
+      {/* Mobile: nur globaler Chat, volle Höhe */}
+      <div className="flex h-[calc(100dvh-7.25rem)] min-h-[420px] flex-col gap-2 px-4 lg:hidden">
+        <div className="flex shrink-0 items-center justify-end">
+          <DashboardLanguageSwitcher locale={locale} onChange={setLocale} />
+        </div>
+        <div className="min-h-0 flex-1">{chatPanel}</div>
+      </div>
+
+      {/* Desktop: Sidebar + Chat + Widgets */}
+      <div className="mx-auto hidden w-full max-w-[1440px] flex-col gap-4 px-6 lg:flex lg:h-[calc(100dvh-8rem)] lg:min-h-0">
         <div className="flex shrink-0 items-center justify-between gap-3">
           <p className="text-sm font-medium text-neutral-500">
             {loading ? copy.loading : "Community-Chat"}
@@ -39,23 +59,14 @@ export function DashboardHub({
           <DashboardLanguageSwitcher locale={locale} onChange={setLocale} />
         </div>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row lg:gap-6">
-          <div className="hidden shrink-0 lg:block lg:pt-1">
+        <div className="flex min-h-0 flex-1 gap-6">
+          <div className="shrink-0 pt-1">
             <DashboardSideRail profile={profile} copy={copy} />
           </div>
 
-          <div className="flex h-[calc(100dvh-11.5rem)] min-h-[380px] flex-col lg:h-auto lg:min-h-0 lg:flex-1">
-            <DashboardChatPanel
-              loungeGroup={loungeGroup}
-              userId={userId}
-              profile={profile}
-              verificationStatus={verificationStatus}
-              communitiesCount={communities.length}
-              copy={copy}
-            />
-          </div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">{chatPanel}</div>
 
-          <div className="hidden min-h-0 shrink-0 overflow-y-auto lg:block lg:pt-1">
+          <div className="min-h-0 shrink-0 overflow-y-auto pt-1">
             <DashboardWidgets {...widgetProps} />
           </div>
         </div>
