@@ -6,7 +6,7 @@ import { ArrowUpRight, Calendar, Sparkles, Users } from "lucide-react";
 
 function WidgetShell({ title, href, action, children }) {
   return (
-    <section className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+    <section className="rounded-2xl border border-white/[0.06] bg-[#0a0a0a]/80 p-4 backdrop-blur-md">
       <div className="mb-3 flex items-center justify-between gap-2">
         <h3 className="text-[11px] font-semibold uppercase tracking-[0.16em] text-neutral-500">{title}</h3>
         {href ? (
@@ -106,12 +106,3 @@ export function DashboardWidgets({
   );
 }
 
-export function DashboardMobileWidgets(props) {
-  return (
-    <div className="flex gap-3 overflow-x-auto pb-1 lg:hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="min-w-[16rem] shrink-0">
-        <DashboardWidgets {...props} />
-      </div>
-    </div>
-  );
-}

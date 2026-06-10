@@ -176,7 +176,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0"
+      className="pointer-events-none fixed inset-0 z-0 opacity-25 sm:opacity-40 lg:opacity-100"
     />
   );
 }
