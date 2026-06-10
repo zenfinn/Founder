@@ -19,6 +19,15 @@ export function DashboardHub({
 }) {
   const { locale, setLocale, copy } = useDashboardLocale("de");
 
+  const chatProps = {
+    loungeGroup,
+    userId,
+    profile,
+    verificationStatus,
+    communitiesCount: communities.length,
+    copy,
+  };
+
   const widgetProps = {
     copy,
     communities,
@@ -27,27 +36,18 @@ export function DashboardHub({
     loungeGroup,
   };
 
-  const chatPanel = (
-    <DashboardChatPanel
-      loungeGroup={loungeGroup}
-      userId={userId}
-      profile={profile}
-      verificationStatus={verificationStatus}
-      communitiesCount={communities.length}
-      copy={copy}
-    />
-  );
-
   return (
     <>
       <FounderProIntentHandler />
 
-      {/* Mobile: nur globaler Chat, volle Höhe */}
+      {/* Mobile: nur globaler Chat */}
       <div className="flex h-[calc(100dvh-7.25rem)] min-h-[420px] flex-col gap-2 px-4 lg:hidden">
         <div className="flex shrink-0 items-center justify-end">
           <DashboardLanguageSwitcher locale={locale} onChange={setLocale} />
         </div>
-        <div className="min-h-0 flex-1">{chatPanel}</div>
+        <div className="min-h-0 flex-1">
+          <DashboardChatPanel {...chatProps} />
+        </div>
       </div>
 
       {/* Desktop: Sidebar + Chat + Widgets */}
@@ -64,7 +64,9 @@ export function DashboardHub({
             <DashboardSideRail profile={profile} copy={copy} />
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">{chatPanel}</div>
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+            <DashboardChatPanel {...chatProps} />
+          </div>
 
           <div className="min-h-0 shrink-0 overflow-y-auto pt-1">
             <DashboardWidgets {...widgetProps} />
