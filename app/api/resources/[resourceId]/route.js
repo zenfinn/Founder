@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { canManageResource } from "@/lib/founder-contact";
+import { canManageResource, isResourceModeratorEmail } from "@/lib/founder-contact";
+import { deleteLegacyGroupResource, parseLegacyResourceId } from "@/lib/community-tools";
 import { deleteResource } from "@/lib/groups";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -21,6 +22,18 @@ export async function DELETE(_request, { params }) {
 
     if (userError || !user) {
       return NextResponse.json({ error: "Bitte logge dich ein." }, { status: 401 });
+    }
+
+    const legacyRef = parseLegacyResourceId(resourceId);
+    if (legacyRef) {
+      if (!isResourceModeratorEmail(user.email)) {
+        return NextResponse.json({ error: "Keine Berechtigung zum Löschen." }, { status: 403 });
+      }
+
+      const adminSupabase = createAdminSupabaseClient();
+      await deleteLegacyGroupResource(adminSupabase, resourceId);
+
+      return NextResponse.json({ ok: true });
     }
 
     const adminSupabase = createAdminSupabaseClient();

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, ExternalLink, Plus, Trash2 } from "lucide-react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { canManageResource } from "@/lib/founder-contact";
+import { canManageResource, isResourceModeratorEmail } from "@/lib/founder-contact";
 import { upsertResourceVote } from "@/lib/groups";
 import {
   defaultResourceType,
@@ -16,10 +16,6 @@ import {
 
 const emptyForm = { title: "", url: "", type: defaultResourceType };
 const SUBMIT_SUCCESS_MESSAGE = "Vielen Dank! Dein Tool wurde zur Überprüfung eingereicht.";
-
-function isLegacyTool(resource) {
-  return Boolean(resource?.legacy);
-}
 
 export function ResourceRanking({ groupId }) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -131,7 +127,8 @@ export function ResourceRanking({ groupId }) {
 
   async function handleDelete(resourceId) {
     const resource = resources.find((item) => item.id === resourceId);
-    if (!user || resource?.legacy) return;
+    if (!user) return;
+    if (resource?.legacy && !isResourceModeratorEmail(user.email)) return;
     setNotice("");
     setSuccess("");
     setDeletingId(resourceId);
@@ -189,12 +186,13 @@ export function ResourceRanking({ groupId }) {
             const typeMeta = getResourceTypeMeta(resource.type);
             const legacy = resource.legacy;
             const canDelete =
-              !legacy &&
-              canManageResource({
-                userEmail: user?.email,
-                userId: user?.id,
-                authorId: resource.user_id,
-              });
+              (legacy && isResourceModeratorEmail(user?.email)) ||
+              (!legacy &&
+                canManageResource({
+                  userEmail: user?.email,
+                  userId: user?.id,
+                  authorId: resource.user_id,
+                }));
 
             return (
               <article
