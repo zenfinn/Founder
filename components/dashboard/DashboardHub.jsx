@@ -31,7 +31,7 @@ export function DashboardHub({
     <>
       <FounderProIntentHandler />
 
-      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-4 px-4 pb-4 md:px-6 lg:h-[calc(100dvh-8rem)] lg:min-h-0 lg:pb-2">
+      <div className="mx-auto flex w-full max-w-[1440px] flex-col gap-3 px-4 md:gap-4 md:px-6 lg:h-[calc(100dvh-8rem)] lg:min-h-0">
         <div className="flex shrink-0 items-center justify-between gap-3">
           <p className="text-sm font-medium text-neutral-500">
             {loading ? copy.loading : "Community-Chat"}
@@ -44,7 +44,7 @@ export function DashboardHub({
             <DashboardSideRail profile={profile} copy={copy} />
           </div>
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="flex h-[calc(100dvh-11.5rem)] min-h-[380px] flex-col lg:h-auto lg:min-h-0 lg:flex-1">
             <DashboardChatPanel
               loungeGroup={loungeGroup}
               userId={userId}
@@ -58,10 +58,6 @@ export function DashboardHub({
           <div className="hidden min-h-0 shrink-0 overflow-y-auto lg:block lg:pt-1">
             <DashboardWidgets {...widgetProps} />
           </div>
-        </div>
-
-        <div className="flex flex-col gap-3 lg:hidden">
-          <DashboardWidgets {...widgetProps} />
         </div>
       </div>
     </>

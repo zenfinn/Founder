@@ -24,7 +24,7 @@ export function DashboardChatPanel({
   const showOnboarding = !onboardingComplete && onboardingProgress < 100;
 
   return (
-    <section className="flex min-h-[min(58dvh,520px)] flex-1 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0a]/80 backdrop-blur-md lg:min-h-0">
+    <section className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0a0a0a]/90 backdrop-blur-md">
       <header className="flex shrink-0 items-start justify-between gap-2 border-b border-white/[0.06] px-3 py-2.5 sm:items-center sm:gap-3 sm:px-4 sm:py-3 md:px-5">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
