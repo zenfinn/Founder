@@ -17,7 +17,7 @@ export async function POST(request) {
     } = await supabase.auth.getUser();
 
     if (userError || !user) {
-      return NextResponse.json({ error: "Bitte logge dich ein, um eine Ressource einzureichen." }, { status: 401 });
+      return NextResponse.json({ error: "Bitte logge dich ein, um ein Tool einzureichen." }, { status: 401 });
     }
 
     const body = await request.json().catch(() => ({}));
@@ -62,7 +62,7 @@ export async function POST(request) {
         "",
         group?.name ? `Community: ${group.name}` : null,
         group?.category ? `Kategorie: ${group.category}` : null,
-        `Ressourcen-Typ: ${type}`,
+        `Tool-Typ: ${type}`,
         `Eingereicht von: ${userEmail || user.id}`,
       ]
         .filter(Boolean)

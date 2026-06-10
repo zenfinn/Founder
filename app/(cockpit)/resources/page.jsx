@@ -4,7 +4,7 @@ import { GlobalResourcesOverview } from "@/components/resources/GlobalResourcesO
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata = {
-  title: "Ressourcen | Founder",
+  title: "Tools | Founder",
   description: "Premium-Tools, Lieferanten und Netzwerke aus allen Founder Communities.",
 };
 
@@ -20,8 +20,8 @@ export default async function ResourcesPage() {
 
   return (
     <CockpitPage
-      eyebrow="Ressourcen"
-      title="Premium-Ressourcen"
+      eyebrow="Tools"
+      title="Alle Tools"
       description="Kuratierte Tools, Supplier und Netzwerke aus den Founder Communities — filterbar und für Pro-Mitglieder freigeschaltet."
     >
       <CockpitPanel>

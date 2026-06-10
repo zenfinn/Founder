@@ -10,7 +10,7 @@ export async function DELETE(_request, { params }) {
   try {
     const resourceId = String(params?.resourceId ?? "").trim();
     if (!resourceId) {
-      return NextResponse.json({ error: "Ressourcen-ID fehlt." }, { status: 400 });
+      return NextResponse.json({ error: "Tool-ID fehlt." }, { status: 400 });
     }
 
     const supabase = createServerSupabaseClient();

@@ -17,12 +17,12 @@ export function ProResourcesTabOverlay({ cancelPath = "/community", variant = "p
           {isJoinVariant ? "Community beitreten" : "Founder Pro"}
         </p>
         <h2 className="mt-3 max-w-xl font-serif text-3xl font-bold tracking-tight text-white sm:text-4xl">
-          {isJoinVariant ? "Ressourcen für Mitglieder" : "Alle Community-Ressourcen"}
+          {isJoinVariant ? "Tools für Mitglieder" : "Alle Community-Tools"}
         </h2>
         <p className="mt-4 max-w-lg text-sm leading-7 text-neutral-400 sm:text-base">
           {isJoinVariant
-            ? "Tritt dieser Community bei, um ihre Ressourcen zu sehen. Für Ressourcen weiterer Gruppen brauchst du Founder Pro."
-            : "Du siehst bereits Ressourcen deiner Community. Mit Founder Pro schaltest du alle Gruppen frei."}
+            ? "Tritt dieser Community bei, um ihre Tools zu sehen. Für Tools weiterer Gruppen brauchst du Founder Pro."
+            : "Du siehst bereits Tools deiner Community. Mit Founder Pro schaltest du alle Gruppen frei."}
         </p>
         <div className="mt-8 flex flex-col items-center gap-3">
           {isJoinVariant && groupId ? (

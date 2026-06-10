@@ -8,7 +8,7 @@ const navItems = [
   { href: "/dashboard", label: "Home", Icon: Home, match: (path) => path === "/dashboard" },
   { href: "/community", label: "Community", Icon: Users, match: (path) => path.startsWith("/community") },
   { href: "/inbox", label: "Chats", Icon: MessageCircle, match: (path) => path.startsWith("/inbox") },
-  { href: "/resources", label: "Ressourcen", Icon: FolderOpen, match: (path) => path.startsWith("/resources") },
+  { href: "/resources", label: "Tools", Icon: FolderOpen, match: (path) => path.startsWith("/resources") },
   { href: "/showcases", label: "Showcases", Icon: LayoutGrid, match: (path) => path.startsWith("/showcases") },
   { href: "/raenge", label: "Ränge", Icon: Star, match: (path) => path.startsWith("/raenge") },
   { href: "/mentoren", label: "Mentoren", Icon: Sparkles, match: (path) => path.startsWith("/mentoren") },

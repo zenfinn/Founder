@@ -15,7 +15,11 @@ import {
 } from "@/lib/resource-types";
 
 const emptyForm = { title: "", url: "", type: defaultResourceType };
-const SUBMIT_SUCCESS_MESSAGE = "Vielen Dank! Deine Ressource wurde zur Überprüfung eingereicht.";
+const SUBMIT_SUCCESS_MESSAGE = "Vielen Dank! Dein Tool wurde zur Überprüfung eingereicht.";
+
+function isLegacyTool(resource) {
+  return Boolean(resource?.legacy);
+}
 
 export function ResourceRanking({ groupId }) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -59,6 +63,13 @@ export function ResourceRanking({ groupId }) {
       setNotice("Bitte einloggen, um zu voten.");
       return;
     }
+
+    const resource = resources.find((item) => item.id === resourceId);
+    if (resource?.legacy) {
+      setNotice("Für kuratierte Tools ist Voting bald verfügbar.");
+      return;
+    }
+
     setNotice("");
     setSuccess("");
 
@@ -92,14 +103,14 @@ export function ResourceRanking({ groupId }) {
       const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Ressource konnte nicht eingereicht werden.");
+        throw new Error(payload.error ?? "Tool konnte nicht eingereicht werden.");
       }
 
       setForm(emptyForm);
 
       if (payload.live) {
         await loadResources();
-        setSuccess("Ressource wurde veröffentlicht.");
+        setSuccess("Tool wurde veröffentlicht.");
       } else {
         setSuccess(SUBMIT_SUCCESS_MESSAGE);
       }
@@ -111,7 +122,8 @@ export function ResourceRanking({ groupId }) {
   }
 
   async function handleDelete(resourceId) {
-    if (!user) return;
+    const resource = resources.find((item) => item.id === resourceId);
+    if (!user || resource?.legacy) return;
     setNotice("");
     setSuccess("");
     setDeletingId(resourceId);
@@ -121,7 +133,7 @@ export function ResourceRanking({ groupId }) {
       const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Ressource konnte nicht gelöscht werden.");
+        throw new Error(payload.error ?? "Tool konnte nicht gelöscht werden.");
       }
 
       await loadResources();
@@ -133,50 +145,73 @@ export function ResourceRanking({ groupId }) {
   }
 
   return (
-    <section className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="rounded-[2rem] border border-slate-200 bg-white p-4 sm:p-6">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="font-serif text-3xl font-bold text-slate-950">Premium-Ressourcen</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
-              Kuratierte Founder-Ressourcen: SaaS, Blueprints, Supplier, Media & Communities — bewertet von der Gruppe.
-            </p>
-          </div>
+    <section className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div>
+        <div className="mb-4">
+          <h2 className="font-serif text-2xl font-bold text-white">Community-Tools</h2>
+          <p className="mt-1 text-sm leading-6 text-neutral-400">
+            SaaS, Supplier, Templates und Netzwerke — kuratiert und von der Gruppe bewertet.
+          </p>
         </div>
 
         {success && (
-          <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">{success}</p>
+          <p className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-300">
+            {success}
+          </p>
         )}
-        {notice && <p className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">{notice}</p>}
+        {notice && (
+          <p className="mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-300">
+            {notice}
+          </p>
+        )}
 
-        <div className="mt-6 space-y-3">
-          {loading && <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-600">Ressourcen werden geladen...</p>}
+        <div className="space-y-3">
+          {loading && (
+            <p className="rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-5 text-sm font-semibold text-neutral-400">
+              Tools werden geladen…
+            </p>
+          )}
           {!loading && resources.length === 0 && (
-            <p className="rounded-2xl bg-slate-50 p-5 text-sm font-semibold text-slate-600">Noch keine Ressourcen in dieser Gruppe.</p>
+            <p className="rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-5 text-sm font-semibold text-neutral-400">
+              Noch keine Tools in dieser Community.
+            </p>
           )}
 
           {resources.map((resource, index) => {
             const typeMeta = getResourceTypeMeta(resource.type);
-            const canDelete = canManageResource({
-              userEmail: user?.email,
-              userId: user?.id,
-              authorId: resource.user_id,
-            });
+            const legacy = resource.legacy;
+            const canDelete =
+              !legacy &&
+              canManageResource({
+                userEmail: user?.email,
+                userId: user?.id,
+                authorId: resource.user_id,
+              });
 
             return (
-              <article key={resource.id} className="flex flex-col gap-4 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <article
+                key={resource.id}
+                className="flex flex-col gap-4 rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-4 sm:flex-row sm:items-center sm:justify-between"
+              >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-founder-600 px-3 py-1 text-xs font-bold text-white">#{index + 1}</span>
+                    <span className="rounded-full bg-[#1a3aad] px-3 py-1 text-xs font-bold text-white">#{index + 1}</span>
                     <span
-                      className={`rounded-full px-3 py-1 text-xs font-bold ${typeMeta?.badgeClass ?? "bg-white text-slate-700"}`}
+                      className={`rounded-full px-3 py-1 text-xs font-bold ${typeMeta?.badgeClass ?? "bg-slate-100 text-slate-700"}`}
                     >
                       {getResourceTypeLabel(resource.type)}
                     </span>
-                    <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">Score {resource.score}</span>
+                    <span className="rounded-full border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-400">
+                      Score {resource.score}
+                    </span>
                   </div>
-                  <h3 className="mt-3 font-serif text-2xl font-bold text-slate-950">{resource.title}</h3>
-                  <a href={resource.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-founder-600">
+                  <h3 className="mt-3 font-serif text-xl font-bold text-white">{resource.title}</h3>
+                  <a
+                    href={resource.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-2 inline-flex items-center gap-1 text-sm font-bold text-[#5b8cff]"
+                  >
                     Öffnen <ExternalLink className="h-4 w-4" />
                   </a>
                 </div>
@@ -185,11 +220,12 @@ export function ResourceRanking({ groupId }) {
                   <button
                     type="button"
                     onClick={() => handleVote(resource.id, "up")}
-                    className={`inline-flex items-center gap-1 rounded-2xl px-4 py-2 text-sm font-bold ${
+                    disabled={legacy}
+                    className={`inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold transition ${
                       resource.viewerVote === "up"
-                        ? "bg-emerald-100 text-emerald-800 ring-2 ring-emerald-300"
-                        : "bg-white text-emerald-700"
-                    }`}
+                        ? "bg-emerald-500/20 text-emerald-300 ring-1 ring-emerald-500/40"
+                        : "border border-white/10 text-emerald-400 hover:border-emerald-500/40"
+                    } disabled:opacity-40`}
                   >
                     <ArrowUp className="h-4 w-4" />
                     {resource.upvotes}
@@ -197,11 +233,12 @@ export function ResourceRanking({ groupId }) {
                   <button
                     type="button"
                     onClick={() => handleVote(resource.id, "down")}
-                    className={`inline-flex items-center gap-1 rounded-2xl px-4 py-2 text-sm font-bold ${
+                    disabled={legacy}
+                    className={`inline-flex items-center gap-1 rounded-xl px-3 py-2 text-sm font-bold transition ${
                       resource.viewerVote === "down"
-                        ? "bg-red-100 text-red-800 ring-2 ring-red-300"
-                        : "bg-white text-red-700"
-                    }`}
+                        ? "bg-red-500/20 text-red-300 ring-1 ring-red-500/40"
+                        : "border border-white/10 text-red-400 hover:border-red-500/40"
+                    } disabled:opacity-40`}
                   >
                     <ArrowDown className="h-4 w-4" />
                     {resource.downvotes}
@@ -211,8 +248,8 @@ export function ResourceRanking({ groupId }) {
                       type="button"
                       onClick={() => handleDelete(resource.id)}
                       disabled={deletingId === resource.id}
-                      aria-label="Ressource löschen"
-                      className="inline-flex items-center justify-center rounded-2xl p-2 text-slate-400 transition hover:bg-white hover:text-red-600 disabled:opacity-50"
+                      aria-label="Tool löschen"
+                      className="inline-flex items-center justify-center rounded-xl border border-white/10 p-2 text-neutral-400 transition hover:border-red-500/40 hover:text-red-300 disabled:opacity-50"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -224,23 +261,26 @@ export function ResourceRanking({ groupId }) {
         </div>
       </div>
 
-      <form onSubmit={handleCreate} className="h-fit rounded-[2rem] border border-slate-200 bg-white p-5">
+      <form
+        onSubmit={handleCreate}
+        className="h-fit rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-5"
+      >
         <div className="flex items-center gap-2">
-          <Plus className="h-5 w-5 text-founder-600" />
-          <h2 className="font-serif text-2xl font-bold text-slate-950">Ressource posten</h2>
+          <Plus className="h-5 w-5 text-[#5b8cff]" />
+          <h2 className="font-serif text-xl font-bold text-white">Tool posten</h2>
         </div>
 
         {!user && (
-          <p className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900">
-            Bitte einloggen, um eine Ressource zu erstellen.
+          <p className="mt-4 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-200">
+            Bitte einloggen, um ein Tool zu teilen.
           </p>
         )}
 
         <div className="mt-5 space-y-3">
           <label className="block">
-            <span className="text-sm font-bold text-slate-700">Titel</span>
+            <span className="text-sm font-semibold text-neutral-300">Titel</span>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold"
+              className="mt-2 w-full rounded-xl border border-[#1a3aad]/30 bg-[#050505] px-4 py-3 text-sm font-medium text-white outline-none focus:border-[#1a3aad]"
               value={form.title}
               onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
               placeholder="z.B. Beste AI-Automation Stack 2026"
@@ -248,9 +288,9 @@ export function ResourceRanking({ groupId }) {
           </label>
 
           <label className="block">
-            <span className="text-sm font-bold text-slate-700">Link</span>
+            <span className="text-sm font-semibold text-neutral-300">Link</span>
             <input
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold"
+              className="mt-2 w-full rounded-xl border border-[#1a3aad]/30 bg-[#050505] px-4 py-3 text-sm font-medium text-white outline-none focus:border-[#1a3aad]"
               value={form.url}
               onChange={(event) => setForm((current) => ({ ...current, url: event.target.value }))}
               placeholder="https://..."
@@ -260,9 +300,9 @@ export function ResourceRanking({ groupId }) {
           </label>
 
           <label className="block">
-            <span className="text-sm font-bold text-slate-700">Kategorie</span>
+            <span className="text-sm font-semibold text-neutral-300">Kategorie</span>
             <select
-              className="mt-2 w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold"
+              className="mt-2 w-full rounded-xl border border-[#1a3aad]/30 bg-[#050505] px-4 py-3 text-sm font-medium text-white outline-none focus:border-[#1a3aad]"
               value={form.type}
               onChange={(event) => setForm((current) => ({ ...current, type: event.target.value }))}
             >
@@ -272,18 +312,16 @@ export function ResourceRanking({ groupId }) {
                 </option>
               ))}
             </select>
-            {selectedType?.hint && (
-              <p className="mt-2 text-xs leading-5 text-slate-500">{selectedType.hint}</p>
-            )}
+            {selectedType?.hint && <p className="mt-2 text-xs leading-5 text-neutral-500">{selectedType.hint}</p>}
           </label>
         </div>
 
         <button
           type="submit"
           disabled={!canSubmit || submitting}
-          className="mt-5 w-full rounded-2xl bg-founder-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-founder-700 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+          className="mt-5 w-full rounded-xl bg-[#1a3aad] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2f61df] disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {submitting ? "Wird eingereicht..." : "Ressource einreichen"}
+          {submitting ? "Wird eingereicht…" : "Tool einreichen"}
         </button>
       </form>
     </section>

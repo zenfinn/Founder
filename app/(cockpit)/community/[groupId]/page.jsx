@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const metadata = {
   title: "Founder Gruppe",
-  description: "Native Founder Gruppe mit Echtzeit-Chat, Ressourcen-Ranking und Community Wins.",
+  description: "Native Founder Gruppe mit Echtzeit-Chat, Tools-Ranking und Community Wins.",
 };
 
 export default async function CommunityGroupPage({ params }) {

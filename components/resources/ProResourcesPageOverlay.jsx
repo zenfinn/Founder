@@ -21,7 +21,7 @@ export function ProResourcesPageOverlay({ cancelPath = "/resources", variant = "
         </h2>
         <p className="mt-4 text-sm leading-7 text-neutral-400 sm:text-base">
           {isJoinVariant
-            ? "Im Free-Plan siehst du Ressourcen deiner Community. Tritt einer Gruppe bei — für alle Communities brauchst du Founder Pro."
+            ? "Im Free-Plan siehst du Tools deiner Community. Tritt einer Gruppe bei — für alle Communities brauchst du Founder Pro."
             : "Schalte unbegrenzten Zugriff auf alle Tools, Lieferanten und Netzwerke frei."}
         </p>
         <div className="mt-8 flex flex-col items-center gap-3">

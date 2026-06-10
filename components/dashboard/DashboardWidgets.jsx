@@ -64,15 +64,15 @@ export function DashboardWidgets({
         )}
       </WidgetShell>
 
-      <WidgetShell title="Ressourcen" href="/resources" action="Alle">
+      <WidgetShell title="Tools" href="/resources" action="Alle">
         {resourcePreview.length === 0 ? (
-          <p className="px-2 text-xs leading-5 text-neutral-500">Noch keine Ressourcen sichtbar.</p>
+          <p className="px-2 text-xs leading-5 text-neutral-500">Noch keine Tools sichtbar.</p>
         ) : (
           <div className="space-y-0.5">
             {resourcePreview.map((resource) => (
               <WidgetLink
                 key={resource.id}
-                href={loungeGroup?.id ? `/community/${loungeGroup.id}?tab=resources` : "/resources"}
+                href={loungeGroup?.id ? `/community/${loungeGroup.id}?tab=tools` : "/resources"}
                 title={resource.title}
                 subtitle={resource.group?.name ?? "Community"}
               />

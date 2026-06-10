@@ -75,7 +75,7 @@ export function DashboardHub({
             Communities
           </Link>
           <Link href="/resources" className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-neutral-300">
-            Ressourcen
+            Tools
           </Link>
           <Link href="/showcases" className="shrink-0 rounded-full border border-white/10 px-3 py-1.5 text-xs font-medium text-neutral-300">
             Showcases

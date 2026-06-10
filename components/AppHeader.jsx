@@ -14,7 +14,7 @@ export function AppHeader({ active }) {
     { href: "/leaderboard", label: "Leaderboard", Icon: Trophy },
     { href: "/community", label: "Community", Icon: Users },
     { href: "/showcases", label: "Showcases", Icon: LayoutGrid },
-    { href: "/resources", label: "Ressourcen", Icon: FolderOpen },
+    { href: "/resources", label: "Tools", Icon: FolderOpen },
     { href: "/mentoren", label: "Mentoren", Icon: Star },
     { href: "/inbox", label: "Chats", Icon: MessageCircle },
   ];

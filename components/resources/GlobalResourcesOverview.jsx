@@ -61,7 +61,7 @@ export function GlobalResourcesOverview() {
         const payload = await response.json();
 
         if (!response.ok) {
-          throw new Error(payload.error ?? "Ressourcen konnten nicht geladen werden.");
+          throw new Error(payload.error ?? "Tools konnten nicht geladen werden.");
         }
 
         if (active) {
@@ -114,13 +114,13 @@ export function GlobalResourcesOverview() {
         <>
           {!proAccess && (
             <div className="mb-4 rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-4">
-              <p className="text-sm font-semibold text-white">Ressourcen deiner Community</p>
+              <p className="text-sm font-semibold text-white">Tools deiner Community</p>
               <p className="mt-1 text-xs leading-5 text-neutral-400">
                 Im Free-Plan siehst du Tools und Lieferanten deiner beigetretenen Gruppe. Mit Founder Pro
                 schaltest du alle Communities frei.
               </p>
               <FounderProUpgradeButton
-                label="Pro für alle Ressourcen"
+                label="Pro für alle Tools"
                 cancelPath="/resources"
                 className="mt-3 inline-flex rounded-xl bg-[#1a3aad] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#2f61df]"
                 errorClassName="mt-2 text-xs font-semibold text-red-400"
@@ -175,15 +175,15 @@ export function GlobalResourcesOverview() {
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {loading ? (
               <p className="col-span-full rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-6 text-sm font-semibold text-neutral-400">
-                Ressourcen werden geladen...
+                Tools werden geladen...
               </p>
             ) : null}
 
             {!loading && filteredResources.length === 0 ? (
               <p className="col-span-full rounded-xl border border-[#1a3aad]/30 bg-[#0f0f0f] p-6 text-sm font-semibold text-neutral-400">
                 {query.trim() || typeFilter !== "all" || communityFilter !== "all"
-                  ? "Keine Ressourcen zu deinen Filtern gefunden."
-                  : "Noch keine Ressourcen in deiner Community."}
+                  ? "Keine Tools zu deinen Filtern gefunden."
+                  : "Noch keine Tools in deiner Community."}
               </p>
             ) : null}
 
@@ -221,7 +221,7 @@ export function GlobalResourcesOverview() {
                       </a>
                       {resource.group?.id && (
                         <Link
-                          href={`/community/${resource.group.id}?tab=resources`}
+                          href={`/community/${resource.group.id}?tab=tools`}
                           className="block text-xs font-bold uppercase tracking-[0.16em] text-neutral-500 transition hover:text-[#1a3aad]"
                         >
                           In Community ansehen

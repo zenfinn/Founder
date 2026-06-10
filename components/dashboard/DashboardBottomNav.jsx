@@ -7,7 +7,7 @@ const navItems = [
   { href: "/dashboard", label: "Home", Icon: Home },
   { href: "/community", label: "Community", Icon: Users },
   { href: "/inbox", label: "Chats", Icon: MessageCircle },
-  { href: "/resources", label: "Ressourcen", Icon: FolderOpen },
+  { href: "/resources", label: "Tools", Icon: FolderOpen },
   { href: "/showcases", label: "Showcases", Icon: LayoutGrid },
   { href: "/mentoren", label: "Mentoren", Icon: Sparkles },
 ];

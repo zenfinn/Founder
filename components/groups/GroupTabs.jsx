@@ -16,13 +16,13 @@ import { Lock, Users } from "lucide-react";
 const tabs = [
   { id: "chat", label: "Chat" },
   { id: "videochat", label: "Videochat" },
-  { id: "resources", label: "Ressourcen" },
+  { id: "resources", label: "Tools" },
   { id: "wins", label: "Wins" },
   { id: "subgroups", label: "Untergruppen" },
 ];
 
 function normalizeTabId(tab) {
-  if (tab === "ranking") return "resources";
+  if (tab === "ranking" || tab === "tools") return "resources";
   return tab;
 }
 

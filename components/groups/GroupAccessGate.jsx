@@ -10,7 +10,7 @@ import { CheckCircle, Lock, ShieldCheck } from "lucide-react";
 
 const proBenefits = [
   "Exklusive Premium-Gruppen direkt in Founder",
-  "Native Echtzeit-Chats, Ressourcen-Ranking und Community Wins",
+  "Native Echtzeit-Chats, Tools-Ranking und Community Wins",
   "Früher Zugang zu Events und kuratierten Founder Deals",
   "Monatlicher Founder Report für Wachstum und Märkte",
 ];
@@ -40,7 +40,7 @@ function FounderProPaywall() {
           <Lock className="h-7 w-7 text-white" />
         </div>
         <p className="mt-6 max-w-2xl text-base leading-7 text-neutral-200">
-          Upgrade jetzt, um Chat, Ressourcen-Ranking und Community Wins freizuschalten.
+          Upgrade jetzt, um Chat, Tools-Ranking und Community Wins freizuschalten.
         </p>
 
         <div className="mt-8 grid gap-3 md:grid-cols-2">

@@ -40,6 +40,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("GET /api/resources", error);
-    return NextResponse.json({ error: error.message ?? "Ressourcen konnten nicht geladen werden." }, { status: 500 });
+    return NextResponse.json({ error: error.message ?? "Tools konnten nicht geladen werden." }, { status: 500 });
   }
 }

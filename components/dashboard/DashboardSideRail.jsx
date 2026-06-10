@@ -46,7 +46,7 @@ export function DashboardSideRail({ profile, copy }) {
 
       <nav className="hidden flex-col gap-0.5 md:flex">
         <NavItem href="/community" icon={Users} label={copy.communities} />
-        <NavItem href="/resources" icon={FolderOpen} label="Ressourcen" />
+        <NavItem href="/resources" icon={FolderOpen} label="Tools" />
         <NavItem href="/showcases" icon={LayoutGrid} label={copy.showcase} />
         <NavItem href="/mentoren" icon={Sparkles} label={copy.mentoring} />
       </nav>
