@@ -98,7 +98,7 @@ function OnboardingRewardModal({ onClose, onUpgrade, upgrading, error }) {
   );
 }
 
-export function DashboardOnboardingSteps({ userId, profile, verificationStatus, communitiesCount, subgroupsCount }) {
+export function DashboardOnboardingSteps({ userId, profile, verificationStatus, communitiesCount }) {
   const proMember = isFounderPro(profile);
   const currentRank = profile?.current_rank ?? "aspiring";
 
@@ -109,9 +109,8 @@ export function DashboardOnboardingSteps({ userId, profile, verificationStatus, 
         verificationStatus,
         currentRank,
         communitiesCount,
-        subgroupsCount,
       }),
-    [profile, verificationStatus, currentRank, communitiesCount, subgroupsCount]
+    [profile, verificationStatus, currentRank, communitiesCount]
   );
 
   const [steps, setSteps] = useState(() => mergeOnboardingSteps(readOnboardingProgress(userId), autoCompleted));

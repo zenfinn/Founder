@@ -7,7 +7,7 @@ import {
   fetchGlobalLoungeGroup,
   FOUNDER_LOUNGE_FALLBACK,
 } from "@/lib/dashboard-lounge";
-import { getAllApprovedResources, getUserCommunities, getUserMentorBookings, getUserSubgroups } from "@/lib/groups";
+import { getAllApprovedResources, getUserCommunities, getUserMentorBookings } from "@/lib/groups";
 import { getOwnProfile } from "@/lib/profiles";
 import { filterResourcesForMembership } from "@/lib/membership";
 
@@ -43,7 +43,6 @@ export function useDashboardData() {
   const [posts, setPosts] = useState(fallbackPosts);
   const [communities, setCommunities] = useState([]);
   const [mentors, setMentors] = useState([]);
-  const [subgroups, setSubgroups] = useState([]);
   const [loungeGroup, setLoungeGroup] = useState(FOUNDER_LOUNGE_FALLBACK);
   const [resourcePreview, setResourcePreview] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -70,14 +69,12 @@ export function useDashboardData() {
         .maybeSingle();
       setVerificationStatus(verification?.status ?? "Nicht gestartet");
 
-      const [communityRows, mentorRows, subgroupRows] = await Promise.all([
+      const [communityRows, mentorRows] = await Promise.all([
         getUserCommunities(supabase, user.id),
         getUserMentorBookings(supabase, user.id),
-        getUserSubgroups(supabase, user.id),
       ]);
       setCommunities(communityRows);
       setMentors(mentorRows);
-      setSubgroups(subgroupRows);
 
       await ensureGlobalLoungeMembership(supabase, user.id);
       const resolvedLounge = (await fetchGlobalLoungeGroup(supabase)) ?? FOUNDER_LOUNGE_FALLBACK;
@@ -128,7 +125,6 @@ export function useDashboardData() {
     posts,
     communities,
     mentors,
-    subgroups,
     loungeGroup,
     resourcePreview,
     loading,

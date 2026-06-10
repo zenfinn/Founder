@@ -4,8 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { GroupChat } from "@/components/groups/GroupChat";
 import { ResourceRanking } from "@/components/groups/ResourceRanking";
 import { CommunityWins } from "@/components/groups/CommunityWins";
-import { GroupSubgroups } from "@/components/groups/GroupSubgroups";
-import { SubgroupDirectory } from "@/components/groups/SubgroupDirectory";
 import { GroupVideochat } from "@/components/groups/GroupVideochat";
 import { ProResourcesTabOverlay } from "@/components/groups/ProResourcesTabOverlay";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -18,11 +16,11 @@ const tabs = [
   { id: "videochat", label: "Videochat" },
   { id: "resources", label: "Tools" },
   { id: "wins", label: "Wins" },
-  { id: "subgroups", label: "Untergruppen" },
 ];
 
 function normalizeTabId(tab) {
   if (tab === "ranking" || tab === "tools") return "resources";
+  if (tab === "subgroups") return "chat";
   return tab;
 }
 
@@ -32,7 +30,6 @@ export function GroupTabs({ group, initialTab = "chat" }) {
   const [profile, setProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
 
-  const proAccess = isFounderPro(profile);
   const isGroupMember = Boolean(group?.is_member);
   const canViewResources = canAccessGroupResources(profile, isGroupMember);
   const groupId = group?.id;
@@ -109,10 +106,6 @@ export function GroupTabs({ group, initialTab = "chat" }) {
         </nav>
       </header>
 
-      {groupId && (activeTab === "chat" || activeTab === "videochat") && (
-        <SubgroupDirectory groupId={groupId} onBrowseAll={() => setActiveTab("subgroups")} variant="terminal" />
-      )}
-
       <div className="min-h-[560px]">
         {!groupId && (
           <p className="border border-red-500/30 px-4 py-3 text-sm font-semibold text-red-300">
@@ -135,7 +128,6 @@ export function GroupTabs({ group, initialTab = "chat" }) {
           <ResourceRanking groupId={groupId} />
         )}
         {groupId && activeTab === "wins" && <CommunityWins groupId={groupId} />}
-        {groupId && activeTab === "subgroups" && <GroupSubgroups groupId={groupId} />}
       </div>
     </div>
   );

@@ -10,7 +10,7 @@ import {
   writeOnboardingProgress,
 } from "@/lib/onboarding-steps";
 
-export function useOnboardingStatus({ userId, profile, verificationStatus, communitiesCount, subgroupsCount }) {
+export function useOnboardingStatus({ userId, profile, verificationStatus, communitiesCount }) {
   const currentRank = profile?.current_rank ?? "aspiring";
 
   const autoCompleted = useMemo(
@@ -20,9 +20,8 @@ export function useOnboardingStatus({ userId, profile, verificationStatus, commu
         verificationStatus,
         currentRank,
         communitiesCount,
-        subgroupsCount,
       }),
-    [profile, verificationStatus, currentRank, communitiesCount, subgroupsCount]
+    [profile, verificationStatus, currentRank, communitiesCount]
   );
 
   const [steps, setSteps] = useState(() => mergeOnboardingSteps(readOnboardingProgress(userId), autoCompleted));

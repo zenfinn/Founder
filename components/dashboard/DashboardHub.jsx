@@ -15,7 +15,6 @@ export function DashboardHub({
   verificationStatus,
   communities,
   mentors,
-  subgroups,
   loungeGroup,
   resourcePreview,
   loading,
@@ -46,7 +45,6 @@ export function DashboardHub({
               profile={profile}
               verificationStatus={verificationStatus}
               communitiesCount={communities.length}
-              subgroupsCount={subgroups.length}
               copy={copy}
             />
           </div>

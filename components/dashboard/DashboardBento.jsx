@@ -72,7 +72,6 @@ export function DashboardBento({
   posts,
   communities,
   mentors,
-  subgroups,
   loading,
 }) {
   const { locale, setLocale, copy } = useDashboardLocale("de");
@@ -87,7 +86,6 @@ export function DashboardBento({
     profile,
     verificationStatus,
     communitiesCount: communities.length,
-    subgroupsCount: subgroups.length,
   });
   const communityGroupIds = communities.map((group) => group.id);
 
@@ -197,7 +195,6 @@ export function DashboardBento({
                     profile={profile}
                     verificationStatus={verificationStatus}
                     communitiesCount={communities.length}
-                    subgroupsCount={subgroups.length}
                   />
                 </div>
               </>

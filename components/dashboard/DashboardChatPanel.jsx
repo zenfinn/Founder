@@ -12,7 +12,6 @@ export function DashboardChatPanel({
   profile,
   verificationStatus,
   communitiesCount,
-  subgroupsCount,
   copy,
 }) {
   const { complete: onboardingComplete, progress: onboardingProgress } = useOnboardingStatus({
@@ -20,7 +19,6 @@ export function DashboardChatPanel({
     profile,
     verificationStatus,
     communitiesCount,
-    subgroupsCount,
   });
 
   const showOnboarding = !onboardingComplete && onboardingProgress < 100;
@@ -65,7 +63,6 @@ export function DashboardChatPanel({
               profile={profile}
               verificationStatus={verificationStatus}
               communitiesCount={communitiesCount}
-              subgroupsCount={subgroupsCount}
             />
           </div>
         </div>

@@ -6,7 +6,7 @@ import { FounderProUpgradeButton } from "@/components/FounderProUpgradeButton";
 const freeBenefits = [
   "1 Community beitreten",
   "Tools deiner Gruppe",
-  "Chat, Wins & Untergruppen",
+  "Chat, Tools & Wins",
 ];
 
 const proBenefits = [

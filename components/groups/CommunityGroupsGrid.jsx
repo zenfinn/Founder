@@ -103,7 +103,7 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
     <div className="mt-0">
       {!proMember && (
         <p className="mb-4 rounded-2xl border border-founder-200 bg-founder-50 px-4 py-3 text-sm font-semibold text-founder-800">
-          Basic: 1 Community + 1 Untergruppe. Tools nur mit Founder Pro.
+          Basic: 1 Community. Tools nur mit Founder Pro.
           {!canJoinMore && membershipCount >= 1 ? ` ${getMembershipLimitMessage("community")}` : ""}
         </p>
       )}
