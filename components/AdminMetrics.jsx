@@ -5,7 +5,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 const initialMetrics = [
   { label: "Founder Pro", value: "0", detail: "Aktive Pro-Profile" },
-  { label: "Aktive Member", value: "0", detail: "Profile insgesamt" },
+  { label: "Registrierte Mitglieder", value: "0", detail: "Profile mit Account" },
   { label: "Ausstehende Verifikationen", value: "0", detail: "Dokumente prüfen" },
   { label: "Event-Umsatz", value: "0,00 €", detail: "Bezahlte Tickets" },
 ];
@@ -28,7 +28,7 @@ export function AdminMetrics() {
 
       setMetrics([
         { label: "Founder Pro", value: String(proCount ?? 0), detail: "Aktive Pro-Profile" },
-        { label: "Aktive Member", value: String(profileCount ?? 0), detail: "Profile insgesamt" },
+        { label: "Registrierte Mitglieder", value: String(profileCount ?? 0), detail: "Profile mit Account" },
         { label: "Ausstehende Verifikationen", value: String(pendingVerificationCount ?? 0), detail: "Dokumente prüfen" },
         {
           label: "Event-Umsatz",

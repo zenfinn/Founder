@@ -2,15 +2,15 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FolderOpen, Home, LayoutGrid, MessageCircle, Sparkles, Star, Users } from "lucide-react";
+import { FolderOpen, Calendar, Home, LayoutGrid, MessageCircle, Sparkles, Users } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Home", Icon: Home, match: (path) => path === "/dashboard" },
   { href: "/community", label: "Community", Icon: Users, match: (path) => path.startsWith("/community") },
   { href: "/inbox", label: "Chats", Icon: MessageCircle, match: (path) => path.startsWith("/inbox") },
   { href: "/resources", label: "Tools", Icon: FolderOpen, match: (path) => path.startsWith("/resources") },
+  { href: "/events", label: "Meetups", Icon: Calendar, match: (path) => path.startsWith("/events") },
   { href: "/showcases", label: "Showcases", Icon: LayoutGrid, match: (path) => path.startsWith("/showcases") },
-  { href: "/raenge", label: "Ränge", Icon: Star, match: (path) => path.startsWith("/raenge") },
   { href: "/mentoren", label: "Mentoren", Icon: Sparkles, match: (path) => path.startsWith("/mentoren") },
 ];
 

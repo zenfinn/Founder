@@ -93,13 +93,13 @@ export function DashboardWidgets({
         )}
       </WidgetShell>
 
-      <WidgetShell title="Events" href="/events" action="Ansehen">
+      <WidgetShell title="Meetups" href="/events" action="Planen">
         <Link
           href="/events"
           className="flex items-center gap-2 rounded-xl px-2 py-2 text-xs text-neutral-400 transition hover:bg-white/[0.04] hover:text-neutral-200"
         >
           <Calendar className="h-4 w-4 shrink-0 text-[#5b8cff]" />
-          Aktuelle Founder Events entdecken
+          Founder-Meetup planen oder entdecken
         </Link>
       </WidgetShell>
     </aside>
