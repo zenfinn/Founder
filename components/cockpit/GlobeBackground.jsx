@@ -89,63 +89,88 @@ function project(point, width, height, scale, centerY) {
   };
 }
 
-function wrapCanvasText(ctx, text, maxWidth) {
-  const words = String(text).split(/\s+/).filter(Boolean);
-  const lines = [];
-  let current = "";
+function drawGlobeFrame(ctx, { width, height, centerY, scale, rotation, activity, voiceActive, now, geometry }) {
+  const { meridians, parallels, nodes } = geometry;
+  const config = ACTIVITY_CONFIG[activity] ?? ACTIVITY_CONFIG.idle;
+  const activeGlow = (voiceActive ? 1.35 : 1) * config.glow;
+  const lineAlpha = voiceActive ? (activity === "idle" ? 0.62 : 0.78) : activity === "idle" ? 0.28 : 0.42;
+  const lineWidth = voiceActive ? 1.15 : 0.75;
 
-  for (const word of words) {
-    const next = current ? `${current} ${word}` : word;
-    if (ctx.measureText(next).width > maxWidth && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = next;
+  ctx.clearRect(0, 0, width, height);
+
+  const gradient = ctx.createRadialGradient(
+    width * 0.5,
+    height * centerY,
+    scale * 0.08,
+    width * 0.5,
+    height * centerY,
+    scale * 1.15
+  );
+  gradient.addColorStop(0, `rgba(47, 97, 223, ${0.3 * activeGlow})`);
+  gradient.addColorStop(0.45, `rgba(26, 58, 173, ${0.18 * activeGlow})`);
+  gradient.addColorStop(1, "rgba(5, 5, 5, 0)");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  if (config.ring > 0) {
+    const cx = width * 0.5;
+    const cy = height * centerY;
+    const baseRadius = scale * 0.55;
+    for (let index = 0; index < 3; index += 1) {
+      const phase = (now * 0.0016 + index * 0.33) % 1;
+      const radius = baseRadius + phase * scale * 0.45;
+      const alpha = (1 - phase) * 0.22 * config.ring;
+      ctx.beginPath();
+      ctx.strokeStyle = `rgba(91, 140, 255, ${alpha})`;
+      ctx.lineWidth = 2 + config.ring;
+      ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+      ctx.stroke();
     }
   }
-  if (current) lines.push(current);
-  return lines;
+
+  function drawLine(points, rot, strokeStyle, lw) {
+    ctx.beginPath();
+    ctx.lineWidth = lw;
+    ctx.strokeStyle = strokeStyle;
+    let started = false;
+    for (const raw of points) {
+      const rotated = rotateY(raw, rot);
+      if (rotated.z < -0.25) {
+        started = false;
+        continue;
+      }
+      const p = project(rotated, width, height, scale, centerY);
+      if (!started) {
+        ctx.moveTo(p.x, p.y);
+        started = true;
+      } else {
+        ctx.lineTo(p.x, p.y);
+      }
+    }
+    ctx.stroke();
+  }
+
+  for (const line of meridians) {
+    drawLine(line, rotation, `rgba(47, 97, 223, ${lineAlpha})`, lineWidth);
+  }
+  for (const line of parallels) {
+    drawLine(line, rotation, `rgba(26, 58, 173, ${lineAlpha * 0.75})`, lineWidth);
+  }
+
+  for (const node of nodes) {
+    const rotated = rotateY(node, rotation);
+    if (rotated.z < -0.1) continue;
+    const p = project(rotated, width, height, scale, centerY);
+    const glow = 0.55 + Math.sin(now * 0.002 * config.pulse + node.pulse) * 0.35 * config.pulse;
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(91, 140, 255, ${Math.min(1, p.alpha * glow * 0.9)})`;
+    ctx.arc(p.x, p.y, 1.2 + p.alpha * (1.4 + config.pulse * 0.5), 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
-function drawGlobeCaption(ctx, { width, height, centerY, scale, message, activity, hint, error, voiceActive }) {
-  const maxWidth = Math.min(width * 0.88, 440);
-  const textY = height * centerY + scale * 0.78;
-  const cx = width * 0.5;
-
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-
-  if (message?.trim()) {
-    const isUserSpeech = activity === "listening" && !LISTENING_HINTS.has(message.trim());
-    const label = isUserSpeech ? "Du" : "Founder";
-    ctx.font = "600 10px system-ui, -apple-system, sans-serif";
-    ctx.fillStyle = isUserSpeech ? "rgba(140, 200, 255, 0.9)" : "rgba(91, 140, 255, 0.95)";
-    ctx.fillText(label, cx, textY - 18);
-
-    ctx.font = "500 14px system-ui, -apple-system, sans-serif";
-    ctx.fillStyle = isUserSpeech ? "rgba(210, 235, 255, 0.95)" : "rgba(235, 242, 255, 0.92)";
-    const lines = wrapCanvasText(ctx, message, maxWidth).slice(0, voiceActive ? 5 : 4);
-    lines.forEach((line, index) => {
-      ctx.fillText(line, cx, textY + index * 20);
-    });
-  }
-
-  if (hint?.trim()) {
-    ctx.font = "500 12px system-ui, -apple-system, sans-serif";
-    ctx.fillStyle = "rgba(91, 140, 255, 0.75)";
-    const hintY = message?.trim() ? textY + 108 : textY;
-    ctx.fillText(hint, cx, hintY);
-  }
-
-  if (error?.trim()) {
-    ctx.font = "500 11px system-ui, -apple-system, sans-serif";
-    ctx.fillStyle = "rgba(248, 113, 113, 0.9)";
-    const errorY = message?.trim() ? textY + (hint?.trim() ? 128 : 108) : textY + 24;
-    const errorLines = wrapCanvasText(ctx, error, maxWidth).slice(0, 2);
-    errorLines.forEach((line, index) => {
-      ctx.fillText(line, cx, errorY + index * 16);
-    });
-  }
+function isUserSpeech(activity, message) {
+  return activity === "listening" && message?.trim() && !LISTENING_HINTS.has(message.trim());
 }
 
 export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntensity = 1 }) {
@@ -153,21 +178,13 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
   const geometryRef = useRef(null);
   const { activity, message, voiceGlobe, invokeGlobeTap } = useFounderGlobe();
   const activityRef = useRef(activity);
-  const messageRef = useRef(message);
   const voiceGlobeRef = useRef(voiceGlobe);
 
   const voiceActive = voiceGlobe.active;
-  const effectiveScale = voiceActive ? 0.44 : scaleFactor;
-  const effectiveCenterY = voiceActive ? 0.34 : centerY;
-  const effectiveGlow = voiceActive ? glowIntensity * 1.35 : glowIntensity;
 
   useEffect(() => {
     activityRef.current = activity;
   }, [activity]);
-
-  useEffect(() => {
-    messageRef.current = message;
-  }, [message]);
 
   useEffect(() => {
     voiceGlobeRef.current = voiceGlobe;
@@ -187,124 +204,51 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function resize() {
+      const hero = voiceGlobeRef.current.active;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.floor(window.innerWidth * dpr);
-      canvas.height = Math.floor(window.innerHeight * dpr);
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
+
+      if (hero) {
+        const size = Math.min(Math.floor(window.innerWidth * 0.56), 232);
+        canvas.width = Math.floor(size * dpr);
+        canvas.height = Math.floor(size * dpr);
+        canvas.style.width = `${size}px`;
+        canvas.style.height = `${size}px`;
+      } else {
+        canvas.width = Math.floor(window.innerWidth * dpr);
+        canvas.height = Math.floor(window.innerHeight * dpr);
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
+      }
+
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function drawLine(points, width, height, scale, rot, strokeStyle, lineWidth = 0.75) {
-      ctx.beginPath();
-      ctx.lineWidth = lineWidth;
-      ctx.strokeStyle = strokeStyle;
-      let started = false;
-      for (const raw of points) {
-        const rotated = rotateY(raw, rot);
-        if (rotated.z < -0.25) {
-          started = false;
-          continue;
-        }
-        const p = project(rotated, width, height, scale, effectiveCenterY);
-        if (!started) {
-          ctx.moveTo(p.x, p.y);
-          started = true;
-        } else {
-          ctx.lineTo(p.x, p.y);
-        }
-      }
-      ctx.stroke();
-    }
-
-    function drawPulseRings(width, height, scale, now, ringStrength) {
-      if (ringStrength <= 0) return;
-
-      const cx = width * 0.5;
-      const cy = height * effectiveCenterY;
-      const baseRadius = scale * 0.55;
-
-      for (let index = 0; index < 3; index += 1) {
-        const phase = (now * 0.0016 + index * 0.33) % 1;
-        const radius = baseRadius + phase * scale * 0.45;
-        const alpha = (1 - phase) * 0.22 * ringStrength;
-        ctx.beginPath();
-        ctx.strokeStyle = `rgba(91, 140, 255, ${alpha})`;
-        ctx.lineWidth = 2 + ringStrength;
-        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-
     function render(now) {
-      const { meridians, parallels, nodes } = geometryRef.current;
-      const width = window.innerWidth;
-      const height = window.innerHeight;
       const voice = voiceGlobeRef.current;
-      const config = ACTIVITY_CONFIG[activityRef.current] ?? ACTIVITY_CONFIG.idle;
-      const activeGlow = effectiveGlow * config.glow;
-      const activeSpin = config.spin;
-      const scale = Math.min(width, height) * effectiveScale * (config.glow > 1.2 ? 1.14 : 1);
+      const width = voice.active ? parseInt(canvas.style.width, 10) : window.innerWidth;
+      const height = voice.active ? parseInt(canvas.style.height, 10) : window.innerHeight;
+      const center = voice.active ? 0.5 : centerY;
+      const scale = voice.active
+        ? Math.min(width, height) * 0.36
+        : Math.min(width, height) * scaleFactor * glowIntensity;
       const delta = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
 
-      if (!reducedMotion) rotation += delta * 0.18 * activeSpin;
-
-      ctx.clearRect(0, 0, width, height);
-
-      const gradient = ctx.createRadialGradient(
-        width * 0.5,
-        height * effectiveCenterY,
-        scale * 0.08,
-        width * 0.5,
-        height * effectiveCenterY,
-        scale * 1.15
-      );
-      gradient.addColorStop(0, `rgba(47, 97, 223, ${0.28 * activeGlow})`);
-      gradient.addColorStop(0.45, `rgba(26, 58, 173, ${0.16 * activeGlow})`);
-      gradient.addColorStop(1, "rgba(5, 5, 5, 0)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
-
-      drawPulseRings(width, height, scale, now, config.ring);
-
-      const lineAlpha = voice.active
-        ? activityRef.current === "idle"
-          ? 0.58
-          : 0.72
-        : activityRef.current === "idle"
-          ? 0.28
-          : 0.42;
-      const lineWidth = voice.active ? 1.1 : 0.75;
-
-      for (const line of meridians) {
-        drawLine(line, width, height, scale, rotation, `rgba(47, 97, 223, ${lineAlpha})`, lineWidth);
-      }
-      for (const line of parallels) {
-        drawLine(line, width, height, scale, rotation, `rgba(26, 58, 173, ${lineAlpha * 0.75})`, lineWidth);
+      if (!reducedMotion) {
+        const spin = ACTIVITY_CONFIG[activityRef.current]?.spin ?? 1;
+        rotation += delta * 0.18 * spin;
       }
 
-      for (const node of nodes) {
-        const rotated = rotateY(node, rotation);
-        if (rotated.z < -0.1) continue;
-        const p = project(rotated, width, height, scale, effectiveCenterY);
-        const glow = 0.55 + Math.sin(now * 0.002 * config.pulse + node.pulse) * 0.35 * config.pulse;
-        ctx.beginPath();
-        ctx.fillStyle = `rgba(91, 140, 255, ${Math.min(1, p.alpha * glow * 0.9)})`;
-        ctx.arc(p.x, p.y, 1.2 + p.alpha * (1.4 + config.pulse * 0.5), 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      drawGlobeCaption(ctx, {
+      drawGlobeFrame(ctx, {
         width,
         height,
-        centerY: effectiveCenterY,
+        centerY: center,
         scale,
-        message: messageRef.current,
+        rotation,
         activity: activityRef.current,
-        hint: voice.hint,
-        error: voice.error,
         voiceActive: voice.active,
+        now,
+        geometry: geometryRef.current,
       });
 
       frameId = requestAnimationFrame(render);
@@ -318,34 +262,62 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
       cancelAnimationFrame(frameId);
       window.removeEventListener("resize", resize);
     };
-  }, [effectiveCenterY, effectiveGlow, effectiveScale]);
+  }, [centerY, glowIntensity, scaleFactor, voiceActive]);
+
+  if (voiceActive) {
+    const userSpeech = isUserSpeech(activity, message);
+    const isActive = activity !== "idle";
+
+    return (
+      <div className="pointer-events-none fixed inset-x-0 top-[56px] z-[30] flex flex-col items-center px-4 sm:top-[64px]">
+        <div className="relative pointer-events-auto">
+          <canvas
+            ref={canvasRef}
+            aria-hidden
+            className={`block rounded-full transition-shadow duration-500 ${
+              isActive ? "shadow-[0_0_48px_rgba(91,140,255,0.45)]" : "shadow-[0_0_28px_rgba(26,58,173,0.3)]"
+            }`}
+          />
+          <button
+            type="button"
+            disabled={voiceGlobe.tapDisabled}
+            onClick={invokeGlobeTap}
+            aria-label={voiceGlobe.hint || "Mit Founder sprechen"}
+            className={`absolute inset-0 rounded-full border-2 border-transparent transition active:scale-[0.97] ${
+              isActive ? "border-[#5b8cff]/30" : "hover:border-[#5b8cff]/20"
+            } ${voiceGlobe.tapDisabled ? "cursor-wait" : "cursor-pointer"}`}
+          />
+        </div>
+
+        {message?.trim() && (
+          <div className="mt-4 max-w-sm text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5b8cff]">
+              {userSpeech ? "Du" : "Founder"}
+            </p>
+            <p className="mt-1.5 text-sm leading-6 text-neutral-100">{message}</p>
+          </div>
+        )}
+
+        {voiceGlobe.hint && (
+          <p className="mt-2 text-center text-xs font-medium text-[#5b8cff]/80">{voiceGlobe.hint}</p>
+        )}
+
+        {voiceGlobe.error && (
+          <p className="mt-2 max-w-xs text-center text-xs leading-5 text-red-300">{voiceGlobe.error}</p>
+        )}
+      </div>
+    );
+  }
 
   const isActive = activity !== "idle";
-  const opacityClass = voiceActive
-    ? "opacity-95 sm:opacity-100"
-    : isActive
-      ? "opacity-80 sm:opacity-95 lg:opacity-100"
-      : "opacity-45 sm:opacity-55 lg:opacity-70";
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        aria-hidden
-        className={`pointer-events-none fixed inset-0 z-0 transition-opacity duration-700 ${opacityClass}`}
-      />
-      {voiceActive && (
-        <button
-          type="button"
-          disabled={voiceGlobe.tapDisabled}
-          onClick={invokeGlobeTap}
-          aria-label={voiceGlobe.hint || "Mit Founder sprechen"}
-          className={`fixed left-1/2 z-[5] h-[min(82vw,340px)] w-[min(82vw,340px)] -translate-x-1/2 -translate-y-1/2 rounded-full bg-transparent ${
-            voiceGlobe.tapDisabled ? "cursor-wait" : "cursor-pointer"
-          }`}
-          style={{ top: `${effectiveCenterY * 100}vh` }}
-        />
-      )}
-    </>
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      className={`pointer-events-none fixed inset-0 z-0 transition-opacity duration-700 ${
+        isActive ? "opacity-80 sm:opacity-95 lg:opacity-100" : "opacity-45 sm:opacity-55 lg:opacity-70"
+      }`}
+    />
   );
 }
