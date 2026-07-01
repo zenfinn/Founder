@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { isSafari } from "@/lib/founder-browser";
+import { isMacDesktop, isSafari } from "@/lib/founder-browser";
 import { isSpeechRecognitionSupported } from "@/lib/founder-voice";
 
 const SILENCE_MS = 1800;
+const DESKTOP_SILENCE_MS = 2200;
 const MIN_UTTERANCE_CHARS = 2;
 const SAFARI_LISTEN_MS = 14000;
 
@@ -65,6 +66,7 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   }, [clearSafariTimer, clearSilenceTimer]);
 
   const completeIfReady = useCallback(() => {
+    if (pausedRef.current) return;
     const combined = `${finalBufferRef.current} ${interimRef.current}`.trim();
     if (combined.length < MIN_UTTERANCE_CHARS) return;
 
@@ -81,9 +83,10 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   }, [clearSafariTimer, clearSilenceTimer]);
 
   const scheduleSilenceCheck = useCallback(() => {
-    if (safariRef.current) return;
+    if (safariRef.current || pausedRef.current) return;
     clearSilenceTimer();
-    silenceTimerRef.current = window.setTimeout(completeIfReady, SILENCE_MS);
+    const delay = isMacDesktop() ? DESKTOP_SILENCE_MS : SILENCE_MS;
+    silenceTimerRef.current = window.setTimeout(completeIfReady, delay);
   }, [clearSilenceTimer, completeIfReady]);
 
   const stopListening = useCallback(() => {
@@ -128,6 +131,8 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     };
 
     recognition.onresult = (event) => {
+      if (pausedRef.current) return;
+
       if (safariRef.current) {
         const piece = String(event.results?.[event.resultIndex]?.[0]?.transcript ?? "").trim();
         if (!piece) return;
@@ -181,6 +186,8 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
       setListening(false);
       clearSafariTimer();
 
+      if (pausedRef.current) return;
+
       if (safariRef.current) {
         const combined = finalBufferRef.current.trim();
         if (combined.length >= MIN_UTTERANCE_CHARS) {
@@ -227,13 +234,13 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   }, [clearSafariTimer, scheduleSilenceCheck, stopListening]);
 
   useEffect(() => {
-    if (!enabled || paused) {
+    if (!enabled) {
       stopListening();
       return undefined;
     }
 
     return () => stopListening();
-  }, [enabled, paused, stopListening]);
+  }, [enabled, stopListening]);
 
   useEffect(() => {
     return () => {

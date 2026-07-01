@@ -245,7 +245,9 @@ export function FounderAiOnboarding({ persistent = false }) {
       const text = String(rawText ?? "").trim();
       if (!text || chatLoading || phaseRef.current !== "chat") return;
 
-      speechRef.current?.stopListening?.();
+      if (speechRef.current?.engine === "whisper") {
+        speechRef.current?.stopListening?.();
+      }
 
       const userMessage = { role: "user", text };
       const nextMessages = [...messagesRef.current, userMessage];
@@ -404,7 +406,7 @@ export function FounderAiOnboarding({ persistent = false }) {
           ? speech.recording
             ? "Ich nehme auf…"
             : "Sprich jetzt — ich höre zu"
-          : "Ich höre zu…",
+          : "Sprich — ich höre zu",
       processing: "Erkenne deine Sprache…",
       speaking: "",
       thinking: "",
