@@ -5,7 +5,7 @@ import { useFounderGlobe } from "@/components/cockpit/FounderGlobeContext";
 
 export function FounderGlobeMessage() {
   const { activity, message } = useFounderGlobe();
-  const visible = Boolean(message) && activity !== "idle";
+  const visible = Boolean(message);
 
   return (
     <AnimatePresence>

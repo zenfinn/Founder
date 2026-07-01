@@ -25,6 +25,11 @@ export function FounderGlobeProvider({ children }) {
     setMessage("");
   }, []);
 
+  const setFounderMessage = useCallback((nextMessage = "") => {
+    setActivity("idle");
+    setMessage(nextMessage);
+  }, []);
+
   const setFounderSpeaking = useCallback((nextMessage = "") => {
     setActivity("speaking");
     setMessage(nextMessage);
@@ -52,6 +57,7 @@ export function FounderGlobeProvider({ children }) {
       bumpFlow,
       isFlowCurrent,
       setFounderIdle,
+      setFounderMessage,
       setFounderSpeaking,
       setFounderListening,
       setFounderTyping,
@@ -63,6 +69,7 @@ export function FounderGlobeProvider({ children }) {
       bumpFlow,
       isFlowCurrent,
       setFounderIdle,
+      setFounderMessage,
       setFounderSpeaking,
       setFounderListening,
       setFounderTyping,
@@ -82,6 +89,7 @@ export function useFounderGlobe() {
       bumpFlow: () => 0,
       isFlowCurrent: () => true,
       setFounderIdle: () => {},
+      setFounderMessage: () => {},
       setFounderSpeaking: () => {},
       setFounderListening: () => {},
       setFounderTyping: () => {},

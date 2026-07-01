@@ -70,6 +70,7 @@ export function FounderAiOnboarding() {
     bumpFlow,
     isFlowCurrent,
     setFounderIdle,
+    setFounderMessage,
     setFounderSpeaking,
     setFounderListening,
     setFounderThinking,
@@ -143,10 +144,11 @@ export function FounderAiOnboarding() {
         await founderSpeak(setFounderSpeaking, setFounderListening, text, {
           isCancelled: () => !isFlowCurrent(generation),
         });
+      } else if (isFlowCurrent(generation)) {
+        setFounderMessage(text);
       }
-      if (isFlowCurrent(generation)) setFounderIdle();
     },
-    [bumpFlow, isFlowCurrent, setFounderIdle, setFounderListening, setFounderSpeaking, voiceMode]
+    [bumpFlow, isFlowCurrent, setFounderListening, setFounderMessage, setFounderSpeaking, voiceMode]
   );
 
   const sendUserMessage = useCallback(
@@ -179,19 +181,16 @@ export function FounderAiOnboarding() {
         setProfile(payload.profile ?? {});
         setReadyForRanking(Boolean(payload.readyForRanking));
 
-        setFounderIdle();
         await speakFounderReply(payload.reply);
       } catch (error) {
-        setMessages((current) => [
-          ...current,
-          { role: "founder", text: error.message ?? "Kurz technisches Problem — versuch es nochmal." },
-        ]);
-        setFounderIdle();
+        const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
+        setMessages((current) => [...current, { role: "founder", text: errorText }]);
+        await speakFounderReply(errorText);
       } finally {
         setChatLoading(false);
       }
     },
-    [chatLoading, setFounderIdle, setFounderThinking, speakFounderReply]
+    [chatLoading, setFounderThinking, speakFounderReply]
   );
 
   const handleSpeechComplete = useCallback(
@@ -235,7 +234,6 @@ export function FounderAiOnboarding() {
         });
       }
       if (isFlowCurrent(generation)) {
-        setFounderIdle();
         setOpeningDone(true);
       }
     }
@@ -333,6 +331,7 @@ export function FounderAiOnboarding() {
 
   const activeMicError = speech.micError;
   const canRank = readyForRanking && !chatLoading;
+  const userMessages = messages.filter((message) => message.role === "user");
 
   return (
     <>
@@ -383,18 +382,21 @@ export function FounderAiOnboarding() {
                   </div>
                 </div>
 
-                <div className="flex-1 space-y-3 overflow-y-auto pr-1" style={{ maxHeight: "min(52vh, 420px)" }}>
-                  {messages.map((message, index) => (
-                    <ChatBubble key={`${message.role}-${index}`} message={message} />
-                  ))}
-                  {chatLoading && (
-                    <div className="mr-auto flex items-center gap-2 rounded-2xl bg-[#1a3aad]/10 px-4 py-3 text-sm text-neutral-400">
-                      <Loader2 className="h-4 w-4 animate-spin text-[#5b8cff]" />
-                      Founder denkt…
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
+                {(userMessages.length > 0 || (!voiceMode && chatLoading)) && (
+                  <div className="flex-1 space-y-3 overflow-y-auto pr-1" style={{ maxHeight: "min(52vh, 420px)" }}>
+                    {userMessages.map((message, index) => (
+                      <ChatBubble key={`${message.role}-${index}`} message={message} />
+                    ))}
+                    {!voiceMode && chatLoading && (
+                      <div className="ml-auto max-w-[88%] rounded-2xl bg-white/5 px-4 py-3 text-sm text-neutral-400">
+                        <Loader2 className="mr-2 inline h-4 w-4 animate-spin text-[#5b8cff]" />
+                        Wird gesendet…
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div ref={chatEndRef} />
 
                 {voiceMode ? (
                   <div className="mt-4 space-y-3 border-t border-white/8 pt-4">
