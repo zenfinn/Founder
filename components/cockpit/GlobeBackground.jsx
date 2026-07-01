@@ -289,7 +289,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
           />
         </div>
 
-        {message?.trim() && (
+        {voiceGlobe.started && message?.trim() && (
           <div className="mt-4 max-w-sm text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5b8cff]">
               {userSpeech ? "Du" : "Founder"}
@@ -299,7 +299,13 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
         )}
 
         {voiceGlobe.hint && (
-          <p className="mt-2 text-center text-xs font-medium text-[#5b8cff]/80">{voiceGlobe.hint}</p>
+          <p
+            className={`max-w-xs text-center text-sm leading-6 ${
+              voiceGlobe.started ? "mt-2 text-xs font-medium text-[#5b8cff]/80" : "mt-5 text-neutral-200"
+            }`}
+          >
+            {voiceGlobe.hint}
+          </p>
         )}
 
         {voiceGlobe.error && (

@@ -9,6 +9,7 @@ const TYPEWRITER_MS = 14;
 
 const DEFAULT_VOICE_GLOBE = {
   active: false,
+  started: false,
   hint: "",
   error: "",
   tapDisabled: false,

@@ -30,6 +30,8 @@ import {
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { saveOwnProfile } from "@/lib/profiles";
 
+const JARVIS_START_HINT = "Drücke auf die Kugel um Jarvis zu starten";
+
 function ChatBubble({ message, pending = false }) {
   const isFounder = message.role === "founder";
   return (
@@ -185,11 +187,8 @@ export function FounderAiOnboarding({ persistent = false }) {
   useEffect(() => {
     if (openingStartedRef.current) return;
     openingStartedRef.current = true;
-
-    const opening = getJarvisOpeningMessage();
-    setMessages([{ role: "founder", text: opening }]);
-    setFounderMessage(opening);
-  }, [setFounderMessage]);
+    setFounderIdle();
+  }, [setFounderIdle]);
 
   useEffect(() => {
     return () => {
@@ -317,7 +316,9 @@ export function FounderAiOnboarding({ persistent = false }) {
 
     if (!openingSpokenRef.current) {
       openingSpokenRef.current = true;
-      void playFounderVoice(getJarvisOpeningMessage());
+      const opening = getJarvisOpeningMessage();
+      setMessages([{ role: "founder", text: opening }]);
+      void playFounderVoice(opening);
       return;
     }
 
@@ -357,7 +358,7 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   useEffect(() => {
     if (!voiceMode || phase !== "chat") {
-      setVoiceGlobe({ active: false, hint: "", error: "", tapDisabled: true });
+      setVoiceGlobe({ active: false, started: false, hint: "", error: "", tapDisabled: true });
       return undefined;
     }
 
@@ -366,7 +367,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         ? isSafari()
           ? "Tippe die Kugel — sprich direkt"
           : "Tippe die Kugel — dann sprich"
-        : "Tippe die Kugel — sprich mit Founder",
+        : JARVIS_START_HINT,
       listening: isSafari() ? "Sprich jetzt…" : speech.engine === "whisper" ? (speech.recording ? "Ich nehme auf…" : "Sprich jetzt — ich höre zu") : "Ich höre zu…",
       processing: "Erkenne deine Sprache…",
       speaking: "Founder spricht…",
@@ -375,12 +376,13 @@ export function FounderAiOnboarding({ persistent = false }) {
 
     setVoiceGlobe({
       active: true,
+      started: globeActivated,
       hint: hintByStatus[globeStatus] ?? hintByStatus.idle,
       error: speech.micError ?? "",
       tapDisabled: chatLoading || isSpeaking,
     });
 
-    return () => setVoiceGlobe({ active: false, hint: "", error: "", tapDisabled: true });
+    return () => setVoiceGlobe({ active: false, started: false, hint: "", error: "", tapDisabled: true });
   }, [
     chatLoading,
     globeActivated,
@@ -640,12 +642,16 @@ export function FounderAiOnboarding({ persistent = false }) {
     </CockpitPanel>
   );
 
-  if (voiceMode && phase === "chat") {
+  if (voiceMode && phase === "chat" && globeActivated) {
     return (
       <div className="pointer-events-none fixed inset-x-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 max-h-[38dvh] sm:inset-x-4 sm:max-h-[34dvh]">
         <div className="pointer-events-auto h-full">{chatPanel}</div>
       </div>
     );
+  }
+
+  if (voiceMode && phase === "chat") {
+    return null;
   }
 
   return (
