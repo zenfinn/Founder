@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { FOUNDER_TTS_MODEL, FOUNDER_TTS_VOICE, isOpenAiVoiceConfigured } from "@/lib/openai-voice";
+import { synthesizeFounderSpeech } from "@/lib/founder-tts";
+import { isOpenAiVoiceConfigured } from "@/lib/openai-voice";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -21,37 +22,18 @@ export async function POST(request) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const text = String(body.text ?? "").trim().slice(0, 1200);
+    const text = String(body.text ?? "").trim();
     if (!text) {
       return NextResponse.json({ error: "Text fehlt." }, { status: 400 });
     }
 
-    const response = await fetch("https://api.openai.com/v1/audio/speech", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: FOUNDER_TTS_MODEL,
-        voice: FOUNDER_TTS_VOICE,
-        input: text,
-        response_format: "mp3",
-        speed: 1.02,
-      }),
-    });
+    const { audio, engine, contentType } = await synthesizeFounderSpeech(text, process.env.OPENAI_API_KEY);
 
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      console.error("OpenAI TTS failed", response.status, detail);
-      return NextResponse.json({ error: "Sprachausgabe fehlgeschlagen." }, { status: 502 });
-    }
-
-    const audio = await response.arrayBuffer();
     return new NextResponse(audio, {
       headers: {
-        "Content-Type": "audio/mpeg",
+        "Content-Type": contentType,
         "Cache-Control": "private, no-store",
+        "X-Founder-Tts-Engine": engine,
       },
     });
   } catch (error) {
