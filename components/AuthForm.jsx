@@ -6,7 +6,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { ensureGlobalLoungeMembership } from "@/lib/dashboard-lounge";
 import { sanitizeProfilePayload } from "@/lib/profiles";
 import { readStoredReferralCode } from "@/components/ReferralCapture";
-import { FOUNDER_PRO_INTENT_KEY } from "@/components/RegisterProIntent";
+import { shouldShowFounderOnboarding } from "@/lib/founder-ai-onboarding";
 
 const industries = [
   "Reselling",
@@ -49,7 +49,7 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
           email,
           password,
           options: {
-            emailRedirectTo: `${appUrl}/login`,
+            emailRedirectTo: `${appUrl}/onboarding/founder`,
             data: {
               display_name: name,
               company_name: companyName,
@@ -68,6 +68,14 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
     }
 
     if (isRegister && data.user) {
+      if (!data.session) {
+        setMessage(
+          "Account erstellt. Bitte bestätige deine E-Mail — danach startet Founder dein persönliches Onboarding."
+        );
+        setLoading(false);
+        return;
+      }
+
       const { error: profileError } = await supabase.from("profiles").upsert(
         {
           id: data.user.id,
@@ -116,10 +124,10 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
       }
     }
 
-    const proIntent =
-      typeof window !== "undefined" && window.sessionStorage.getItem(FOUNDER_PRO_INTENT_KEY) === "1";
+    const userId = data.user?.id ?? data.session?.user?.id;
+    const nextPath = userId && shouldShowFounderOnboarding(userId) ? "/onboarding/founder" : "/dashboard";
 
-    router.push(isRegister ? (proIntent ? "/dashboard" : "/onboarding/founder") : "/dashboard");
+    router.push(nextPath);
     router.refresh();
   }
 

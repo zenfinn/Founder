@@ -5,6 +5,7 @@ import { BrandMark } from "@/components/BrandMark";
 import { UserHeaderControls } from "@/components/UserHeaderControls";
 import { CockpitBottomNav } from "@/components/cockpit/CockpitBottomNav";
 import { GlobeBackground } from "@/components/cockpit/GlobeBackground";
+import { FounderOnboardingGate } from "@/components/onboarding/FounderOnboardingGate";
 
 export function CockpitShell({ children }) {
   return (
@@ -23,7 +24,9 @@ export function CockpitShell({ children }) {
         </div>
       </header>
 
-      <main className="relative z-10 min-h-0 flex-1 pb-28">{children}</main>
+      <main className="relative z-10 min-h-0 flex-1 pb-28">
+        <FounderOnboardingGate>{children}</FounderOnboardingGate>
+      </main>
 
       <CockpitBottomNav />
     </div>

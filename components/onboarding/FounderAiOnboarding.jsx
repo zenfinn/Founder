@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Loader2, Mic, MicOff, MessageSquare, Send, Sparkles, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -11,6 +10,7 @@ import {
   FOUNDER_QUESTIONS,
   readOnboardingComplete,
   writeOnboardingComplete,
+  writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { saveOwnProfile } from "@/lib/profiles";
@@ -288,6 +288,11 @@ export function FounderAiOnboarding() {
     }
   }
 
+  function skipOnboarding() {
+    if (userId) writeOnboardingSkipped(userId);
+    router.push("/dashboard");
+  }
+
   function finishOnboarding() {
     if (userId) writeOnboardingComplete(userId);
     router.push("/dashboard");
@@ -507,9 +512,13 @@ export function FounderAiOnboarding() {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/8 pt-4">
-                <Link href="/dashboard" className="text-sm text-neutral-500 hover:text-neutral-300">
+                <button
+                  type="button"
+                  onClick={skipOnboarding}
+                  className="text-sm text-neutral-500 hover:text-neutral-300"
+                >
                   Später
-                </Link>
+                </button>
                 <button
                   type="button"
                   onClick={finishOnboarding}
