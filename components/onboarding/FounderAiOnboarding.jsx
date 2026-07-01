@@ -23,7 +23,6 @@ import { isSafari } from "@/lib/founder-browser";
 import {
   fetchFounderVoiceStatus,
   invalidateFounderVoiceCache,
-  speakFounderText,
   stopFounderSpeech,
   unlockFounderAudioPlayback,
 } from "@/lib/founder-voice";
@@ -61,7 +60,6 @@ export function FounderAiOnboarding({ persistent = false }) {
   const [readyForRanking, setReadyForRanking] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
   const [rankedGroups, setRankedGroups] = useState([]);
   const [joinedSlugs, setJoinedSlugs] = useState({});
   const [joiningSlug, setJoiningSlug] = useState("");
@@ -69,9 +67,7 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   const {
     setFounderIdle,
-    setFounderSpeaking,
     setFounderListening,
-    setFounderThinking,
     setFounderMessage,
     registerGlobeTap,
     setVoiceGlobe,
@@ -89,7 +85,7 @@ export function FounderAiOnboarding({ persistent = false }) {
   const runRankingRef = useRef(null);
   const rankingTriggeredRef = useRef(false);
 
-  const micPaused = chatLoading || isSpeaking;
+  const micPaused = chatLoading;
   const voiceInputEnabled = voiceMode && phase === "chat" && globeActivated;
 
   useEffect(() => {
@@ -162,25 +158,11 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   const playFounderVoice = useCallback(
     async (text) => {
-      if (!voiceModeRef.current || !text?.trim()) return;
-      setIsSpeaking(true);
-      setFounderSpeaking(text);
-      try {
-        await speakFounderText(text);
-      } catch (error) {
-        console.warn("Founder TTS failed", error);
-        setFounderMessage(text);
-      } finally {
-        setIsSpeaking(false);
-        if (voiceModeRef.current) {
-          setFounderListening("Sprich — ich höre zu.");
-          resumeListening();
-        } else {
-          setFounderMessage(text);
-        }
-      }
+      if (!text?.trim()) return;
+      setFounderMessage(text);
+      if (voiceModeRef.current) resumeListening();
     },
-    [resumeListening, setFounderListening, setFounderMessage, setFounderSpeaking]
+    [resumeListening, setFounderMessage]
   );
 
   useEffect(() => {
@@ -208,7 +190,7 @@ export function FounderAiOnboarding({ persistent = false }) {
       setMessages(nextMessages);
       setTextInput("");
       setChatLoading(true);
-      setFounderThinking("Founder denkt nach…");
+      setFounderIdle();
 
       try {
         const response = await fetch("/api/onboarding/founder/chat", {
@@ -240,7 +222,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         setChatLoading(false);
       }
     },
-    [chatLoading, playFounderVoice, resumeListening, setFounderMessage, setFounderThinking]
+    [chatLoading, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage]
   );
 
   const handleSpeechComplete = useCallback(
@@ -276,13 +258,11 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   const globeStatus = chatLoading
     ? "thinking"
-    : isSpeaking
-      ? "speaking"
-      : speech.processing
-        ? "processing"
-        : speech.listening
-          ? "listening"
-          : "idle";
+    : speech.processing
+      ? "processing"
+      : speech.listening
+        ? "listening"
+        : "idle";
 
   const handleGlobeTap = useCallback(() => {
     if (!speechSupported) {
@@ -310,20 +290,14 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   useEffect(() => {
     if (!voiceMode || phase !== "chat") return;
-    if (chatLoading) {
-      setFounderThinking("Founder denkt nach…");
-      return;
-    }
-    if (isSpeaking) return;
+    if (chatLoading) return;
     if (speech.listening) {
       setFounderListening(speech.liveTranscript || "Sprich — ich höre zu.");
     }
   }, [
     chatLoading,
-    isSpeaking,
     phase,
     setFounderListening,
-    setFounderThinking,
     speech.listening,
     speech.liveTranscript,
     voiceMode,
@@ -345,8 +319,8 @@ export function FounderAiOnboarding({ persistent = false }) {
         : JARVIS_START_HINT,
       listening: isSafari() ? "Sprich jetzt…" : speech.engine === "whisper" ? (speech.recording ? "Ich nehme auf…" : "Sprich jetzt — ich höre zu") : "Ich höre zu…",
       processing: "Erkenne deine Sprache…",
-      speaking: "Founder spricht…",
-      thinking: "Founder denkt nach…",
+      speaking: "",
+      thinking: "",
     };
 
     setVoiceGlobe({
@@ -354,7 +328,7 @@ export function FounderAiOnboarding({ persistent = false }) {
       started: globeActivated,
       hint: hintByStatus[globeStatus] ?? hintByStatus.idle,
       error: speech.micError ?? "",
-      tapDisabled: chatLoading || isSpeaking,
+      tapDisabled: chatLoading,
     });
 
     return () => setVoiceGlobe({ active: false, started: false, hint: "", error: "", tapDisabled: true });
@@ -362,7 +336,6 @@ export function FounderAiOnboarding({ persistent = false }) {
     chatLoading,
     globeActivated,
     globeStatus,
-    isSpeaking,
     phase,
     setVoiceGlobe,
     speech.micError,
@@ -475,7 +448,7 @@ export function FounderAiOnboarding({ persistent = false }) {
     router.push("/dashboard");
   }
 
-  const canRank = readyForRanking && !chatLoading && !isSpeaking;
+  const canRank = readyForRanking && !chatLoading;
 
   const liveTranscript =
     voiceMode && speech.listening && speech.liveTranscript?.trim() ? speech.liveTranscript.trim() : "";
@@ -497,31 +470,28 @@ export function FounderAiOnboarding({ persistent = false }) {
             exit={{ opacity: 0, y: -8 }}
             className="flex flex-col"
           >
-            <div className="mb-2 flex shrink-0 items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5b8cff]">Phase 1</p>
-              <div className="flex gap-1.5">
-                <button
-                  type="button"
-                  onClick={disableVoiceMode}
-                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
-                    !voiceMode ? "bg-[#1a3aad] text-white" : "bg-white/5 text-neutral-400"
-                  }`}
-                >
-                  <MessageSquare className="h-3.5 w-3.5" />
-                  Text
-                </button>
-                <button
-                  type="button"
-                  disabled={!speechSupported}
-                  onClick={enableVoiceMode}
-                  className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold disabled:opacity-40 ${
-                    voiceMode ? "bg-[#1a3aad] text-white" : "bg-white/5 text-neutral-400"
-                  }`}
-                >
-                  <Mic className="h-3.5 w-3.5" />
-                  Kugel
-                </button>
-              </div>
+            <div className="mb-2 flex shrink-0 justify-end gap-1.5">
+              <button
+                type="button"
+                onClick={disableVoiceMode}
+                className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${
+                  !voiceMode ? "bg-[#1a3aad] text-white" : "bg-white/5 text-neutral-400"
+                }`}
+              >
+                <MessageSquare className="h-3.5 w-3.5" />
+                Text
+              </button>
+              <button
+                type="button"
+                disabled={!speechSupported}
+                onClick={enableVoiceMode}
+                className={`inline-flex min-h-[36px] items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold disabled:opacity-40 ${
+                  voiceMode ? "bg-[#1a3aad] text-white" : "bg-white/5 text-neutral-400"
+                }`}
+              >
+                <Mic className="h-3.5 w-3.5" />
+                Kugel
+              </button>
             </div>
 
             <div

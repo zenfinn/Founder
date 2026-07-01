@@ -289,7 +289,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
           />
         </div>
 
-        {voiceGlobe.started && message?.trim() && (
+        {voiceGlobe.started && message?.trim() && activity !== "thinking" && (
           <div className="mt-4 max-w-sm text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#5b8cff]">
               {userSpeech ? "Du" : "Founder"}
