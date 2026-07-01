@@ -146,6 +146,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         profileRef.current = {};
         setGlobeActivated(false);
         globeActivatedRef.current = false;
+        rankingTriggeredRef.current = false;
         setForceOnboarding(true);
         setAssistantMode(false);
         setUserId(user.id);
@@ -278,6 +279,17 @@ export function FounderAiOnboarding({ persistent = false }) {
         } else {
           setFounderMessage(reply);
         }
+
+        if (
+          payload.readyForRanking &&
+          payload.autoRank !== false &&
+          !assistantMode &&
+          !rankingTriggeredRef.current &&
+          phaseRef.current === "chat"
+        ) {
+          rankingTriggeredRef.current = true;
+          window.setTimeout(() => runRankingRef.current?.(), voiceModeRef.current ? 400 : 200);
+        }
       } catch (error) {
         const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
         setMessages((current) => [...current, { role: "founder", text: errorText }]);
@@ -287,7 +299,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         setChatLoading(false);
       }
     },
-    [chatLoading, chatMode, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage]
+    [assistantMode, chatLoading, chatMode, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage]
   );
 
   const handleSpeechComplete = useCallback(
