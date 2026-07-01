@@ -17,7 +17,7 @@ import {
   writeOnboardingComplete,
   writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
-import { buildRankingSpeech, getJarvisOpeningMessage } from "@/lib/founder-jarvis";
+import { buildRankingSpeech } from "@/lib/founder-jarvis";
 import { isSttSupported } from "@/lib/founder-stt-preference";
 import { isSafari } from "@/lib/founder-browser";
 import {
@@ -84,7 +84,6 @@ export function FounderAiOnboarding({ persistent = false }) {
   const processingVoiceRef = useRef(false);
   const chatEndRef = useRef(null);
   const openingStartedRef = useRef(false);
-  const openingSpokenRef = useRef(false);
   const globeActivatedRef = useRef(false);
   const speechRef = useRef(null);
   const runRankingRef = useRef(null);
@@ -314,20 +313,11 @@ export function FounderAiOnboarding({ persistent = false }) {
       globeActivatedRef.current = true;
     });
 
-    if (!openingSpokenRef.current) {
-      openingSpokenRef.current = true;
-      const opening = getJarvisOpeningMessage();
-      setMessages([{ role: "founder", text: opening }]);
-      void playFounderVoice(opening);
-      return;
-    }
-
-    setFounderListening("Sprich jetzt — ich höre zu.");
+    setFounderListening("Sprich — ich höre zu.");
     stopFounderSpeech();
     speechRef.current?.resetTranscript?.();
-    // Sync start — Safari bricht STT bei await vor startListening
     speechRef.current?.startListening?.({ force: true });
-  }, [playFounderVoice, setFounderListening, speechSupported]);
+  }, [setFounderListening, speechSupported]);
 
   useEffect(() => {
     globeActivatedRef.current = globeActivated;
