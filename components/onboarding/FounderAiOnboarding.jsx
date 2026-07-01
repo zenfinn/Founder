@@ -22,6 +22,7 @@ import { isSttSupported } from "@/lib/founder-stt-preference";
 import {
   fetchFounderVoiceStatus,
   invalidateFounderVoiceCache,
+  requestMicrophoneAccess,
   speakFounderText,
   stopFounderSpeech,
 } from "@/lib/founder-voice";
@@ -274,9 +275,19 @@ export function FounderAiOnboarding({ persistent = false }) {
           ? "listening"
           : "idle";
 
-  const handleGlobeTap = useCallback(() => {
+  const handleGlobeTap = useCallback(async () => {
     if (!speechSupported) {
       setVoiceMode(false);
+      return;
+    }
+
+    const micOk = await requestMicrophoneAccess();
+    if (!micOk) {
+      setVoiceGlobe((current) => ({
+        ...current,
+        active: true,
+        error: "Mikrofon verweigert — in Safari/Chrome unter Einstellungen → Website → Mikrofon erlauben.",
+      }));
       return;
     }
 
@@ -292,10 +303,10 @@ export function FounderAiOnboarding({ persistent = false }) {
       return;
     }
 
-    setFounderListening("Sprich — ich höre zu.");
+    setFounderListening("Sprich jetzt — ich höre zu.");
     speechRef.current?.resetTranscript?.();
     speechRef.current?.startListening?.({ force: true });
-  }, [playFounderVoice, setFounderListening, speechSupported]);
+  }, [playFounderVoice, setFounderListening, setVoiceGlobe, speechSupported]);
 
   useEffect(() => {
     globeActivatedRef.current = globeActivated;
@@ -331,8 +342,13 @@ export function FounderAiOnboarding({ persistent = false }) {
     }
 
     const hintByStatus = {
-      idle: globeActivated ? "Tippe nochmal — Mikrofon starten" : "Tippe die Kugel — sprich mit Founder",
-      listening: "Ich höre zu…",
+      idle: globeActivated ? "Tippe die Kugel — dann sprich" : "Tippe die Kugel — sprich mit Founder",
+      listening:
+        speech.engine === "whisper"
+          ? speech.recording
+            ? "Ich nehme auf…"
+            : "Sprich jetzt — ich höre zu"
+          : "Ich höre zu…",
       processing: "Erkenne deine Sprache…",
       speaking: "Founder spricht…",
       thinking: "Founder denkt nach…",
@@ -354,6 +370,8 @@ export function FounderAiOnboarding({ persistent = false }) {
     phase,
     setVoiceGlobe,
     speech.micError,
+    speech.engine,
+    speech.recording,
     voiceMode,
   ]);
 
