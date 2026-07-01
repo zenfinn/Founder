@@ -6,7 +6,7 @@ import { Loader2, MessageSquare, Mic, Send, Sparkles, Trophy } from "lucide-reac
 import { motion, AnimatePresence } from "framer-motion";
 import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
 import { FounderAvatar } from "@/components/onboarding/FounderAvatar";
-import { useFounderVoiceSession } from "@/hooks/useFounderVoiceSession";
+import { useFounderSpeechInput } from "@/hooks/useFounderSpeechInput";
 import {
   FOUNDER_GREETING,
   FOUNDER_QUESTIONS,
@@ -15,8 +15,7 @@ import {
   writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
 import {
-  isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
+  isFounderVoiceSupported,
   speakFounderText,
   stopFounderSpeech,
 } from "@/lib/founder-voice";
@@ -111,7 +110,7 @@ export function FounderAiOnboarding() {
   }, [answers]);
 
   useEffect(() => {
-    setSpeechSupported(isSpeechRecognitionSupported() && isSpeechSynthesisSupported());
+    isFounderVoiceSupported().then(setSpeechSupported);
   }, []);
 
   useEffect(() => {
@@ -226,13 +225,13 @@ export function FounderAiOnboarding() {
     [submitAnswer]
   );
 
-  const triggerVoice = useFounderVoiceSession({
+  const triggerVoice = useFounderSpeechInput({
     enabled: step === "trigger" && triggerVoiceActive && isVoiceMode,
     paused: founderSpeaking,
     onTranscriptComplete: handleTriggerVoiceComplete,
   });
 
-  const interviewVoice = useFounderVoiceSession({
+  const interviewVoice = useFounderSpeechInput({
     enabled: step === "interview" && isVoiceMode,
     paused: founderSpeaking || step !== "interview",
     onTranscriptComplete: handleInterviewVoiceComplete,
@@ -387,7 +386,8 @@ export function FounderAiOnboarding() {
   }
 
   const activeMicError = triggerVoice.micError || interviewVoice.micError;
-  const avatarListening = !founderSpeaking && (triggerVoice.listening || interviewVoice.listening);
+  const avatarListening =
+    !founderSpeaking && (triggerVoice.listening || interviewVoice.listening) && !interviewVoice.processing;
   const avatarSpeaking = founderSpeaking;
 
   return (
@@ -497,7 +497,8 @@ export function FounderAiOnboarding() {
                 )}
                 {speechSupported && (
                   <p className="mt-3 text-xs text-neutral-500">
-                    Bei Sprache: einfach lossprechen — Founder erkennt automatisch, wenn du fertig bist.
+                    Bei Sprache: einfach lossprechen — Founder erkennt automatisch, wenn du fertig bist. Am besten
+                    mit Kopfhörer-Mikrofon.
                   </p>
                 )}
               </motion.div>
@@ -532,10 +533,21 @@ export function FounderAiOnboarding() {
                   <div className="mt-6 space-y-3">
                     <div className="rounded-xl border border-[#1a3aad]/30 bg-[#0a1020]/80 px-4 py-4">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-[#5b8cff]">
-                        {founderSpeaking ? "Founder spricht" : interviewVoice.listening ? "Ich höre zu" : "Bereit"}
+                        {founderSpeaking
+                          ? "Founder spricht"
+                          : interviewVoice.processing
+                            ? "Erkenne deine Antwort"
+                            : interviewVoice.recording
+                              ? "Ich höre zu"
+                              : interviewVoice.listening
+                                ? "Bereit — sprich los"
+                                : "Mikro aktivieren"}
                       </p>
                       <p className="mt-2 min-h-[72px] text-sm leading-6 text-neutral-200">
-                        {currentAnswer || "Sprich einfach los — deine Antwort erscheint hier live."}
+                        {currentAnswer ||
+                          (interviewVoice.processing
+                            ? "Einen Moment — ich wandle deine Sprache in Text um."
+                            : "Sprich einfach los — deine Antwort erscheint hier live.")}
                       </p>
                     </div>
                     {activeMicError && (

@@ -46,6 +46,9 @@ SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=Founder <no-reply@founder.example>
 ADMIN_EMAIL=joinfounder@gmail.com
+
+# Founder AI voice (Onboarding TTS + Whisper STT — required for Mac/Safari voice mode)
+OPENAI_API_KEY=
 ```
 
 ## Stripe Webhook
