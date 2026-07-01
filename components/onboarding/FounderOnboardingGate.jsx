@@ -29,7 +29,7 @@ export function FounderOnboardingGate({ children }) {
 
       if (cancelled) return;
 
-      if (user?.id && shouldShowFounderOnboarding(user.id)) {
+      if (user?.id && shouldShowFounderOnboarding(user.id, user.email)) {
         router.replace("/onboarding/founder");
         return;
       }

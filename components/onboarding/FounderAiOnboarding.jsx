@@ -13,11 +13,17 @@ import {
 } from "@/components/onboarding/FounderNicheStaircase";
 import { useFounderSpeechInput } from "@/hooks/useFounderSpeechInput";
 import {
+  isForceOnboardingEmail,
   readOnboardingComplete,
   writeOnboardingComplete,
   writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
 import { buildRankingSpeech } from "@/lib/founder-jarvis";
+import {
+  clearJarvisSession,
+  readJarvisSession,
+  writeJarvisSession,
+} from "@/lib/founder-jarvis-session";
 import { isSttSupported } from "@/lib/founder-stt-preference";
 import { isSafari } from "@/lib/founder-browser";
 import {
@@ -27,7 +33,7 @@ import {
   unlockFounderAudioPlayback,
 } from "@/lib/founder-voice";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { saveOwnProfile } from "@/lib/profiles";
+import { getOwnProfile, saveOwnProfile } from "@/lib/profiles";
 
 const JARVIS_START_HINT = "Drücke auf die Kugel um Jarvis zu starten";
 
@@ -52,6 +58,9 @@ export function FounderAiOnboarding({ persistent = false }) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [userId, setUserId] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [assistantMode, setAssistantMode] = useState(false);
+  const [forceOnboarding, setForceOnboarding] = useState(false);
   const [phase, setPhase] = useState("chat");
   const [voiceMode, setVoiceMode] = useState(true);
   const [globeActivated, setGlobeActivated] = useState(false);
@@ -125,11 +134,56 @@ export function FounderAiOnboarding({ persistent = false }) {
         router.replace("/login");
         return;
       }
-      if (!persistent && readOnboardingComplete(user.id)) {
-        router.replace("/dashboard");
+
+      const email = user.email ?? "";
+      const demoOnboarding = isForceOnboardingEmail(email);
+      const onboardingDone = !demoOnboarding && readOnboardingComplete(user.id, email);
+
+      if (demoOnboarding) {
+        clearJarvisSession(user.id);
+        setMessages([]);
+        setProfile({});
+        profileRef.current = {};
+        setGlobeActivated(false);
+        globeActivatedRef.current = false;
+        setForceOnboarding(true);
+        setAssistantMode(false);
+        setUserId(user.id);
+        setUserEmail(email);
         return;
       }
+
+      if (!persistent && onboardingDone) {
+        router.replace("/jarvis");
+        return;
+      }
+
+      if (persistent && onboardingDone) {
+        setAssistantMode(true);
+        const session = readJarvisSession(user.id);
+        const dbProfile = await getOwnProfile(supabase, user.id).catch(() => null);
+        const seedProfile = {
+          ...(session?.profile ?? {}),
+          name: session?.profile?.name || dbProfile?.display_name || undefined,
+          interests: session?.profile?.interests?.length
+            ? session.profile.interests
+            : dbProfile?.interests?.length
+              ? dbProfile.interests
+              : undefined,
+        };
+        if (session?.messages?.length) setMessages(session.messages);
+        if (Object.keys(seedProfile).length) {
+          setProfile(seedProfile);
+          profileRef.current = seedProfile;
+        }
+        setUserId(user.id);
+        setUserEmail(email);
+        return;
+      }
+
+      setAssistantMode(false);
       setUserId(user.id);
+      setUserEmail(email);
     }
 
     loadUser();
@@ -137,6 +191,13 @@ export function FounderAiOnboarding({ persistent = false }) {
       cancelled = true;
     };
   }, [persistent, router, supabase]);
+
+  useEffect(() => {
+    if (!userId || !assistantMode || forceOnboarding) return;
+    writeJarvisSession(userId, { messages, profile });
+  }, [assistantMode, forceOnboarding, messages, profile, userId]);
+
+  const chatMode = assistantMode ? "assistant" : "onboarding";
 
   const lastFounderText = useMemo(() => {
     const founderMessages = messages.filter((message) => message.role === "founder");
@@ -196,7 +257,11 @@ export function FounderAiOnboarding({ persistent = false }) {
         const response = await fetch("/api/onboarding/founder/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: nextMessages, profile: profileRef.current }),
+          body: JSON.stringify({
+            messages: nextMessages,
+            profile: profileRef.current,
+            mode: chatMode,
+          }),
         });
         const payload = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(payload.error ?? "Antwort fehlgeschlagen.");
@@ -222,7 +287,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         setChatLoading(false);
       }
     },
-    [chatLoading, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage]
+    [chatLoading, chatMode, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage]
   );
 
   const handleSpeechComplete = useCallback(
@@ -441,15 +506,19 @@ export function FounderAiOnboarding({ persistent = false }) {
   function skipOnboarding() {
     stopFounderSpeech();
     setFounderIdle();
-    if (userId) writeOnboardingSkipped(userId);
+    if (userId) writeOnboardingSkipped(userId, userEmail);
+    if (assistantMode && userId) writeJarvisSession(userId, { messages, profile });
     router.push("/dashboard");
   }
 
   function finishOnboarding() {
     stopFounderSpeech();
     setFounderIdle();
-    if (userId) writeOnboardingComplete(userId);
-    router.push("/dashboard");
+    if (userId && !forceOnboarding) {
+      writeOnboardingComplete(userId, userEmail);
+      writeJarvisSession(userId, { messages, profile });
+    }
+    router.push(forceOnboarding ? "/jarvis" : "/dashboard");
   }
 
   const canRank = readyForRanking && !chatLoading;
@@ -527,7 +596,7 @@ export function FounderAiOnboarding({ persistent = false }) {
                   <input
                     value={textInput}
                     onChange={(event) => setTextInput(event.target.value)}
-                    placeholder="Erzähl Founder von dir…"
+                    placeholder={assistantMode ? "Frag Founder etwas…" : "Erzähl Founder von dir…"}
                     disabled={chatLoading}
                     className="min-h-[44px] flex-1 rounded-xl border border-white/10 bg-black/40 px-3.5 py-2.5 text-base text-white outline-none ring-[#1a3aad] focus:ring-2 disabled:opacity-50 sm:text-sm"
                   />
@@ -543,16 +612,18 @@ export function FounderAiOnboarding({ persistent = false }) {
 
               <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={skipOnboarding} className="min-h-[44px] px-2 text-sm text-neutral-500">
-                  Später
+                  {assistantMode ? "Dashboard" : "Später"}
                 </button>
-                <button
-                  type="button"
-                  disabled={!canRank}
-                  onClick={runRanking}
-                  className="min-h-[44px] rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40"
-                >
-                  Meine Top-Nischen
-                </button>
+                {!assistantMode && (
+                  <button
+                    type="button"
+                    disabled={!canRank}
+                    onClick={runRanking}
+                    className="min-h-[44px] rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40"
+                  >
+                    Meine Top-Nischen
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
@@ -605,9 +676,15 @@ export function FounderAiOnboarding({ persistent = false }) {
   return (
     <CockpitPage
       compact
-      eyebrow={voiceMode ? undefined : "Founder AI"}
-      title={voiceMode ? undefined : "Dein persönlicher Start"}
-      description={voiceMode ? undefined : "Erzähl Founder von dir."}
+      eyebrow={voiceMode ? undefined : assistantMode ? "Founder AI" : "Founder AI"}
+      title={voiceMode ? undefined : assistantMode ? "Dein Founder-Assistent" : "Dein persönlicher Start"}
+      description={
+        voiceMode
+          ? undefined
+          : assistantMode
+            ? "Frag mich zu Rängen, Steuern, Nischen oder der Plattform."
+            : "Erzähl Founder von dir."
+      }
       className="min-h-0 flex-1 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
     >
       {chatPanel}

@@ -100,7 +100,9 @@ export function AuthForm({ mode = "login", requestedRank: defaultRank = "aspirin
     }
 
     const userId = data.user?.id ?? data.session?.user?.id;
-    const nextPath = userId && shouldShowFounderOnboarding(userId) ? "/onboarding/founder" : "/dashboard";
+    const userEmail = data.user?.email ?? data.session?.user?.email ?? "";
+    const nextPath =
+      userId && shouldShowFounderOnboarding(userId, userEmail) ? "/onboarding/founder" : "/dashboard";
 
     router.push(nextPath);
     router.refresh();
