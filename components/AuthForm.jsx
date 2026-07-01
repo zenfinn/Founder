@@ -119,7 +119,7 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
     const proIntent =
       typeof window !== "undefined" && window.sessionStorage.getItem(FOUNDER_PRO_INTENT_KEY) === "1";
 
-    router.push(isRegister ? (proIntent ? "/dashboard" : "/profile/verify") : "/dashboard");
+    router.push(isRegister ? (proIntent ? "/dashboard" : "/onboarding/founder") : "/dashboard");
     router.refresh();
   }
 
