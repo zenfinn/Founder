@@ -53,6 +53,7 @@ const supabaseHost = process.env.NEXT_PUBLIC_SUPABASE_URL
 
 export const viewport = {
   themeColor: "#1a3aad",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }) {

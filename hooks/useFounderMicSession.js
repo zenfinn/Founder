@@ -193,8 +193,8 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     rafRef.current = requestAnimationFrame(monitorInput);
   }, [finishRecording]);
 
-  const startSession = useCallback(async () => {
-    if (!enabledRef.current) return;
+  const startSession = useCallback(async ({ force = false } = {}) => {
+    if (!force && !enabledRef.current) return;
 
     const mimeType = pickRecorderMimeType();
     if (!mimeType) {

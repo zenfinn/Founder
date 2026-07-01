@@ -4,9 +4,24 @@ import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
 
 const STEP_LAYOUT = {
-  1: { order: "order-2 md:col-start-2", height: "h-44 md:h-52", delay: 0.35 },
-  2: { order: "order-1 md:col-start-1", height: "h-36 md:h-40", delay: 0.15 },
-  3: { order: "order-3 md:col-start-3", height: "h-28 md:h-32", delay: 0.55 },
+  1: {
+    order: "order-1",
+    desktopOrder: "md:order-2 md:col-start-2",
+    height: "min-h-[11rem] md:h-52",
+    delay: 0.1,
+  },
+  2: {
+    order: "order-2",
+    desktopOrder: "md:order-1 md:col-start-1",
+    height: "min-h-[10rem] md:h-40",
+    delay: 0.2,
+  },
+  3: {
+    order: "order-3",
+    desktopOrder: "md:order-3 md:col-start-3",
+    height: "min-h-[9.5rem] md:h-32",
+    delay: 0.3,
+  },
 };
 
 function StairStep({ group, rank, onJoin, joining, joined, preview = false }) {
@@ -15,18 +30,18 @@ function StairStep({ group, rank, onJoin, joining, joined, preview = false }) {
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 32, scale: 0.95 }}
+      initial={{ opacity: 0, y: 20, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: layout.delay, type: "spring", stiffness: 120, damping: 16 }}
-      className={`flex flex-col ${layout.order} ${layout.height} rounded-t-2xl border border-t-4 bg-gradient-to-b p-4 ${
+      className={`flex flex-col ${layout.order} ${layout.desktopOrder} ${layout.height} rounded-2xl border border-t-4 bg-gradient-to-b p-4 sm:rounded-t-2xl ${
         rank === 1
-          ? "border-t-amber-400/80 from-amber-500/20 to-[#0a0a0a] shadow-[0_0_48px_rgba(251,191,36,0.15)]"
+          ? "border-t-amber-400/80 from-amber-500/20 to-[#0a0a0a] shadow-[0_0_48px_rgba(251,191,36,0.12)]"
           : "border-t-[#5b8cff]/60 from-[#1a3aad]/15 to-[#0a0a0a]"
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xl">{medals[rank]}</span>
-        <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-neutral-400">
+        <span className="text-2xl">{medals[rank]}</span>
+        <span className="rounded-full bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-neutral-400">
           #{rank}
         </span>
       </div>
@@ -38,16 +53,14 @@ function StairStep({ group, rank, onJoin, joining, joined, preview = false }) {
         </div>
       ) : (
         <>
-          <h3 className="mt-2 font-serif text-base font-bold text-white md:text-lg">{group.name}</h3>
-          <p className="text-[11px] text-[#5b8cff]">{group.category}</p>
-          <p className="mt-1 flex-1 text-xs leading-5 text-neutral-400 line-clamp-3">
-            {group.matchReason ?? group.coachTip}
-          </p>
+          <h3 className="mt-2 font-serif text-lg font-bold text-white">{group.name}</h3>
+          <p className="text-xs text-[#5b8cff]">{group.category}</p>
+          <p className="mt-2 flex-1 text-sm leading-6 text-neutral-400">{group.matchReason ?? group.coachTip}</p>
           <button
             type="button"
             disabled={joining || joined}
             onClick={() => onJoin?.(group)}
-            className="mt-3 w-full rounded-xl bg-[#1a3aad] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#2448c7] disabled:cursor-not-allowed disabled:opacity-60 md:text-sm"
+            className="mt-4 min-h-[44px] w-full rounded-xl bg-[#1a3aad] px-4 py-3 text-sm font-semibold text-white transition active:scale-[0.98] hover:bg-[#2448c7] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {joined ? "Beigetreten ✓" : joining ? "Beitritt…" : "Beitreten"}
           </button>
@@ -59,14 +72,14 @@ function StairStep({ group, rank, onJoin, joining, joined, preview = false }) {
 
 export function FounderStaircaseLoading() {
   return (
-    <div className="flex min-h-[320px] flex-col items-center justify-center text-center">
-      <Loader2 className="h-10 w-10 animate-spin text-[#5b8cff]" />
-      <p className="mt-6 font-serif text-xl text-white">Founder matcht deine Nischen…</p>
+    <div className="flex min-h-[240px] flex-col items-center justify-center px-2 text-center sm:min-h-[320px]">
+      <Loader2 className="h-9 w-9 animate-spin text-[#5b8cff] sm:h-10 sm:w-10" />
+      <p className="mt-5 font-serif text-lg text-white sm:mt-6 sm:text-xl">Founder matcht deine Nischen…</p>
       <p className="mt-2 text-sm text-neutral-500">Dein Treppchen wird aufgebaut.</p>
 
-      <div className="mt-10 grid w-full max-w-3xl grid-cols-1 items-end gap-3 md:grid-cols-3 md:gap-4">
-        <StairStep rank={2} preview />
+      <div className="mt-8 grid w-full max-w-3xl grid-cols-1 items-stretch gap-3 md:mt-10 md:grid-cols-3 md:items-end md:gap-4">
         <StairStep rank={1} preview />
+        <StairStep rank={2} preview />
         <StairStep rank={3} preview />
       </div>
     </div>
@@ -77,16 +90,16 @@ export function FounderNicheStaircase({ groups, onJoin, joiningSlug, joinedSlugs
   const byRank = [1, 2, 3].map((rank) => groups.find((g) => g.rank === rank)).filter(Boolean);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#5b8cff]">Phase 2</p>
-        <h2 className="mt-2 font-serif text-2xl font-bold text-white">Deine Top-3 Nischen</h2>
-        <p className="mt-1 text-sm text-neutral-400">Steig ein — ein Klick und du bist in der Gruppe.</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#5b8cff] sm:text-xs">Phase 2</p>
+        <h2 className="mt-2 font-serif text-xl font-bold text-white sm:text-2xl">Deine Top-3 Nischen</h2>
+        <p className="mt-1 text-sm text-neutral-400">Ein Tipp — und du bist in der Gruppe.</p>
       </div>
 
       <div className="relative">
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-        <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-3 md:gap-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-px bg-gradient-to-r from-transparent via-white/15 to-transparent md:block" />
+        <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 md:items-end md:gap-4">
           {byRank.map((group) => (
             <StairStep
               key={group.id ?? group.slug}
