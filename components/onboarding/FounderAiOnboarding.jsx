@@ -43,7 +43,7 @@ function ChatBubble({ message }) {
   );
 }
 
-export function FounderAiOnboarding() {
+export function FounderAiOnboarding({ persistent = false }) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const [userId, setUserId] = useState("");
@@ -122,7 +122,7 @@ export function FounderAiOnboarding() {
         router.replace("/login");
         return;
       }
-      if (readOnboardingComplete(user.id)) {
+      if (!persistent && readOnboardingComplete(user.id)) {
         router.replace("/dashboard");
         return;
       }
@@ -133,7 +133,7 @@ export function FounderAiOnboarding() {
     return () => {
       cancelled = true;
     };
-  }, [router, supabase]);
+  }, [persistent, router, supabase]);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });

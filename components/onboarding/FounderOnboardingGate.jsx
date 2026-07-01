@@ -10,10 +10,12 @@ export function FounderOnboardingGate({ children }) {
   const pathname = usePathname();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const onOnboardingPage = pathname?.startsWith("/onboarding/founder");
-  const [ready, setReady] = useState(onOnboardingPage);
+  const onJarvisPage = pathname?.startsWith("/jarvis");
+  const skipEnforce = onOnboardingPage || onJarvisPage;
+  const [ready, setReady] = useState(skipEnforce);
 
   useEffect(() => {
-    if (onOnboardingPage) {
+    if (skipEnforce) {
       setReady(true);
       return;
     }
@@ -41,7 +43,7 @@ export function FounderOnboardingGate({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [onOnboardingPage, pathname, router, supabase]);
+  }, [pathname, router, skipEnforce, supabase]);
 
   if (!ready) {
     return (
