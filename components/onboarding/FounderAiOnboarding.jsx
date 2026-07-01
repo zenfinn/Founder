@@ -25,6 +25,7 @@ import {
   invalidateFounderVoiceCache,
   speakFounderText,
   stopFounderSpeech,
+  unlockFounderAudioPlayback,
 } from "@/lib/founder-voice";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { saveOwnProfile } from "@/lib/profiles";
@@ -167,6 +168,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         await speakFounderText(text);
       } catch (error) {
         console.warn("Founder TTS failed", error);
+        setFounderMessage(text);
       } finally {
         setIsSpeaking(false);
         if (voiceModeRef.current) {
@@ -285,6 +287,8 @@ export function FounderAiOnboarding({ persistent = false }) {
       setVoiceMode(false);
       return;
     }
+
+    unlockFounderAudioPlayback();
 
     flushSync(() => {
       setVoiceMode(true);
