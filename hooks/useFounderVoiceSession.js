@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isSpeechRecognitionSupported } from "@/lib/founder-voice";
 
-const SILENCE_MS = 2200;
+const SILENCE_MS = 1800;
 const MIN_UTTERANCE_CHARS = 2;
 
 export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }) {
@@ -18,10 +18,20 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   const finalBufferRef = useRef("");
   const interimRef = useRef("");
   const onCompleteRef = useRef(onTranscriptComplete);
+  const enabledRef = useRef(enabled);
+  const pausedRef = useRef(paused);
 
   useEffect(() => {
     onCompleteRef.current = onTranscriptComplete;
   }, [onTranscriptComplete]);
+
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
 
   const clearSilenceTimer = useCallback(() => {
     if (silenceTimerRef.current) {
@@ -43,7 +53,11 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     if (combined.length < MIN_UTTERANCE_CHARS) return;
 
     shouldListenRef.current = false;
-    recognitionRef.current?.stop?.();
+    try {
+      recognitionRef.current?.stop?.();
+    } catch {
+      // ignore
+    }
     setListening(false);
     clearSilenceTimer();
     onCompleteRef.current?.(combined);
@@ -57,13 +71,27 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   const stopListening = useCallback(() => {
     shouldListenRef.current = false;
     clearSilenceTimer();
-    recognitionRef.current?.stop?.();
+    try {
+      recognitionRef.current?.stop?.();
+    } catch {
+      // ignore
+    }
     setListening(false);
   }, [clearSilenceTimer]);
 
   const startListening = useCallback(({ force = false } = {}) => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition || (!force && (!enabled || paused))) return;
+    if (!SpeechRecognition) {
+      setMicError("Spracherkennung wird in diesem Browser nicht unterstützt.");
+      return;
+    }
+
+    if (force) {
+      enabledRef.current = true;
+      pausedRef.current = false;
+    }
+
+    if (!force && (!enabledRef.current || pausedRef.current)) return;
 
     stopListening();
     shouldListenRef.current = true;
@@ -101,30 +129,32 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     };
 
     recognition.onerror = (event) => {
-      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
-        setMicError("Mikrofon-Zugriff verweigert. Bitte in den Browser-Einstellungen erlauben.");
+      const code = event.error ?? "unknown";
+
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        setMicError("Mikrofon verweigert — bitte in den Browser-Einstellungen erlauben.");
         shouldListenRef.current = false;
         setListening(false);
         return;
       }
 
-      if (event.error === "no-speech" || event.error === "aborted") return;
+      if (code === "no-speech" || code === "aborted") return;
 
-      setMicError("Spracherkennung unterbrochen — ich versuche es erneut.");
+      setMicError("Spracherkennung unterbrochen — tippe die Kugel nochmal.");
     };
 
     recognition.onend = () => {
       setListening(false);
-      if (!shouldListenRef.current || paused || !enabled) return;
+      if (!shouldListenRef.current || pausedRef.current || !enabledRef.current) return;
 
       window.setTimeout(() => {
-        if (!shouldListenRef.current || paused || !enabled) return;
+        if (!shouldListenRef.current || pausedRef.current || !enabledRef.current) return;
         try {
           recognition.start();
         } catch {
-          // ignore restart races
+          // restart via new tap
         }
-      }, 280);
+      }, 300);
     };
 
     recognitionRef.current = recognition;
@@ -135,7 +165,7 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
       setMicError(error.message ?? "Mikrofon konnte nicht gestartet werden.");
       setListening(false);
     }
-  }, [enabled, paused, scheduleSilenceCheck, stopListening]);
+  }, [scheduleSilenceCheck, stopListening]);
 
   useEffect(() => {
     if (!enabled || paused) {
@@ -150,7 +180,11 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     return () => {
       shouldListenRef.current = false;
       clearSilenceTimer();
-      recognitionRef.current?.stop?.();
+      try {
+        recognitionRef.current?.stop?.();
+      } catch {
+        // ignore
+      }
     };
   }, [clearSilenceTimer]);
 
@@ -159,6 +193,8 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   return {
     supported: isSpeechRecognitionSupported(),
     listening,
+    recording: false,
+    processing: false,
     micError,
     liveTranscript,
     resetTranscript,
