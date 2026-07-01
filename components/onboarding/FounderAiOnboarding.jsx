@@ -548,7 +548,9 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   const chatPanel = (
     <CockpitPanel
-      className={`relative flex flex-col overflow-hidden backdrop-blur-md ${
+      className={`relative flex flex-col backdrop-blur-md ${
+        phase === "staircase" || phase === "loading" ? "overflow-visible" : "overflow-hidden"
+      } ${
         voiceMode
           ? "border-[#1a3aad]/25 bg-[#050505]/75 shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
           : "min-h-[min(72dvh,720px)] bg-[#050505]/55 sm:min-h-[520px]"
