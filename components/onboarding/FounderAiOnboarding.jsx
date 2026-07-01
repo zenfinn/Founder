@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { Loader2, MessageSquare, Mic, Send, Sparkles, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
-import { FounderAvatar } from "@/components/onboarding/FounderAvatar";
+import {
+  founderSpeak,
+  typeFounderMessage,
+  useFounderGlobe,
+} from "@/components/cockpit/FounderGlobeContext";
+import { FounderGlobeMessage } from "@/components/onboarding/FounderGlobeMessage";
 import { useFounderSpeechInput } from "@/hooks/useFounderSpeechInput";
 import {
   FOUNDER_GREETING,
@@ -15,8 +20,9 @@ import {
   writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
 import {
-  isFounderVoiceSupported,
-  speakFounderText,
+  fetchFounderVoiceStatus,
+  invalidateFounderVoiceCache,
+  isMediaRecorderSupported,
   stopFounderSpeech,
 } from "@/lib/founder-voice";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
@@ -90,16 +96,16 @@ export function FounderAiOnboarding() {
     { role: "founder", text: "Frag mich jederzeit, was du als Nächstes machen sollst — z. B. deine erste Nachricht in einer Gruppe." },
   ]);
   const [coachLoading, setCoachLoading] = useState(false);
-  const [founderSpeaking, setFounderSpeaking] = useState(false);
-  const [avatarMessage, setAvatarMessage] = useState("");
+  const [voiceApiReady, setVoiceApiReady] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
+  const globe = useFounderGlobe();
   const processingVoiceRef = useRef(false);
   const questionIndexRef = useRef(0);
   const answersRef = useRef(answers);
 
   const currentQuestion = FOUNDER_QUESTIONS[questionIndex];
   const isVoiceMode = mode === "voice";
-  const showAvatar = isVoiceMode && ["trigger", "greeting", "interview"].includes(step);
+  const founderBusy = ["speaking", "typing", "thinking"].includes(globe.activity);
 
   useEffect(() => {
     questionIndexRef.current = questionIndex;
@@ -110,7 +116,11 @@ export function FounderAiOnboarding() {
   }, [answers]);
 
   useEffect(() => {
-    isFounderVoiceSupported().then(setSpeechSupported);
+    invalidateFounderVoiceCache();
+    fetchFounderVoiceStatus({ force: true }).then((apiReady) => {
+      setVoiceApiReady(apiReady);
+      setSpeechSupported(apiReady && isMediaRecorderSupported());
+    });
   }, []);
 
   useEffect(() => {
@@ -166,6 +176,7 @@ export function FounderAiOnboarding() {
     async (finalAnswers) => {
       const payloadAnswers = finalAnswers ?? answers;
       stopFounderSpeech();
+      globe.setFounderThinking("Ich analysiere deine Antworten und baue dein Podium…");
       setStep("loading");
       const minDelay = new Promise((resolve) => window.setTimeout(resolve, 2400));
 
@@ -197,9 +208,10 @@ export function FounderAiOnboarding() {
           text: `Dein Podium steht. Starte mit ${payload.rankedGroups?.[0]?.name ?? "deiner Top-Community"} — ich helfe dir beim ersten Schritt.`,
         },
       ]);
+      globe.setFounderIdle();
       setStep("podium");
     },
-    [answers, supabase, userId]
+    [answers, globe, supabase, userId]
   );
 
   runAnalysisRef.current = runAnalysis;
@@ -207,14 +219,14 @@ export function FounderAiOnboarding() {
   const handleTriggerVoiceComplete = useCallback(
     (text) => {
       if (!isHiFounderTrigger(text)) {
-        setAvatarMessage('Sag „Hi Founder“, um zu starten.');
+        globe.setFounderListening('Sag „Hi Founder“, um zu starten.');
         return;
       }
       setTriggerVoiceActive(false);
       setTriggerInput(text);
       setStep("greeting");
     },
-    []
+    [globe]
   );
 
   const handleInterviewVoiceComplete = useCallback(
@@ -227,13 +239,13 @@ export function FounderAiOnboarding() {
 
   const triggerVoice = useFounderSpeechInput({
     enabled: step === "trigger" && triggerVoiceActive && isVoiceMode,
-    paused: founderSpeaking,
+    paused: founderBusy,
     onTranscriptComplete: handleTriggerVoiceComplete,
   });
 
   const interviewVoice = useFounderSpeechInput({
     enabled: step === "interview" && isVoiceMode,
-    paused: founderSpeaking || step !== "interview",
+    paused: founderBusy || step !== "interview",
     onTranscriptComplete: handleInterviewVoiceComplete,
   });
 
@@ -244,6 +256,62 @@ export function FounderAiOnboarding() {
   }, [interviewVoice.liveTranscript, isVoiceMode, step]);
 
   useEffect(() => {
+    if (!isVoiceMode || step !== "interview" || founderBusy) return;
+
+    if (interviewVoice.processing) {
+      globe.setFounderThinking("Ich verstehe deine Antwort…");
+      return;
+    }
+
+    if (interviewVoice.recording || interviewVoice.listening) {
+      globe.setFounderListening();
+    }
+  }, [
+    founderBusy,
+    globe,
+    interviewVoice.listening,
+    interviewVoice.processing,
+    interviewVoice.recording,
+    isVoiceMode,
+    step,
+  ]);
+
+  useEffect(() => {
+
+    let cancelled = false;
+
+    async function greet() {
+      await typeFounderMessage(globe.setFounderTyping, FOUNDER_GREETING);
+      if (!cancelled) globe.setFounderIdle();
+    }
+
+    greet();
+    return () => {
+      cancelled = true;
+    };
+  }, [globe, step]);
+
+  useEffect(() => {
+    if (isVoiceMode || step !== "interview" || !currentQuestion) return undefined;
+
+    let cancelled = false;
+
+    async function askInText() {
+      await typeFounderMessage(
+        globe.setFounderTyping,
+        `${currentQuestion.label} ${currentQuestion.hint}`
+      );
+      if (!cancelled) globe.setFounderIdle();
+    }
+
+    askInText();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVoiceMode, step, questionIndex, currentQuestion?.id]);
+
+  useEffect(() => {
     if (!isVoiceMode || step !== "interview" || !currentQuestion) return undefined;
 
     let cancelled = false;
@@ -251,17 +319,14 @@ export function FounderAiOnboarding() {
     async function askQuestion() {
       interviewVoice.resetTranscript();
       setCurrentAnswer("");
-      setFounderSpeaking(true);
-      setAvatarMessage(`${currentQuestion.label} ${currentQuestion.hint}`);
 
-      await speakFounderText(
+      await founderSpeak(
+        globe.setFounderSpeaking,
+        globe.setFounderListening,
         `${currentQuestion.voiceHint}. Sprich einfach los — ich erkenne automatisch, wenn du fertig bist.`
       );
 
-      if (!cancelled) {
-        setFounderSpeaking(false);
-        setAvatarMessage("Ich höre zu — sprich einfach los.");
-      }
+      if (cancelled) globe.setFounderIdle();
     }
 
     askQuestion();
@@ -270,7 +335,7 @@ export function FounderAiOnboarding() {
       cancelled = true;
       stopFounderSpeech();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-ask when the question changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isVoiceMode, step, questionIndex, currentQuestion?.id]);
 
   useEffect(() => {
@@ -284,8 +349,11 @@ export function FounderAiOnboarding() {
   }, [step]);
 
   useEffect(() => {
-    return () => stopFounderSpeech();
-  }, []);
+    return () => {
+      stopFounderSpeech();
+      globe.setFounderIdle();
+    };
+  }, [globe]);
 
   function handleTriggerSubmit(event) {
     event?.preventDefault?.();
@@ -297,12 +365,11 @@ export function FounderAiOnboarding() {
     setMode(nextMode);
 
     if (nextMode === "voice") {
-      setFounderSpeaking(true);
-      setAvatarMessage(FOUNDER_GREETING);
-      await speakFounderText(
-        `${FOUNDER_GREETING} Ich stelle dir vier kurze Fragen. Sprich einfach los, wenn ich fertig bin — kein Knopf nötig.`
+      await founderSpeak(
+        globe.setFounderSpeaking,
+        globe.setFounderListening,
+        `${FOUNDER_GREETING} Ich stelle dir vier kurze Fragen. Sprich einfach los, wenn ich fertig bin.`
       );
-      setFounderSpeaking(false);
       setStep("interview");
       return;
     }
@@ -311,13 +378,15 @@ export function FounderAiOnboarding() {
   }
 
   async function startTriggerVoice() {
+    if (!speechSupported) return;
+
     setMode("voice");
     setTriggerVoiceActive(true);
-    setFounderSpeaking(true);
-    setAvatarMessage("Sag „Hi Founder“, um zu starten.");
-    await speakFounderText('Sag einfach „Hi Founder“, wenn du bereit bist.');
-    setFounderSpeaking(false);
-    setAvatarMessage("Ich höre zu…");
+    await founderSpeak(
+      globe.setFounderSpeaking,
+      globe.setFounderListening,
+      'Sag einfach „Hi Founder“, wenn du bereit bist.'
+    );
   }
 
   function handleAnswerSubmit(event) {
@@ -375,34 +444,27 @@ export function FounderAiOnboarding() {
 
   function skipOnboarding() {
     stopFounderSpeech();
+    globe.setFounderIdle();
     if (userId) writeOnboardingSkipped(userId);
     router.push("/dashboard");
   }
 
   function finishOnboarding() {
     stopFounderSpeech();
+    globe.setFounderIdle();
     if (userId) writeOnboardingComplete(userId);
     router.push("/dashboard");
   }
 
   const activeMicError = triggerVoice.micError || interviewVoice.micError;
-  const avatarListening =
-    !founderSpeaking && (triggerVoice.listening || interviewVoice.listening) && !interviewVoice.processing;
-  const avatarSpeaking = founderSpeaking;
-
   return (
     <>
-      <FounderAvatar
-        visible={showAvatar}
-        speaking={avatarSpeaking}
-        listening={avatarListening}
-        message={avatarMessage}
-      />
+      <FounderGlobeMessage />
 
       <CockpitPage
         eyebrow="Founder AI"
         title="Dein persönlicher Start"
-        description="Sag Hi Founder — wir matchen dich mit den richtigen Communities."
+        description="Die Kugel im Hintergrund ist Founder — sie pulsiert, wenn er mit dir spricht."
         className="pb-40"
       >
         <CockpitPanel className="relative overflow-hidden">
@@ -493,7 +555,11 @@ export function FounderAiOnboarding() {
                   </button>
                 </div>
                 {!speechSupported && (
-                  <p className="mt-3 text-xs text-neutral-500">Sprache wird in diesem Browser nicht unterstützt — nutze Text.</p>
+                  <p className="mt-3 text-xs text-amber-300">
+                    {voiceApiReady
+                      ? "Mikrofon wird in diesem Browser nicht unterstützt — nutze Text."
+                      : "Premium-Sprache wird geladen… Falls Sprache grau bleibt: Seite neu laden."}
+                  </p>
                 )}
                 {speechSupported && (
                   <p className="mt-3 text-xs text-neutral-500">
@@ -533,13 +599,13 @@ export function FounderAiOnboarding() {
                   <div className="mt-6 space-y-3">
                     <div className="rounded-xl border border-[#1a3aad]/30 bg-[#0a1020]/80 px-4 py-4">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-[#5b8cff]">
-                        {founderSpeaking
+                        {globe.activity === "speaking"
                           ? "Founder spricht"
                           : interviewVoice.processing
                             ? "Erkenne deine Antwort"
                             : interviewVoice.recording
                               ? "Ich höre zu"
-                              : interviewVoice.listening
+                              : globe.activity === "listening"
                                 ? "Bereit — sprich los"
                                 : "Mikro aktivieren"}
                       </p>

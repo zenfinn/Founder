@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { pickRecorderMimeType, isMediaRecorderSupported } from "@/lib/founder-voice";
 
-const SILENCE_MS = 1800;
-const SPEECH_THRESHOLD = 0.016;
+const SILENCE_MS = 1600;
+const SPEECH_THRESHOLD = 0.01;
 const MIN_RECORD_MS = 700;
 const MIN_TRANSCRIPT_CHARS = 2;
 

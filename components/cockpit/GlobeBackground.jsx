@@ -1,10 +1,19 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useFounderGlobe } from "@/components/cockpit/FounderGlobeContext";
 
 const MERIDIANS = 24;
 const PARALLELS = 14;
 const GLOW_NODES = 48;
+
+const ACTIVITY_CONFIG = {
+  idle: { glow: 1, spin: 1, pulse: 1, ring: 0 },
+  speaking: { glow: 3.6, spin: 2.4, pulse: 2.8, ring: 1 },
+  listening: { glow: 2.8, spin: 1.6, pulse: 2.2, ring: 0.85 },
+  typing: { glow: 2.5, spin: 1.3, pulse: 2, ring: 0.7 },
+  thinking: { glow: 2.2, spin: 1.8, pulse: 1.6, ring: 0.55 },
+};
 
 function buildGlobeGeometry() {
   const meridians = [];
@@ -77,6 +86,12 @@ function project(point, width, height, scale, centerY) {
 export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntensity = 1 }) {
   const canvasRef = useRef(null);
   const geometryRef = useRef(null);
+  const { activity } = useFounderGlobe();
+  const activityRef = useRef(activity);
+
+  useEffect(() => {
+    activityRef.current = activity;
+  }, [activity]);
 
   useEffect(() => {
     geometryRef.current = buildGlobeGeometry();
@@ -100,8 +115,10 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function drawLine(points, width, height, scale, rot) {
+    function drawLine(points, width, height, scale, rot, strokeStyle, lineWidth = 0.75) {
       ctx.beginPath();
+      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = strokeStyle;
       let started = false;
       for (const raw of points) {
         const rotated = rotateY(raw, rot);
@@ -120,42 +137,73 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
       ctx.stroke();
     }
 
+    function drawPulseRings(width, height, scale, now, ringStrength) {
+      if (ringStrength <= 0) return;
+
+      const cx = width * 0.5;
+      const cy = height * centerY;
+      const baseRadius = scale * 0.55;
+
+      for (let index = 0; index < 3; index += 1) {
+        const phase = (now * 0.0016 + index * 0.33) % 1;
+        const radius = baseRadius + phase * scale * 0.45;
+        const alpha = (1 - phase) * 0.22 * ringStrength;
+        ctx.beginPath();
+        ctx.strokeStyle = `rgba(91, 140, 255, ${alpha})`;
+        ctx.lineWidth = 2 + ringStrength;
+        ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
     function render(now) {
       const { meridians, parallels, nodes } = geometryRef.current;
       const width = window.innerWidth;
       const height = window.innerHeight;
-      const scale = Math.min(width, height) * scaleFactor;
+      const scale = Math.min(width, height) * scaleFactor * (config.glow > 1.2 ? 1.14 : 1);
       const delta = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
-      if (!reducedMotion) rotation += delta * 0.18;
+
+      const config = ACTIVITY_CONFIG[activityRef.current] ?? ACTIVITY_CONFIG.idle;
+      const activeGlow = glowIntensity * config.glow;
+      const activeSpin = config.spin;
+
+      if (!reducedMotion) rotation += delta * 0.18 * activeSpin;
 
       ctx.clearRect(0, 0, width, height);
 
-      const gradient = ctx.createRadialGradient(width * 0.5, height * centerY, scale * 0.1, width * 0.5, height * centerY, scale * 1.1);
-      gradient.addColorStop(0, `rgba(26, 58, 173, ${0.14 * glowIntensity})`);
-      gradient.addColorStop(0.55, `rgba(26, 58, 173, ${0.04 * glowIntensity})`);
+      const gradient = ctx.createRadialGradient(
+        width * 0.5,
+        height * centerY,
+        scale * 0.08,
+        width * 0.5,
+        height * centerY,
+        scale * 1.15
+      );
+      gradient.addColorStop(0, `rgba(47, 97, 223, ${0.22 * activeGlow})`);
+      gradient.addColorStop(0.45, `rgba(26, 58, 173, ${0.12 * activeGlow})`);
       gradient.addColorStop(1, "rgba(5, 5, 5, 0)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, width, height);
 
-      ctx.lineWidth = 0.75;
+      drawPulseRings(width, height, scale, now, config.ring);
+
+      const lineAlpha = activityRef.current === "idle" ? 0.28 : 0.42;
       for (const line of meridians) {
-        ctx.strokeStyle = "rgba(26, 58, 173, 0.28)";
-        drawLine(line, width, height, scale, rotation);
+        drawLine(line, width, height, scale, rotation, `rgba(47, 97, 223, ${lineAlpha})`);
       }
       for (const line of parallels) {
-        ctx.strokeStyle = "rgba(26, 58, 173, 0.2)";
-        drawLine(line, width, height, scale, rotation);
+        drawLine(line, width, height, scale, rotation, `rgba(26, 58, 173, ${lineAlpha * 0.75})`);
       }
 
       for (const node of nodes) {
         const rotated = rotateY(node, rotation);
         if (rotated.z < -0.1) continue;
         const p = project(rotated, width, height, scale, centerY);
-        const glow = 0.55 + Math.sin(now * 0.002 + node.pulse) * 0.25;
+        const glow = 0.55 + Math.sin(now * 0.002 * config.pulse + node.pulse) * 0.35 * config.pulse;
         ctx.beginPath();
-        ctx.fillStyle = `rgba(47, 97, 223, ${p.alpha * glow})`;
-        ctx.arc(p.x, p.y, 1.2 + p.alpha * 1.4, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(91, 140, 255, ${Math.min(1, p.alpha * glow * 0.9)})`;
+        ctx.arc(p.x, p.y, 1.2 + p.alpha * (1.4 + config.pulse * 0.5), 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -172,11 +220,15 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     };
   }, [scaleFactor, centerY, glowIntensity]);
 
+  const isActive = activity !== "idle";
+
   return (
     <canvas
       ref={canvasRef}
       aria-hidden
-      className="pointer-events-none fixed inset-0 z-0 opacity-25 sm:opacity-40 lg:opacity-100"
+      className={`pointer-events-none fixed inset-0 z-0 transition-opacity duration-700 ${
+        isActive ? "opacity-70 sm:opacity-90 lg:opacity-100" : "opacity-25 sm:opacity-40 lg:opacity-100"
+      }`}
     />
   );
 }
