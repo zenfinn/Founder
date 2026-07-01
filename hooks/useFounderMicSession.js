@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { pickRecorderMimeType, isMediaRecorderSupported } from "@/lib/founder-voice";
 
-const SILENCE_MS = 1600;
-const SPEECH_THRESHOLD = 0.01;
-const MIN_RECORD_MS = 700;
+const SILENCE_MS = 1700;
+const SPEECH_THRESHOLD = 0.012;
+const MIN_RECORD_MS = 800;
 const MIN_TRANSCRIPT_CHARS = 2;
 
 function measureVolume(analyser) {
@@ -36,14 +36,24 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
   const mimeTypeRef = useRef("");
   const rafRef = useRef(null);
   const onCompleteRef = useRef(onTranscriptComplete);
+  const pausedRef = useRef(paused);
+  const enabledRef = useRef(enabled);
   const speechDetectedRef = useRef(false);
   const silenceStartedAtRef = useRef(0);
   const recordStartedAtRef = useRef(0);
-  const activeRef = useRef(false);
+  const processingRef = useRef(false);
 
   useEffect(() => {
     onCompleteRef.current = onTranscriptComplete;
   }, [onTranscriptComplete]);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+
+  useEffect(() => {
+    enabledRef.current = enabled;
+  }, [enabled]);
 
   const resetTranscript = useCallback(() => {
     setLiveTranscript("");
@@ -52,7 +62,6 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
   }, []);
 
   const teardown = useCallback(() => {
-    activeRef.current = false;
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current);
       rafRef.current = null;
@@ -95,10 +104,13 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
   }, []);
 
   const finishRecording = useCallback(async () => {
+    if (processingRef.current) return;
+
     const recorder = recorderRef.current;
     if (!recorder || recorder.state === "inactive") return;
 
     setRecording(false);
+    processingRef.current = true;
 
     await new Promise((resolve) => {
       recorder.onstop = resolve;
@@ -107,8 +119,14 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
     const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current || "audio/webm" });
     chunksRef.current = [];
+    recorderRef.current = null;
 
-    if (blob.size < 1200) return;
+    if (blob.size < 1500) {
+      processingRef.current = false;
+      speechDetectedRef.current = false;
+      silenceStartedAtRef.current = 0;
+      return;
+    }
 
     setProcessing(true);
     try {
@@ -120,6 +138,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     } catch (error) {
       setMicError(error.message ?? "Spracherkennung fehlgeschlagen.");
     } finally {
+      processingRef.current = false;
       setProcessing(false);
       speechDetectedRef.current = false;
       silenceStartedAtRef.current = 0;
@@ -128,7 +147,12 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
   const monitorInput = useCallback(() => {
     const analyser = analyserRef.current;
-    if (!analyser || !activeRef.current) return;
+    if (!analyser || !enabledRef.current) return;
+
+    if (pausedRef.current || processingRef.current) {
+      rafRef.current = requestAnimationFrame(monitorInput);
+      return;
+    }
 
     const volume = measureVolume(analyser);
     const now = Date.now();
@@ -140,14 +164,17 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
       if (!recorderRef.current || recorderRef.current.state === "inactive") {
         const mimeType = mimeTypeRef.current;
-        if (!mimeType || !streamRef.current) return;
+        if (!mimeType || !streamRef.current) {
+          rafRef.current = requestAnimationFrame(monitorInput);
+          return;
+        }
 
         chunksRef.current = [];
         const recorder = new MediaRecorder(streamRef.current, { mimeType });
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) chunksRef.current.push(event.data);
         };
-        recorder.start(250);
+        recorder.start(300);
         recorderRef.current = recorder;
         recordStartedAtRef.current = now;
         setRecording(true);
@@ -167,7 +194,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
   }, [finishRecording]);
 
   const startSession = useCallback(async () => {
-    if (!enabled || paused || activeRef.current) return;
+    if (!enabledRef.current) return;
 
     const mimeType = pickRecorderMimeType();
     if (!mimeType) {
@@ -175,7 +202,12 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
       return;
     }
 
-    teardown();
+    if (streamRef.current) {
+      setListening(true);
+      if (!rafRef.current) monitorInput();
+      return;
+    }
+
     setMicError("");
     mimeTypeRef.current = mimeType;
 
@@ -188,7 +220,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
         },
       });
 
-      if (!enabled || paused) {
+      if (!enabledRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
@@ -203,23 +235,22 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
       audioContextRef.current = audioContext;
       analyserRef.current = analyser;
-      activeRef.current = true;
       setListening(true);
       monitorInput();
-    } catch (error) {
+    } catch {
       setMicError("Mikrofon-Zugriff verweigert. Bitte in den Systemeinstellungen erlauben.");
     }
-  }, [enabled, paused, monitorInput, teardown]);
+  }, [monitorInput]);
 
   useEffect(() => {
-    if (!enabled || paused) {
+    if (!enabled) {
       teardown();
       return undefined;
     }
 
     startSession();
     return () => teardown();
-  }, [enabled, paused, startSession, teardown]);
+  }, [enabled, startSession, teardown]);
 
   return {
     supported: isMediaRecorderSupported(),

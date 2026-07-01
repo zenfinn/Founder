@@ -99,13 +99,30 @@ export function FounderAiOnboarding() {
   const [voiceApiReady, setVoiceApiReady] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
   const globe = useFounderGlobe();
+  const {
+    activity: globeActivity,
+    bumpFlow,
+    isFlowCurrent,
+    setFounderIdle,
+    setFounderSpeaking,
+    setFounderListening,
+    setFounderTyping,
+    setFounderThinking,
+  } = globe;
   const processingVoiceRef = useRef(false);
   const questionIndexRef = useRef(0);
   const answersRef = useRef(answers);
+  const stepRef = useRef(step);
 
   const currentQuestion = FOUNDER_QUESTIONS[questionIndex];
   const isVoiceMode = mode === "voice";
-  const founderBusy = ["speaking", "typing", "thinking"].includes(globe.activity);
+  const founderBusy = ["speaking", "typing", "thinking"].includes(globeActivity);
+  const voiceInputEnabled =
+    isVoiceMode && ((step === "trigger" && triggerVoiceActive) || step === "interview");
+
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
 
   useEffect(() => {
     questionIndexRef.current = questionIndex;
@@ -167,7 +184,7 @@ export function FounderAiOnboarding() {
 
     window.setTimeout(() => {
       processingVoiceRef.current = false;
-    }, 800);
+    }, 2500);
   }, []);
 
   const runAnalysisRef = useRef(null);
@@ -176,7 +193,7 @@ export function FounderAiOnboarding() {
     async (finalAnswers) => {
       const payloadAnswers = finalAnswers ?? answers;
       stopFounderSpeech();
-      globe.setFounderThinking("Ich analysiere deine Antworten und baue dein Podium…");
+      setFounderThinking("Ich analysiere deine Antworten und baue dein Podium…");
       setStep("loading");
       const minDelay = new Promise((resolve) => window.setTimeout(resolve, 2400));
 
@@ -208,135 +225,100 @@ export function FounderAiOnboarding() {
           text: `Dein Podium steht. Starte mit ${payload.rankedGroups?.[0]?.name ?? "deiner Top-Community"} — ich helfe dir beim ersten Schritt.`,
         },
       ]);
-      globe.setFounderIdle();
+      setFounderIdle();
       setStep("podium");
     },
-    [answers, globe, supabase, userId]
+    [answers, setFounderIdle, setFounderThinking, supabase, userId]
   );
 
   runAnalysisRef.current = runAnalysis;
 
-  const handleTriggerVoiceComplete = useCallback(
+  const handleSpeechComplete = useCallback(
     (text) => {
-      if (!isHiFounderTrigger(text)) {
-        globe.setFounderListening('Sag „Hi Founder“, um zu starten.');
+      if (stepRef.current === "trigger") {
+        if (!isHiFounderTrigger(text)) {
+          setFounderListening('Sag „Hi Founder“, um zu starten.');
+          return;
+        }
+        setTriggerVoiceActive(false);
+        setTriggerInput(text);
+        setStep("greeting");
         return;
       }
-      setTriggerVoiceActive(false);
-      setTriggerInput(text);
-      setStep("greeting");
+
+      if (stepRef.current === "interview") {
+        setCurrentAnswer(text);
+        submitAnswer(text);
+      }
     },
-    [globe]
+    [setFounderListening, submitAnswer]
   );
 
-  const handleInterviewVoiceComplete = useCallback(
-    (text) => {
-      setCurrentAnswer(text);
-      submitAnswer(text);
-    },
-    [submitAnswer]
-  );
-
-  const triggerVoice = useFounderSpeechInput({
-    enabled: step === "trigger" && triggerVoiceActive && isVoiceMode,
+  const speech = useFounderSpeechInput({
+    enabled: voiceInputEnabled,
     paused: founderBusy,
-    onTranscriptComplete: handleTriggerVoiceComplete,
-  });
-
-  const interviewVoice = useFounderSpeechInput({
-    enabled: step === "interview" && isVoiceMode,
-    paused: founderBusy || step !== "interview",
-    onTranscriptComplete: handleInterviewVoiceComplete,
+    onTranscriptComplete: handleSpeechComplete,
   });
 
   useEffect(() => {
     if (!isVoiceMode || step !== "interview") return;
-
-    setCurrentAnswer(interviewVoice.liveTranscript);
-  }, [interviewVoice.liveTranscript, isVoiceMode, step]);
-
-  useEffect(() => {
-    if (!isVoiceMode || step !== "interview" || founderBusy) return;
-
-    if (interviewVoice.processing) {
-      globe.setFounderThinking("Ich verstehe deine Antwort…");
-      return;
-    }
-
-    if (interviewVoice.recording || interviewVoice.listening) {
-      globe.setFounderListening();
-    }
-  }, [
-    founderBusy,
-    globe,
-    interviewVoice.listening,
-    interviewVoice.processing,
-    interviewVoice.recording,
-    isVoiceMode,
-    step,
-  ]);
+    setCurrentAnswer(speech.liveTranscript);
+  }, [isVoiceMode, speech.liveTranscript, step]);
 
   useEffect(() => {
+    if (step !== "greeting") return undefined;
 
-    let cancelled = false;
+    const generation = bumpFlow();
 
     async function greet() {
-      await typeFounderMessage(globe.setFounderTyping, FOUNDER_GREETING);
-      if (!cancelled) globe.setFounderIdle();
+      await typeFounderMessage(setFounderTyping, FOUNDER_GREETING, {
+        isCancelled: () => !isFlowCurrent(generation),
+      });
+      if (isFlowCurrent(generation)) setFounderIdle();
     }
 
     greet();
-    return () => {
-      cancelled = true;
-    };
-  }, [globe, step]);
+    return undefined;
+  }, [bumpFlow, isFlowCurrent, setFounderIdle, setFounderTyping, step]);
 
   useEffect(() => {
     if (isVoiceMode || step !== "interview" || !currentQuestion) return undefined;
 
-    let cancelled = false;
+    const generation = bumpFlow();
 
     async function askInText() {
-      await typeFounderMessage(
-        globe.setFounderTyping,
-        `${currentQuestion.label} ${currentQuestion.hint}`
-      );
-      if (!cancelled) globe.setFounderIdle();
+      await typeFounderMessage(setFounderTyping, `${currentQuestion.label} ${currentQuestion.hint}`, {
+        isCancelled: () => !isFlowCurrent(generation),
+      });
+      if (isFlowCurrent(generation)) setFounderIdle();
     }
 
     askInText();
-    return () => {
-      cancelled = true;
-    };
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVoiceMode, step, questionIndex, currentQuestion?.id]);
+  }, [bumpFlow, isFlowCurrent, isVoiceMode, setFounderIdle, setFounderTyping, step, questionIndex, currentQuestion?.id]);
 
   useEffect(() => {
     if (!isVoiceMode || step !== "interview" || !currentQuestion) return undefined;
 
-    let cancelled = false;
+    const generation = bumpFlow();
 
     async function askQuestion() {
-      interviewVoice.resetTranscript();
+      speech.resetTranscript();
       setCurrentAnswer("");
 
       await founderSpeak(
-        globe.setFounderSpeaking,
-        globe.setFounderListening,
-        `${currentQuestion.voiceHint}. Sprich einfach los — ich erkenne automatisch, wenn du fertig bist.`
+        setFounderSpeaking,
+        setFounderListening,
+        `${currentQuestion.voiceHint}. Sprich einfach los — ich erkenne automatisch, wenn du fertig bist.`,
+        { isCancelled: () => !isFlowCurrent(generation) }
       );
-
-      if (cancelled) globe.setFounderIdle();
     }
 
     askQuestion();
-
-    return () => {
-      cancelled = true;
-      stopFounderSpeech();
-    };
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVoiceMode, step, questionIndex, currentQuestion?.id]);
+  }, [bumpFlow, isFlowCurrent, isVoiceMode, setFounderListening, setFounderSpeaking, step, questionIndex, currentQuestion?.id]);
 
   useEffect(() => {
     if (step !== "loading") return undefined;
@@ -350,10 +332,10 @@ export function FounderAiOnboarding() {
 
   useEffect(() => {
     return () => {
-      stopFounderSpeech();
-      globe.setFounderIdle();
+      bumpFlow();
+      setFounderIdle();
     };
-  }, [globe]);
+  }, [bumpFlow, setFounderIdle]);
 
   function handleTriggerSubmit(event) {
     event?.preventDefault?.();
@@ -362,15 +344,17 @@ export function FounderAiOnboarding() {
   }
 
   async function handleModeSelect(nextMode) {
+    const generation = bumpFlow();
     setMode(nextMode);
 
     if (nextMode === "voice") {
       await founderSpeak(
-        globe.setFounderSpeaking,
-        globe.setFounderListening,
-        `${FOUNDER_GREETING} Ich stelle dir vier kurze Fragen. Sprich einfach los, wenn ich fertig bin.`
+        setFounderSpeaking,
+        setFounderListening,
+        `${FOUNDER_GREETING} Ich stelle dir vier kurze Fragen. Sprich einfach los, wenn ich fertig bin.`,
+        { isCancelled: () => !isFlowCurrent(generation) }
       );
-      setStep("interview");
+      if (isFlowCurrent(generation)) setStep("interview");
       return;
     }
 
@@ -380,12 +364,14 @@ export function FounderAiOnboarding() {
   async function startTriggerVoice() {
     if (!speechSupported) return;
 
+    const generation = bumpFlow();
     setMode("voice");
     setTriggerVoiceActive(true);
     await founderSpeak(
-      globe.setFounderSpeaking,
-      globe.setFounderListening,
-      'Sag einfach „Hi Founder“, wenn du bereit bist.'
+      setFounderSpeaking,
+      setFounderListening,
+      'Sag einfach „Hi Founder“, wenn du bereit bist.',
+      { isCancelled: () => !isFlowCurrent(generation) }
     );
   }
 
@@ -444,19 +430,19 @@ export function FounderAiOnboarding() {
 
   function skipOnboarding() {
     stopFounderSpeech();
-    globe.setFounderIdle();
+    setFounderIdle();
     if (userId) writeOnboardingSkipped(userId);
     router.push("/dashboard");
   }
 
   function finishOnboarding() {
     stopFounderSpeech();
-    globe.setFounderIdle();
+    setFounderIdle();
     if (userId) writeOnboardingComplete(userId);
     router.push("/dashboard");
   }
 
-  const activeMicError = triggerVoice.micError || interviewVoice.micError;
+  const activeMicError = speech.micError;
   return (
     <>
       <FounderGlobeMessage />
@@ -467,7 +453,7 @@ export function FounderAiOnboarding() {
         description="Die Kugel im Hintergrund ist Founder — sie pulsiert, wenn er mit dir spricht."
         className="pb-40"
       >
-        <CockpitPanel className="relative overflow-hidden">
+        <CockpitPanel className="relative z-10 overflow-hidden bg-[#050505]/55 backdrop-blur-sm">
           <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#1a3aad]/20 blur-3xl" />
 
           <AnimatePresence mode="wait">
@@ -599,19 +585,19 @@ export function FounderAiOnboarding() {
                   <div className="mt-6 space-y-3">
                     <div className="rounded-xl border border-[#1a3aad]/30 bg-[#0a1020]/80 px-4 py-4">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-[#5b8cff]">
-                        {globe.activity === "speaking"
+                        {globeActivity === "speaking"
                           ? "Founder spricht"
-                          : interviewVoice.processing
+                          : speech.processing
                             ? "Erkenne deine Antwort"
-                            : interviewVoice.recording
+                            : speech.recording
                               ? "Ich höre zu"
-                              : globe.activity === "listening"
+                              : globeActivity === "listening"
                                 ? "Bereit — sprich los"
                                 : "Mikro aktivieren"}
                       </p>
                       <p className="mt-2 min-h-[72px] text-sm leading-6 text-neutral-200">
                         {currentAnswer ||
-                          (interviewVoice.processing
+                          (speech.processing
                             ? "Einen Moment — ich wandle deine Sprache in Text um."
                             : "Sprich einfach los — deine Antwort erscheint hier live.")}
                       </p>
