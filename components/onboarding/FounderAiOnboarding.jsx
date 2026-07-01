@@ -30,14 +30,16 @@ import {
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { saveOwnProfile } from "@/lib/profiles";
 
-function ChatBubble({ message }) {
+function ChatBubble({ message, pending = false }) {
   const isFounder = message.role === "founder";
   return (
     <div
       className={`max-w-[92%] rounded-2xl px-3.5 py-2.5 text-sm leading-6 ${
-        isFounder
-          ? "mr-auto bg-[#1a3aad]/25 text-neutral-100"
-          : "ml-auto border border-white/10 bg-[#1a3aad]/10 text-white"
+        pending
+          ? "ml-auto border border-dashed border-[#5b8cff]/40 bg-[#1a3aad]/5 text-neutral-300 italic"
+          : isFounder
+            ? "mr-auto bg-[#1a3aad]/25 text-neutral-100"
+            : "ml-auto border border-white/10 bg-[#1a3aad]/10 text-white"
       }`}
     >
       {message.text}
@@ -139,10 +141,6 @@ export function FounderAiOnboarding({ persistent = false }) {
     };
   }, [persistent, router, supabase]);
 
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [messages, chatLoading]);
-
   const lastFounderText = useMemo(() => {
     const founderMessages = messages.filter((message) => message.role === "founder");
     return founderMessages[founderMessages.length - 1]?.text ?? "";
@@ -238,10 +236,17 @@ export function FounderAiOnboarding({ persistent = false }) {
         }
 
         if (isReady && phaseRef.current === "chat" && !rankingTriggeredRef.current) {
-          rankingTriggeredRef.current = true;
-          window.setTimeout(() => {
-            if (phaseRef.current === "chat") runRankingRef.current?.();
-          }, voiceModeRef.current ? 1400 : 700);
+          const userTurns = nextMessages.filter((message) => message.role === "user").length;
+          const minTurns = 3;
+          if (userTurns >= minTurns) {
+            rankingTriggeredRef.current = true;
+            const rankDelayMs = voiceModeRef.current ? 9000 : 4500;
+            window.setTimeout(() => {
+              if (phaseRef.current === "chat") runRankingRef.current?.();
+            }, rankDelayMs);
+          } else {
+            setReadyForRanking(true);
+          }
         }
       } catch (error) {
         const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
@@ -281,6 +286,10 @@ export function FounderAiOnboarding({ persistent = false }) {
   });
 
   speechRef.current = speech;
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, chatLoading, speech.liveTranscript, speech.listening, voiceMode]);
 
   const globeStatus = chatLoading
     ? "thinking"
@@ -492,7 +501,8 @@ export function FounderAiOnboarding({ persistent = false }) {
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const canRank = (readyForRanking || userMessageCount >= 2) && !chatLoading && !isSpeaking;
 
-  const visibleMessages = voiceMode ? messages.filter((message) => message.role === "user") : messages;
+  const liveTranscript =
+    voiceMode && speech.listening && speech.liveTranscript?.trim() ? speech.liveTranscript.trim() : "";
 
   const chatPanel = (
     <CockpitPanel
@@ -540,15 +550,18 @@ export function FounderAiOnboarding({ persistent = false }) {
 
             <div
               className={`space-y-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] ${
-                voiceMode ? "max-h-[18vh] sm:max-h-[20vh]" : "min-h-0 flex-1 max-h-[min(40vh,360px)]"
+                voiceMode ? "max-h-[24vh] sm:max-h-[26vh]" : "min-h-0 flex-1 max-h-[min(40vh,360px)]"
               }`}
             >
-              {visibleMessages.length === 0 && voiceMode && !chatLoading && (
-                <p className="text-center text-xs text-neutral-500">Deine Antworten erscheinen hier</p>
+              {messages.length === 0 && voiceMode && !chatLoading && (
+                <p className="text-center text-xs text-neutral-500">Gespräch erscheint hier — du und Founder</p>
               )}
-              {visibleMessages.map((message, index) => (
+              {messages.map((message, index) => (
                 <ChatBubble key={`${message.role}-${index}`} message={message} />
               ))}
+              {liveTranscript && (
+                <ChatBubble message={{ role: "user", text: liveTranscript }} pending />
+              )}
               {chatLoading && (
                 <div className="mr-auto flex items-center gap-2 rounded-2xl bg-[#1a3aad]/10 px-3 py-2 text-sm text-neutral-400">
                   <Loader2 className="h-4 w-4 animate-spin text-[#5b8cff]" />
@@ -629,7 +642,7 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   if (voiceMode && phase === "chat") {
     return (
-      <div className="pointer-events-none fixed inset-x-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 max-h-[32dvh] sm:inset-x-4 sm:max-h-[28dvh]">
+      <div className="pointer-events-none fixed inset-x-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 max-h-[38dvh] sm:inset-x-4 sm:max-h-[34dvh]">
         <div className="pointer-events-auto h-full">{chatPanel}</div>
       </div>
     );
