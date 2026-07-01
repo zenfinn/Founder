@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { ensureGlobalLoungeMembership } from "@/lib/dashboard-lounge";
-import { sanitizeProfilePayload } from "@/lib/profiles";
 import { readStoredReferralCode } from "@/components/ReferralCapture";
 import { shouldShowFounderOnboarding } from "@/lib/founder-ai-onboarding";
+import {
+  formatAnnualRevenueEur,
+  getRankTier,
+  parseAnnualRevenueInput,
+  resolveRequestedRank,
+} from "@/lib/rank-system";
 
 const industries = [
   "Reselling",
@@ -23,7 +27,21 @@ const industries = [
   "Web Design",
 ];
 
-export function AuthForm({ mode = "login", requestedRank = "aspiring", compact = false }) {
+function mapAuthError(message = "") {
+  const text = message.toLowerCase();
+
+  if (text.includes("rate limit")) {
+    return "Zu viele Versuche. Bitte warte ein paar Minuten und versuche es erneut.";
+  }
+
+  if (text.includes("invalid login")) {
+    return "Login fehlgeschlagen. Prüfe E-Mail und Passwort.";
+  }
+
+  return message || "Anmeldung fehlgeschlagen.";
+}
+
+export function AuthForm({ mode = "login", requestedRank: defaultRank = "aspiring", compact = false }) {
   const router = useRouter();
   const supabase = createBrowserSupabaseClient();
   const [name, setName] = useState("");
@@ -36,92 +54,49 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
   const [message, setMessage] = useState("");
 
   const isRegister = mode === "register";
+  const parsedRevenue = useMemo(() => parseAnnualRevenueInput(estimatedAnnualRevenue), [estimatedAnnualRevenue]);
+  const requestedRank = useMemo(
+    () => resolveRequestedRank({ revenueInput: estimatedAnnualRevenue, fallbackRank: defaultRank }),
+    [estimatedAnnualRevenue, defaultRank]
+  );
+  const rankTier = useMemo(() => getRankTier(requestedRank), [requestedRank]);
 
   async function handleSubmit(event) {
     event.preventDefault();
     setLoading(true);
     setMessage("");
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin;
-
-    const { data, error } = isRegister
-      ? await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${appUrl}/onboarding/founder`,
-            data: {
-              display_name: name,
-              company_name: companyName,
-              industry,
-              estimated_annual_revenue: estimatedAnnualRevenue,
-              requested_rank: requestedRank,
-            },
-          },
-        })
-      : await supabase.auth.signInWithPassword({ email, password });
-
-    if (error) {
-      setMessage(error.message);
-      setLoading(false);
-      return;
-    }
-
-    if (isRegister && data.user) {
-      if (!data.session) {
-        setMessage(
-          "Account erstellt. Bitte bestätige deine E-Mail — danach startet Founder dein persönliches Onboarding."
-        );
-        setLoading(false);
-        return;
-      }
-
-      const { error: profileError } = await supabase.from("profiles").upsert(
-        {
-          id: data.user.id,
-          ...sanitizeProfilePayload({
-            display_name: name,
-            company_name: companyName,
-            industry,
-            username: "",
-            bio: "",
-            avatar_url: "",
-            instagram_url: "",
-            tiktok_url: "",
-            linkedin_url: "",
-            website_url: "",
-            twitter_url: "",
-          }),
-          estimated_annual_revenue: estimatedAnnualRevenue,
-          requested_rank: requestedRank,
-          current_rank: "aspiring",
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" },
-      );
-
-      if (profileError) {
-        setMessage(profileError.message);
-        setLoading(false);
-        return;
-      }
-
-      await ensureGlobalLoungeMembership(supabase, data.user.id);
-
-      await fetch("/api/auth/welcome", {
+    if (isRegister) {
+      const referralCode = readStoredReferralCode();
+      const registerResponse = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({
+          email,
+          password,
+          name,
+          company_name: companyName,
+          industry,
+          estimated_annual_revenue: estimatedAnnualRevenue,
+          requested_rank: requestedRank,
+          referral_code: referralCode,
+        }),
       });
 
-      const referralCode = readStoredReferralCode();
-      if (referralCode) {
-        await fetch("/api/referrals/attach", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ referralCode }),
-        });
+      const registerPayload = await registerResponse.json().catch(() => ({}));
+      if (!registerResponse.ok) {
+        setMessage(registerPayload.error ?? "Registrierung fehlgeschlagen.");
+        setLoading(false);
+        return;
       }
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      setMessage(mapAuthError(error.message));
+      setLoading(false);
+      return;
     }
 
     const userId = data.user?.id ?? data.session?.user?.id;
@@ -141,7 +116,7 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
       redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/login`,
     });
 
-    setMessage(error ? error.message : "Wenn ein Account existiert, wurde eine Passwort-E-Mail versendet.");
+    setMessage(error ? mapAuthError(error.message) : "Wenn ein Account existiert, wurde eine Passwort-E-Mail versendet.");
   }
 
   const fieldClass =
@@ -203,14 +178,20 @@ export function AuthForm({ mode = "login", requestedRank = "aspiring", compact =
             <span className={labelClass}>Geschätzter Jahresumsatz</span>
             <input
               className={fieldClass}
-              placeholder="z.B. 50.000 EUR"
+              placeholder="z.B. 1.000.000 EUR"
               value={estimatedAnnualRevenue}
               onChange={(event) => setEstimatedAnnualRevenue(event.target.value)}
               required
             />
           </label>
-          <div className="rounded-xl bg-founder-50 px-3 py-2 text-xs font-semibold text-founder-800">
-            Gewünschter Rang: {requestedRank}
+          <div className="rounded-xl bg-founder-50 px-3 py-2.5 text-xs text-founder-800">
+            <p className="font-semibold">Gewünschter Rang: {rankTier.label}</p>
+            <p className="mt-1 leading-5 text-founder-700">
+              {parsedRevenue !== null
+                ? `Automatisch aus deinem Jahresumsatz (${formatAnnualRevenueEur(parsedRevenue)}).`
+                : "Wird automatisch aus deinem Jahresumsatz berechnet."}
+            </p>
+            <p className="mt-1 text-[11px] leading-5 text-founder-600">{rankTier.criteria}</p>
           </div>
         </>
       )}
