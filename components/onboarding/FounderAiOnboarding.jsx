@@ -7,7 +7,6 @@ import { Loader2, MessageSquare, Mic, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CockpitPage, CockpitPanel } from "@/components/cockpit/CockpitPage";
 import { useFounderGlobe } from "@/components/cockpit/FounderGlobeContext";
-import { FounderGlobeTalk } from "@/components/onboarding/FounderGlobeTalk";
 import {
   FounderNicheStaircase,
   FounderStaircaseLoading,
@@ -68,6 +67,8 @@ export function FounderAiOnboarding() {
     setFounderListening,
     setFounderThinking,
     setFounderMessage,
+    registerGlobeTap,
+    setVoiceGlobe,
   } = useFounderGlobe();
 
   const messagesRef = useRef(messages);
@@ -263,40 +264,15 @@ export function FounderAiOnboarding() {
 
   speechRef.current = speech;
 
-  useEffect(() => {
-    globeActivatedRef.current = globeActivated;
-  }, [globeActivated]);
-
-  useEffect(() => {
-    if (!voiceMode || phase !== "chat") return;
-    if (chatLoading) {
-      setFounderThinking("Founder denkt nach…");
-      return;
-    }
-    if (isSpeaking) return;
-    if (speech.listening) {
-      setFounderListening(speech.liveTranscript || "Sprich — ich höre zu.");
-      return;
-    }
-    if (globeActivated) {
-      setFounderListening("Tippe die Kugel — sprich mit Founder");
-    }
-  }, [
-    chatLoading,
-    globeActivated,
-    isSpeaking,
-    phase,
-    setFounderListening,
-    setFounderThinking,
-    speech.listening,
-    speech.liveTranscript,
-    voiceMode,
-  ]);
-
-  useEffect(() => {
-    if (!voiceMode) return;
-    setTextInput(speech.liveTranscript);
-  }, [speech.liveTranscript, voiceMode]);
+  const globeStatus = chatLoading
+    ? "thinking"
+    : isSpeaking
+      ? "speaking"
+      : speech.processing
+        ? "processing"
+        : speech.listening
+          ? "listening"
+          : "idle";
 
   const handleGlobeTap = useCallback(() => {
     if (!speechSupported) {
@@ -320,6 +296,71 @@ export function FounderAiOnboarding() {
     speechRef.current?.resetTranscript?.();
     speechRef.current?.startListening?.({ force: true });
   }, [playFounderVoice, setFounderListening, speechSupported]);
+
+  useEffect(() => {
+    globeActivatedRef.current = globeActivated;
+  }, [globeActivated]);
+
+  useEffect(() => {
+    if (!voiceMode || phase !== "chat") return;
+    if (chatLoading) {
+      setFounderThinking("Founder denkt nach…");
+      return;
+    }
+    if (isSpeaking) return;
+    if (speech.listening) {
+      setFounderListening(speech.liveTranscript || "Sprich — ich höre zu.");
+    }
+  }, [
+    chatLoading,
+    isSpeaking,
+    phase,
+    setFounderListening,
+    setFounderThinking,
+    speech.listening,
+    speech.liveTranscript,
+    voiceMode,
+  ]);
+
+  useEffect(() => registerGlobeTap(handleGlobeTap), [handleGlobeTap, registerGlobeTap]);
+
+  useEffect(() => {
+    if (!voiceMode || phase !== "chat") {
+      setVoiceGlobe({ active: false, hint: "", error: "", tapDisabled: true });
+      return undefined;
+    }
+
+    const hintByStatus = {
+      idle: globeActivated ? "Tippe nochmal — Mikrofon starten" : "Tippe die Kugel — sprich mit Founder",
+      listening: "Ich höre zu…",
+      processing: "Erkenne deine Sprache…",
+      speaking: "Founder spricht…",
+      thinking: "Founder denkt nach…",
+    };
+
+    setVoiceGlobe({
+      active: true,
+      hint: hintByStatus[globeStatus] ?? hintByStatus.idle,
+      error: speech.micError ?? "",
+      tapDisabled: chatLoading || isSpeaking,
+    });
+
+    return () => setVoiceGlobe({ active: false, hint: "", error: "", tapDisabled: true });
+  }, [
+    chatLoading,
+    globeActivated,
+    globeStatus,
+    isSpeaking,
+    phase,
+    setVoiceGlobe,
+    speech.micError,
+    voiceMode,
+  ]);
+
+  useEffect(() => {
+    if (!voiceMode) return;
+    setTextInput(speech.liveTranscript);
+  }, [speech.liveTranscript, voiceMode]);
 
   function disableVoiceMode() {
     speechRef.current?.stopListening?.();
@@ -408,37 +449,16 @@ export function FounderAiOnboarding() {
   const userMessageCount = messages.filter((message) => message.role === "user").length;
   const canRank = (readyForRanking || userMessageCount >= 2) && !chatLoading && !isSpeaking;
 
-  const globeStatus = chatLoading
-    ? "thinking"
-    : isSpeaking
-      ? "speaking"
-      : speech.processing
-        ? "processing"
-        : speech.listening
-          ? "listening"
-          : globeActivated
-            ? "idle"
-            : "idle";
+  const visibleMessages = voiceMode ? messages.filter((message) => message.role === "user") : messages;
 
   return (
     <>
-      {phase === "chat" && voiceMode && (
-        <FounderGlobeTalk
-          status={globeStatus}
-          founderText={speech.liveTranscript ? "" : lastFounderText}
-          liveTranscript={speech.liveTranscript}
-          micError={speech.micError}
-          onTap={handleGlobeTap}
-          disabled={chatLoading || isSpeaking}
-        />
-      )}
-
       <CockpitPage
         compact
-        eyebrow="Founder AI"
-        title="Dein persönlicher Start"
-        description={voiceMode ? "Sprich mit der Kugel — Founder hört zu." : "Erzähl Founder von dir."}
-        className={`min-h-0 flex-1 ${voiceMode ? "mt-[52vh] sm:mt-[48vh]" : ""} pb-[calc(1.25rem+env(safe-area-inset-bottom))]`}
+        eyebrow={voiceMode ? undefined : "Founder AI"}
+        title={voiceMode ? undefined : "Dein persönlicher Start"}
+        description={voiceMode ? undefined : "Erzähl Founder von dir."}
+        className={`min-h-0 flex-1 ${voiceMode ? "mt-[58vh] sm:mt-[54vh]" : ""} pb-[calc(1.25rem+env(safe-area-inset-bottom))]`}
       >
         <CockpitPanel
           className={`relative flex flex-col overflow-hidden backdrop-blur-sm ${
@@ -486,7 +506,10 @@ export function FounderAiOnboarding() {
                     voiceMode ? "max-h-[28vh] sm:max-h-[32vh]" : "min-h-0 flex-1 max-h-[min(40vh,360px)]"
                   }`}
                 >
-                  {messages.map((message, index) => (
+                  {visibleMessages.length === 0 && voiceMode && !chatLoading && (
+                    <p className="text-center text-xs text-neutral-500">Deine Antworten erscheinen hier</p>
+                  )}
+                  {visibleMessages.map((message, index) => (
                     <ChatBubble key={`${message.role}-${index}`} message={message} />
                   ))}
                   {chatLoading && (

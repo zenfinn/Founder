@@ -7,10 +7,19 @@ const FounderGlobeContext = createContext(null);
 
 const TYPEWRITER_MS = 14;
 
+const DEFAULT_VOICE_GLOBE = {
+  active: false,
+  hint: "",
+  error: "",
+  tapDisabled: false,
+};
+
 export function FounderGlobeProvider({ children }) {
   const [activity, setActivity] = useState("idle");
   const [message, setMessage] = useState("");
+  const [voiceGlobe, setVoiceGlobe] = useState(DEFAULT_VOICE_GLOBE);
   const flowGenerationRef = useRef(0);
+  const globeTapRef = useRef(null);
 
   const bumpFlow = useCallback(() => {
     flowGenerationRef.current += 1;
@@ -19,6 +28,17 @@ export function FounderGlobeProvider({ children }) {
   }, []);
 
   const isFlowCurrent = useCallback((generation) => generation === flowGenerationRef.current, []);
+
+  const registerGlobeTap = useCallback((handler) => {
+    globeTapRef.current = handler;
+    return () => {
+      if (globeTapRef.current === handler) globeTapRef.current = null;
+    };
+  }, []);
+
+  const invokeGlobeTap = useCallback(() => {
+    globeTapRef.current?.();
+  }, []);
 
   const setFounderIdle = useCallback(() => {
     setActivity("idle");
@@ -54,8 +74,12 @@ export function FounderGlobeProvider({ children }) {
     () => ({
       activity,
       message,
+      voiceGlobe,
       bumpFlow,
       isFlowCurrent,
+      registerGlobeTap,
+      invokeGlobeTap,
+      setVoiceGlobe,
       setFounderIdle,
       setFounderMessage,
       setFounderSpeaking,
@@ -66,8 +90,11 @@ export function FounderGlobeProvider({ children }) {
     [
       activity,
       message,
+      voiceGlobe,
       bumpFlow,
       isFlowCurrent,
+      registerGlobeTap,
+      invokeGlobeTap,
       setFounderIdle,
       setFounderMessage,
       setFounderSpeaking,
@@ -86,8 +113,12 @@ export function useFounderGlobe() {
     return {
       activity: "idle",
       message: "",
+      voiceGlobe: DEFAULT_VOICE_GLOBE,
       bumpFlow: () => 0,
       isFlowCurrent: () => true,
+      registerGlobeTap: () => () => {},
+      invokeGlobeTap: () => {},
+      setVoiceGlobe: () => {},
       setFounderIdle: () => {},
       setFounderMessage: () => {},
       setFounderSpeaking: () => {},
