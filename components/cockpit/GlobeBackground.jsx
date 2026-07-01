@@ -11,6 +11,10 @@ const LISTENING_HINTS = new Set([
   "Sprich — ich höre zu.",
   "Tippe die Kugel — sprich mit Founder",
   "Ich höre zu — sprich einfach los.",
+  "Tippe die Kugel — sprich jetzt.",
+  "Tippe die Kugel — sprich direkt",
+  "Tippe die Kugel — dann sprich",
+  "Sprich jetzt — ich höre zu.",
 ]);
 
 const ACTIVITY_CONFIG = {

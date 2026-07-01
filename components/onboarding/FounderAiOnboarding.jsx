@@ -147,14 +147,14 @@ export function FounderAiOnboarding({ persistent = false }) {
     if (!voiceModeRef.current || phaseRef.current !== "chat") return;
     // Safari verliert User-Gesture nach async TTS — Nutzer muss erneut tippen
     if (isSafari()) {
-      setFounderListening("Tippe die Kugel — sprich jetzt.");
+      setFounderIdle();
       return;
     }
     window.setTimeout(() => {
       speechRef.current?.resetTranscript?.();
       speechRef.current?.startListening?.({ force: true });
     }, 500);
-  }, [setFounderListening]);
+  }, [setFounderIdle]);
 
   const playFounderVoice = useCallback(
     async (text) => {
@@ -278,11 +278,11 @@ export function FounderAiOnboarding({ persistent = false }) {
       globeActivatedRef.current = true;
     });
 
-    setFounderListening("Sprich — ich höre zu.");
+    setFounderIdle();
     stopFounderSpeech();
     speechRef.current?.resetTranscript?.();
     speechRef.current?.startListening?.({ force: true });
-  }, [setFounderListening, speechSupported]);
+  }, [setFounderIdle, speechSupported]);
 
   useEffect(() => {
     globeActivatedRef.current = globeActivated;
@@ -292,12 +292,16 @@ export function FounderAiOnboarding({ persistent = false }) {
     if (!voiceMode || phase !== "chat") return;
     if (chatLoading) return;
     if (speech.listening) {
-      setFounderListening(speech.liveTranscript || "Sprich — ich höre zu.");
+      if (speech.liveTranscript?.trim()) {
+        setFounderListening(speech.liveTranscript);
+      } else {
+        setFounderIdle();
+      }
     }
   }, [
     chatLoading,
     phase,
-    setFounderListening,
+    setFounderIdle,
     speech.listening,
     speech.liveTranscript,
     voiceMode,
