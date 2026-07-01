@@ -17,7 +17,7 @@ import {
   writeOnboardingComplete,
   writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
-import { getJarvisOpeningMessage } from "@/lib/founder-jarvis";
+import { buildRankingSpeech, getJarvisOpeningMessage } from "@/lib/founder-jarvis";
 import { isSttSupported } from "@/lib/founder-stt-preference";
 import { isSafari } from "@/lib/founder-browser";
 import {
@@ -83,6 +83,8 @@ export function FounderAiOnboarding({ persistent = false }) {
   const openingSpokenRef = useRef(false);
   const globeActivatedRef = useRef(false);
   const speechRef = useRef(null);
+  const runRankingRef = useRef(null);
+  const rankingTriggeredRef = useRef(false);
 
   const micPaused = chatLoading || isSpeaking;
   const voiceInputEnabled = voiceMode && phase === "chat" && globeActivated;
@@ -222,16 +224,24 @@ export function FounderAiOnboarding({ persistent = false }) {
         if (!response.ok) throw new Error(payload.error ?? "Antwort fehlgeschlagen.");
 
         const reply = payload.reply;
+        const isReady = Boolean(payload.readyForRanking);
         setMessages((current) => [...current, { role: "founder", text: reply }]);
         const nextProfile = payload.profile ?? {};
         setProfile(nextProfile);
         profileRef.current = nextProfile;
-        setReadyForRanking(Boolean(payload.readyForRanking));
+        setReadyForRanking(isReady);
 
         if (voiceModeRef.current) {
           await playFounderVoice(reply);
         } else {
           setFounderMessage(reply);
+        }
+
+        if (isReady && phaseRef.current === "chat" && !rankingTriggeredRef.current) {
+          rankingTriggeredRef.current = true;
+          window.setTimeout(() => {
+            if (phaseRef.current === "chat") runRankingRef.current?.();
+          }, voiceModeRef.current ? 1400 : 700);
         }
       } catch (error) {
         const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
@@ -412,6 +422,7 @@ export function FounderAiOnboarding({ persistent = false }) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
+      rankingTriggeredRef.current = false;
       setPhase("chat");
       setMessages((current) => [
         ...current,
@@ -420,12 +431,26 @@ export function FounderAiOnboarding({ persistent = false }) {
       return;
     }
 
-    setRankedGroups(payload.rankedGroups ?? []);
+    const groups = payload.rankedGroups ?? [];
+    setRankedGroups(groups);
     if (userId && payload.profilePatch) {
       await saveOwnProfile(supabase, userId, payload.profilePatch).catch(() => {});
     }
     setPhase("staircase");
-  }, [setFounderIdle, supabase, userId]);
+
+    if (groups.length) {
+      const speech = buildRankingSpeech(groups, profileRef.current?.name);
+      setFounderMessage(speech);
+      setMessages((current) => [...current, { role: "founder", text: speech }]);
+      if (voiceModeRef.current) {
+        await playFounderVoice(speech);
+      }
+    }
+  }, [playFounderVoice, setFounderIdle, setFounderMessage, supabase, userId]);
+
+  useEffect(() => {
+    runRankingRef.current = runRanking;
+  }, [runRanking]);
 
   async function handleJoinGroup(group) {
     if (!group?.id || joinedSlugs[group.slug]) return;
@@ -553,7 +578,7 @@ export function FounderAiOnboarding({ persistent = false }) {
                 </form>
               )}
 
-              <div className="flex items-center justify-between gap-2 pb-[env(safe-area-inset-bottom)]">
+              <div className="flex items-center justify-between gap-2">
                 <button type="button" onClick={skipOnboarding} className="min-h-[44px] px-2 text-sm text-neutral-500">
                   Später
                 </button>
@@ -563,7 +588,7 @@ export function FounderAiOnboarding({ persistent = false }) {
                   onClick={runRanking}
                   className="min-h-[44px] rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40"
                 >
-                  Meine Top-Nischen
+                  {readyForRanking ? "Top-Nischen laden…" : "Meine Top-Nischen"}
                 </button>
               </div>
             </div>
@@ -604,8 +629,8 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   if (voiceMode && phase === "chat") {
     return (
-      <div className="fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-20 sm:inset-x-4">
-        {chatPanel}
+      <div className="pointer-events-none fixed inset-x-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-20 max-h-[32dvh] sm:inset-x-4 sm:max-h-[28dvh]">
+        <div className="pointer-events-auto h-full">{chatPanel}</div>
       </div>
     );
   }
