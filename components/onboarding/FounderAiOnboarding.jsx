@@ -220,31 +220,16 @@ export function FounderAiOnboarding({ persistent = false }) {
         if (!response.ok) throw new Error(payload.error ?? "Antwort fehlgeschlagen.");
 
         const reply = payload.reply;
-        const isReady = Boolean(payload.readyForRanking);
         setMessages((current) => [...current, { role: "founder", text: reply }]);
         const nextProfile = payload.profile ?? {};
         setProfile(nextProfile);
         profileRef.current = nextProfile;
-        setReadyForRanking(isReady);
+        setReadyForRanking(Boolean(payload.readyForRanking));
 
         if (voiceModeRef.current) {
           await playFounderVoice(reply);
         } else {
           setFounderMessage(reply);
-        }
-
-        if (isReady && phaseRef.current === "chat" && !rankingTriggeredRef.current) {
-          const userTurns = nextMessages.filter((message) => message.role === "user").length;
-          const minTurns = 3;
-          if (userTurns >= minTurns) {
-            rankingTriggeredRef.current = true;
-            const rankDelayMs = voiceModeRef.current ? 9000 : 4500;
-            window.setTimeout(() => {
-              if (phaseRef.current === "chat") runRankingRef.current?.();
-            }, rankDelayMs);
-          } else {
-            setReadyForRanking(true);
-          }
         }
       } catch (error) {
         const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
@@ -490,8 +475,7 @@ export function FounderAiOnboarding({ persistent = false }) {
     router.push("/dashboard");
   }
 
-  const userMessageCount = messages.filter((message) => message.role === "user").length;
-  const canRank = (readyForRanking || userMessageCount >= 2) && !chatLoading && !isSpeaking;
+  const canRank = readyForRanking && !chatLoading && !isSpeaking;
 
   const liveTranscript =
     voiceMode && speech.listening && speech.liveTranscript?.trim() ? speech.liveTranscript.trim() : "";
@@ -593,7 +577,7 @@ export function FounderAiOnboarding({ persistent = false }) {
                   onClick={runRanking}
                   className="min-h-[44px] rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-black disabled:opacity-40"
                 >
-                  {readyForRanking ? "Top-Nischen laden…" : "Meine Top-Nischen"}
+                  Meine Top-Nischen
                 </button>
               </div>
             </div>
