@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { fetchFounderVoiceStatus } from "@/lib/founder-voice";
+import { useEffect, useMemo, useState } from "react";
+import { fetchFounderVoiceStatus, isSpeechRecognitionSupported } from "@/lib/founder-voice";
+import { isSttSupported, isWhisperRecordingSupported, pickSttEngine } from "@/lib/founder-stt-preference";
 import { useFounderMicSession } from "@/hooks/useFounderMicSession";
 import { useFounderVoiceSession } from "@/hooks/useFounderVoiceSession";
 
@@ -20,23 +21,31 @@ export function useFounderSpeechInput({ enabled, paused, onTranscriptComplete })
     };
   }, []);
 
+  const engine = useMemo(() => {
+    if (apiVoice === null) return "loading";
+    return pickSttEngine(apiVoice);
+  }, [apiVoice]);
+
+  const useWhisper = engine === "whisper";
+  const useBrowser = engine === "browser";
+
   const micSession = useFounderMicSession({
-    enabled: enabled && apiVoice === true,
+    enabled: enabled && useWhisper,
     paused,
     onTranscriptComplete,
   });
 
   const webSession = useFounderVoiceSession({
-    enabled: enabled && apiVoice === false,
+    enabled: enabled && useBrowser,
     paused,
     onTranscriptComplete,
   });
 
-  if (apiVoice === null) {
+  if (apiVoice === null || engine === "loading") {
     return {
       ready: false,
       engine: "loading",
-      supported: false,
+      supported: isSttSupported(),
       listening: false,
       recording: false,
       processing: false,
@@ -48,12 +57,12 @@ export function useFounderSpeechInput({ enabled, paused, onTranscriptComplete })
     };
   }
 
-  const session = apiVoice ? micSession : webSession;
+  const session = useWhisper ? micSession : webSession;
 
   return {
     ready: true,
-    engine: apiVoice ? "openai" : "browser",
-    supported: session.supported,
+    engine: useWhisper ? "whisper" : "browser",
+    supported: useWhisper ? isWhisperRecordingSupported() : isSpeechRecognitionSupported(),
     listening: session.listening,
     recording: Boolean(session.recording),
     processing: Boolean(session.processing),

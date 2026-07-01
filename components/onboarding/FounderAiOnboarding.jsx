@@ -18,11 +18,10 @@ import {
   writeOnboardingSkipped,
 } from "@/lib/founder-ai-onboarding";
 import { getJarvisOpeningMessage } from "@/lib/founder-jarvis";
+import { isSttSupported } from "@/lib/founder-stt-preference";
 import {
   fetchFounderVoiceStatus,
   invalidateFounderVoiceCache,
-  isMediaRecorderSupported,
-  isSpeechRecognitionSupported,
   speakFounderText,
   stopFounderSpeech,
 } from "@/lib/founder-voice";
@@ -91,7 +90,7 @@ export function FounderAiOnboarding() {
     invalidateFounderVoiceCache();
     fetchFounderVoiceStatus({ force: true }).then((apiReady) => {
       setVoiceApiReady(apiReady);
-      setSpeechSupported(apiReady ? isMediaRecorderSupported() : isSpeechRecognitionSupported());
+      setSpeechSupported(isSttSupported());
     });
   }, []);
 
@@ -225,6 +224,7 @@ export function FounderAiOnboarding() {
   function enableVoiceMode() {
     if (!speechSupported) return;
     flushSync(() => setVoiceMode(true));
+    speechRef.current?.resetTranscript?.();
     speechRef.current?.startListening?.({ force: true });
   }
 

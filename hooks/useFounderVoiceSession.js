@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { isSpeechRecognitionSupported } from "@/lib/founder-voice";
 
 const SILENCE_MS = 2200;
-const MIN_UTTERANCE_CHARS = 4;
+const MIN_UTTERANCE_CHARS = 2;
 
 export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }) {
   const [transcript, setTranscript] = useState("");

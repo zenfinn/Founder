@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { pickRecorderMimeType, isMediaRecorderSupported } from "@/lib/founder-voice";
+import { transcribeOnceWithBrowser } from "@/lib/founder-browser-stt";
+import { audioBlobFileName } from "@/lib/founder-audio-upload";
+import { isSpeechRecognitionSupported, pickRecorderMimeType, isMediaRecorderSupported } from "@/lib/founder-voice";
 
 const SILENCE_MS = 1700;
 const SPEECH_THRESHOLD = 0.012;
@@ -88,7 +90,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
   const transcribeBlob = useCallback(async (blob) => {
     const formData = new FormData();
-    formData.append("audio", blob, blob.type.includes("mp4") ? "speech.mp4" : "speech.webm");
+    formData.append("audio", blob, audioBlobFileName(blob));
 
     const response = await fetch("/api/onboarding/voice/transcribe", {
       method: "POST",
@@ -103,6 +105,26 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     return String(payload.text ?? "").trim();
   }, []);
 
+  const transcribeWithFallback = useCallback(
+    async (blob) => {
+      try {
+        return await transcribeBlob(blob);
+      } catch (whisperError) {
+        if (!isSpeechRecognitionSupported()) throw whisperError;
+
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+
+        return transcribeOnceWithBrowser();
+      }
+    },
+    [transcribeBlob]
+  );
+
   const finishRecording = useCallback(async () => {
     if (processingRef.current) return;
 
@@ -113,7 +135,17 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     processingRef.current = true;
 
     await new Promise((resolve) => {
+      const recorder = recorderRef.current;
+      if (!recorder) {
+        resolve();
+        return;
+      }
       recorder.onstop = resolve;
+      try {
+        recorder.requestData?.();
+      } catch {
+        // ignore
+      }
       recorder.stop();
     });
 
@@ -125,12 +157,13 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
       processingRef.current = false;
       speechDetectedRef.current = false;
       silenceStartedAtRef.current = 0;
+      setMicError("Zu kurz aufgenommen — bitte etwas länger sprechen.");
       return;
     }
 
     setProcessing(true);
     try {
-      const text = await transcribeBlob(blob);
+      const text = await transcribeWithFallback(blob);
       setLiveTranscript(text);
       if (text.length >= MIN_TRANSCRIPT_CHARS) {
         onCompleteRef.current?.(text);
@@ -143,7 +176,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
       speechDetectedRef.current = false;
       silenceStartedAtRef.current = 0;
     }
-  }, [transcribeBlob]);
+  }, [transcribeWithFallback]);
 
   const monitorInput = useCallback(() => {
     const analyser = analyserRef.current;
@@ -194,6 +227,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
   }, [finishRecording]);
 
   const startSession = useCallback(async ({ force = false } = {}) => {
+    if (force) enabledRef.current = true;
     if (!force && !enabledRef.current) return;
 
     const mimeType = pickRecorderMimeType();
@@ -220,10 +254,12 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
         },
       });
 
-      if (!enabledRef.current) {
+      if (!force && !enabledRef.current) {
         stream.getTracks().forEach((track) => track.stop());
         return;
       }
+
+      enabledRef.current = true;
 
       streamRef.current = stream;
       const audioContext = new AudioContext();
