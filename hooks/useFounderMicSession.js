@@ -197,17 +197,21 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
       if (!recorderRef.current || recorderRef.current.state === "inactive") {
         const mimeType = mimeTypeRef.current;
-        if (!mimeType || !streamRef.current) {
+        if (!streamRef.current) {
           rafRef.current = requestAnimationFrame(monitorInput);
           return;
         }
 
         chunksRef.current = [];
-        const recorder = new MediaRecorder(streamRef.current, { mimeType });
+        const recorder = mimeType
+          ? new MediaRecorder(streamRef.current, { mimeType })
+          : new MediaRecorder(streamRef.current);
         recorder.ondataavailable = (event) => {
           if (event.data.size > 0) chunksRef.current.push(event.data);
         };
-        recorder.start(300);
+        const timeslice = mimeType ? 300 : undefined;
+        if (timeslice) recorder.start(timeslice);
+        else recorder.start();
         recorderRef.current = recorder;
         recordStartedAtRef.current = now;
         setRecording(true);
@@ -231,7 +235,7 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     if (!force && !enabledRef.current) return;
 
     const mimeType = pickRecorderMimeType();
-    if (!mimeType) {
+    if (typeof window.MediaRecorder === "undefined") {
       setMicError("Audio-Aufnahme wird in diesem Browser nicht unterstützt.");
       return;
     }

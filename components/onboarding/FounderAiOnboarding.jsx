@@ -19,10 +19,10 @@ import {
 } from "@/lib/founder-ai-onboarding";
 import { getJarvisOpeningMessage } from "@/lib/founder-jarvis";
 import { isSttSupported } from "@/lib/founder-stt-preference";
+import { isSafari } from "@/lib/founder-browser";
 import {
   fetchFounderVoiceStatus,
   invalidateFounderVoiceCache,
-  requestMicrophoneAccess,
   speakFounderText,
   stopFounderSpeech,
 } from "@/lib/founder-voice";
@@ -147,11 +147,16 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   const resumeListening = useCallback(() => {
     if (!voiceModeRef.current || phaseRef.current !== "chat") return;
+    // Safari verliert User-Gesture nach async TTS — Nutzer muss erneut tippen
+    if (isSafari()) {
+      setFounderListening("Tippe die Kugel — sprich jetzt.");
+      return;
+    }
     window.setTimeout(() => {
       speechRef.current?.resetTranscript?.();
       speechRef.current?.startListening?.({ force: true });
     }, 500);
-  }, []);
+  }, [setFounderListening]);
 
   const playFounderVoice = useCallback(
     async (text) => {
@@ -230,7 +235,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
         setMessages((current) => [...current, { role: "founder", text: errorText }]);
         setFounderMessage(errorText);
-        resumeListening();
+        if (!isSafari()) resumeListening();
       } finally {
         setChatLoading(false);
       }
@@ -243,7 +248,7 @@ export function FounderAiOnboarding({ persistent = false }) {
       if (processingVoiceRef.current || phaseRef.current !== "chat") return;
       const value = String(text ?? "").trim();
       if (!value || value.length < 2) {
-        resumeListening();
+        if (!isSafari()) resumeListening();
         return;
       }
 
@@ -275,19 +280,9 @@ export function FounderAiOnboarding({ persistent = false }) {
           ? "listening"
           : "idle";
 
-  const handleGlobeTap = useCallback(async () => {
+  const handleGlobeTap = useCallback(() => {
     if (!speechSupported) {
       setVoiceMode(false);
-      return;
-    }
-
-    const micOk = await requestMicrophoneAccess();
-    if (!micOk) {
-      setVoiceGlobe((current) => ({
-        ...current,
-        active: true,
-        error: "Mikrofon verweigert — in Safari/Chrome unter Einstellungen → Website → Mikrofon erlauben.",
-      }));
       return;
     }
 
@@ -299,14 +294,16 @@ export function FounderAiOnboarding({ persistent = false }) {
 
     if (!openingSpokenRef.current) {
       openingSpokenRef.current = true;
-      playFounderVoice(getJarvisOpeningMessage());
+      void playFounderVoice(getJarvisOpeningMessage());
       return;
     }
 
     setFounderListening("Sprich jetzt — ich höre zu.");
+    stopFounderSpeech();
     speechRef.current?.resetTranscript?.();
+    // Sync start — Safari bricht STT bei await vor startListening
     speechRef.current?.startListening?.({ force: true });
-  }, [playFounderVoice, setFounderListening, setVoiceGlobe, speechSupported]);
+  }, [playFounderVoice, setFounderListening, speechSupported]);
 
   useEffect(() => {
     globeActivatedRef.current = globeActivated;
@@ -342,13 +339,12 @@ export function FounderAiOnboarding({ persistent = false }) {
     }
 
     const hintByStatus = {
-      idle: globeActivated ? "Tippe die Kugel — dann sprich" : "Tippe die Kugel — sprich mit Founder",
-      listening:
-        speech.engine === "whisper"
-          ? speech.recording
-            ? "Ich nehme auf…"
-            : "Sprich jetzt — ich höre zu"
-          : "Ich höre zu…",
+      idle: globeActivated
+        ? isSafari()
+          ? "Tippe die Kugel — sprich direkt"
+          : "Tippe die Kugel — dann sprich"
+        : "Tippe die Kugel — sprich mit Founder",
+      listening: isSafari() ? "Sprich jetzt…" : speech.engine === "whisper" ? (speech.recording ? "Ich nehme auf…" : "Sprich jetzt — ich höre zu") : "Ich höre zu…",
       processing: "Erkenne deine Sprache…",
       speaking: "Founder spricht…",
       thinking: "Founder denkt nach…",

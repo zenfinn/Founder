@@ -1,10 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { isSafari } from "@/lib/founder-browser";
 import { isSpeechRecognitionSupported } from "@/lib/founder-voice";
 
 const SILENCE_MS = 1800;
 const MIN_UTTERANCE_CHARS = 2;
+const SAFARI_LISTEN_MS = 14000;
 
 export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }) {
   const [transcript, setTranscript] = useState("");
@@ -15,11 +17,17 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   const recognitionRef = useRef(null);
   const shouldListenRef = useRef(false);
   const silenceTimerRef = useRef(null);
+  const safariTimerRef = useRef(null);
   const finalBufferRef = useRef("");
   const interimRef = useRef("");
   const onCompleteRef = useRef(onTranscriptComplete);
   const enabledRef = useRef(enabled);
   const pausedRef = useRef(paused);
+  const safariRef = useRef(false);
+
+  useEffect(() => {
+    safariRef.current = isSafari();
+  }, []);
 
   useEffect(() => {
     onCompleteRef.current = onTranscriptComplete;
@@ -40,19 +48,28 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     }
   }, []);
 
+  const clearSafariTimer = useCallback(() => {
+    if (safariTimerRef.current) {
+      window.clearTimeout(safariTimerRef.current);
+      safariTimerRef.current = null;
+    }
+  }, []);
+
   const resetTranscript = useCallback(() => {
     finalBufferRef.current = "";
     interimRef.current = "";
     setTranscript("");
     setInterimTranscript("");
     clearSilenceTimer();
-  }, [clearSilenceTimer]);
+    clearSafariTimer();
+  }, [clearSafariTimer, clearSilenceTimer]);
 
   const completeIfReady = useCallback(() => {
     const combined = `${finalBufferRef.current} ${interimRef.current}`.trim();
     if (combined.length < MIN_UTTERANCE_CHARS) return;
 
     shouldListenRef.current = false;
+    clearSafariTimer();
     try {
       recognitionRef.current?.stop?.();
     } catch {
@@ -61,9 +78,10 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     setListening(false);
     clearSilenceTimer();
     onCompleteRef.current?.(combined);
-  }, [clearSilenceTimer]);
+  }, [clearSafariTimer, clearSilenceTimer]);
 
   const scheduleSilenceCheck = useCallback(() => {
+    if (safariRef.current) return;
     clearSilenceTimer();
     silenceTimerRef.current = window.setTimeout(completeIfReady, SILENCE_MS);
   }, [clearSilenceTimer, completeIfReady]);
@@ -71,13 +89,14 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
   const stopListening = useCallback(() => {
     shouldListenRef.current = false;
     clearSilenceTimer();
+    clearSafariTimer();
     try {
       recognitionRef.current?.stop?.();
     } catch {
       // ignore
     }
     setListening(false);
-  }, [clearSilenceTimer]);
+  }, [clearSafariTimer, clearSilenceTimer]);
 
   const startListening = useCallback(({ force = false } = {}) => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -99,8 +118,8 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
 
     const recognition = new SpeechRecognition();
     recognition.lang = "de-DE";
-    recognition.continuous = true;
-    recognition.interimResults = true;
+    recognition.continuous = !safariRef.current;
+    recognition.interimResults = !safariRef.current;
     recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
@@ -109,6 +128,14 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     };
 
     recognition.onresult = (event) => {
+      if (safariRef.current) {
+        const piece = String(event.results?.[event.resultIndex]?.[0]?.transcript ?? "").trim();
+        if (!piece) return;
+        finalBufferRef.current = piece;
+        setTranscript(piece);
+        return;
+      }
+
       let interim = "";
       let finals = "";
 
@@ -132,19 +159,39 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
       const code = event.error ?? "unknown";
 
       if (code === "not-allowed" || code === "service-not-allowed") {
-        setMicError("Mikrofon verweigert — bitte in den Browser-Einstellungen erlauben.");
+        setMicError("Mikrofon verweigert — Safari → Einstellungen → Websites → Mikrofon erlauben.");
         shouldListenRef.current = false;
         setListening(false);
         return;
       }
 
-      if (code === "no-speech" || code === "aborted") return;
+      if (code === "no-speech") {
+        if (safariRef.current) {
+          setMicError("Nichts gehört — tippe die Kugel und sprich lauter.");
+        }
+        return;
+      }
+
+      if (code === "aborted") return;
 
       setMicError("Spracherkennung unterbrochen — tippe die Kugel nochmal.");
     };
 
     recognition.onend = () => {
       setListening(false);
+      clearSafariTimer();
+
+      if (safariRef.current) {
+        const combined = finalBufferRef.current.trim();
+        if (combined.length >= MIN_UTTERANCE_CHARS) {
+          shouldListenRef.current = false;
+          onCompleteRef.current?.(combined);
+        } else if (shouldListenRef.current) {
+          setMicError("Nichts gehört — tippe die Kugel und sprich direkt.");
+        }
+        return;
+      }
+
       if (!shouldListenRef.current || pausedRef.current || !enabledRef.current) return;
 
       window.setTimeout(() => {
@@ -162,10 +209,22 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     try {
       recognition.start();
     } catch (error) {
-      setMicError(error.message ?? "Mikrofon konnte nicht gestartet werden.");
+      setMicError(error.message ?? "Mikrofon konnte nicht gestartet werden — nochmal tippen.");
       setListening(false);
+      return;
     }
-  }, [scheduleSilenceCheck, stopListening]);
+
+    if (safariRef.current) {
+      clearSafariTimer();
+      safariTimerRef.current = window.setTimeout(() => {
+        try {
+          recognition.stop();
+        } catch {
+          // ignore
+        }
+      }, SAFARI_LISTEN_MS);
+    }
+  }, [clearSafariTimer, scheduleSilenceCheck, stopListening]);
 
   useEffect(() => {
     if (!enabled || paused) {
@@ -180,13 +239,14 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     return () => {
       shouldListenRef.current = false;
       clearSilenceTimer();
+      clearSafariTimer();
       try {
         recognitionRef.current?.stop?.();
       } catch {
         // ignore
       }
     };
-  }, [clearSilenceTimer]);
+  }, [clearSafariTimer, clearSilenceTimer]);
 
   const liveTranscript = `${transcript}${interimTranscript ? ` ${interimTranscript}` : ""}`.trim();
 
