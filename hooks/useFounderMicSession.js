@@ -1,13 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { transcribeOnceWithBrowser } from "@/lib/founder-browser-stt";
+import { isMacDesktop } from "@/lib/founder-browser";
 import { audioBlobFileName } from "@/lib/founder-audio-upload";
 import { isSpeechRecognitionSupported, pickRecorderMimeType, isMediaRecorderSupported } from "@/lib/founder-voice";
 
 const SILENCE_MS = 1700;
+const MAC_SILENCE_MS = 1400;
 const SPEECH_THRESHOLD = 0.012;
+const MAC_SPEECH_THRESHOLD = 0.007;
 const MIN_RECORD_MS = 800;
+const MAC_MIN_RECORD_MS = 500;
+const MIN_BLOB_SIZE = 1500;
+const MAC_MIN_BLOB_SIZE = 700;
+const MAX_RECORD_MS = 14000;
 const MIN_TRANSCRIPT_CHARS = 2;
 
 function measureVolume(analyser) {
@@ -110,8 +116,13 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
       try {
         return await transcribeBlob(blob);
       } catch (whisperError) {
+        // Browser-STT nach MediaRecorder auf macOS ist unzuverlässig
+        if (isMacDesktop()) {
+          throw new Error("Sprache nicht klar erkannt — bitte nochmal auf Sprache tippen und deutlich sprechen.");
+        }
         if (!isSpeechRecognitionSupported()) throw whisperError;
 
+        const { transcribeOnceWithBrowser } = await import("@/lib/founder-browser-stt");
         if (rafRef.current) {
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
@@ -153,7 +164,8 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     chunksRef.current = [];
     recorderRef.current = null;
 
-    if (blob.size < 1500) {
+    const minBlob = isMacDesktop() ? MAC_MIN_BLOB_SIZE : MIN_BLOB_SIZE;
+    if (blob.size < minBlob) {
       processingRef.current = false;
       speechDetectedRef.current = false;
       silenceStartedAtRef.current = 0;
@@ -178,6 +190,25 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
     }
   }, [transcribeWithFallback]);
 
+  const beginRecording = useCallback(() => {
+    if (!streamRef.current || recorderRef.current?.state === "recording") return;
+
+    const mimeType = mimeTypeRef.current;
+    chunksRef.current = [];
+    const recorder = mimeType
+      ? new MediaRecorder(streamRef.current, { mimeType })
+      : new MediaRecorder(streamRef.current);
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) chunksRef.current.push(event.data);
+    };
+    const timeslice = mimeType ? 300 : undefined;
+    if (timeslice) recorder.start(timeslice);
+    else recorder.start();
+    recorderRef.current = recorder;
+    recordStartedAtRef.current = Date.now();
+    setRecording(true);
+  }, []);
+
   const monitorInput = useCallback(() => {
     const analyser = analyserRef.current;
     if (!analyser || !enabledRef.current) return;
@@ -189,32 +220,27 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
 
     const volume = measureVolume(analyser);
     const now = Date.now();
-    const isSpeaking = volume > SPEECH_THRESHOLD;
+    const macDesktop = isMacDesktop();
+    const threshold = macDesktop ? MAC_SPEECH_THRESHOLD : SPEECH_THRESHOLD;
+    const silenceMs = macDesktop ? MAC_SILENCE_MS : SILENCE_MS;
+    const minRecordMs = macDesktop ? MAC_MIN_RECORD_MS : MIN_RECORD_MS;
+    const isSpeaking = volume > threshold;
+
+    if (macDesktop && !recorderRef.current && streamRef.current) {
+      speechDetectedRef.current = true;
+      beginRecording();
+    }
 
     if (isSpeaking) {
       speechDetectedRef.current = true;
       silenceStartedAtRef.current = 0;
 
       if (!recorderRef.current || recorderRef.current.state === "inactive") {
-        const mimeType = mimeTypeRef.current;
         if (!streamRef.current) {
           rafRef.current = requestAnimationFrame(monitorInput);
           return;
         }
-
-        chunksRef.current = [];
-        const recorder = mimeType
-          ? new MediaRecorder(streamRef.current, { mimeType })
-          : new MediaRecorder(streamRef.current);
-        recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) chunksRef.current.push(event.data);
-        };
-        const timeslice = mimeType ? 300 : undefined;
-        if (timeslice) recorder.start(timeslice);
-        else recorder.start();
-        recorderRef.current = recorder;
-        recordStartedAtRef.current = now;
-        setRecording(true);
+        beginRecording();
       }
     } else if (speechDetectedRef.current && recorderRef.current?.state === "recording") {
       if (!silenceStartedAtRef.current) silenceStartedAtRef.current = now;
@@ -222,13 +248,21 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
       const silentFor = now - silenceStartedAtRef.current;
       const recordedFor = now - recordStartedAtRef.current;
 
-      if (silentFor >= SILENCE_MS && recordedFor >= MIN_RECORD_MS) {
+      if (silentFor >= silenceMs && recordedFor >= minRecordMs) {
         finishRecording();
+        rafRef.current = requestAnimationFrame(monitorInput);
+        return;
+      }
+
+      if (recordedFor >= MAX_RECORD_MS) {
+        finishRecording();
+        rafRef.current = requestAnimationFrame(monitorInput);
+        return;
       }
     }
 
     rafRef.current = requestAnimationFrame(monitorInput);
-  }, [finishRecording]);
+  }, [beginRecording, finishRecording]);
 
   const startSession = useCallback(async ({ force = false } = {}) => {
     if (force) enabledRef.current = true;

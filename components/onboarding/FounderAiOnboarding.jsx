@@ -35,7 +35,7 @@ import {
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { getOwnProfile, saveOwnProfile } from "@/lib/profiles";
 
-const JARVIS_START_HINT = "Drücke auf die Kugel um Jarvis zu starten";
+const JARVIS_START_HINT = "Tippe auf die Kugel oder unten auf Sprache";
 
 function ChatBubble({ message, pending = false }) {
   const isFounder = message.role === "founder";
@@ -398,7 +398,13 @@ export function FounderAiOnboarding({ persistent = false }) {
           ? "Tippe die Kugel — sprich direkt"
           : "Tippe die Kugel — dann sprich"
         : JARVIS_START_HINT,
-      listening: isSafari() ? "Sprich jetzt…" : speech.engine === "whisper" ? (speech.recording ? "Ich nehme auf…" : "Sprich jetzt — ich höre zu") : "Ich höre zu…",
+      listening: isSafari()
+        ? "Sprich jetzt…"
+        : speech.engine === "whisper"
+          ? speech.recording
+            ? "Ich nehme auf…"
+            : "Sprich jetzt — ich höre zu"
+          : "Ich höre zu…",
       processing: "Erkenne deine Sprache…",
       speaking: "",
       thinking: "",
@@ -575,7 +581,7 @@ export function FounderAiOnboarding({ persistent = false }) {
                 }`}
               >
                 <Mic className="h-3.5 w-3.5" />
-                Kugel
+                Sprache
               </button>
             </div>
 

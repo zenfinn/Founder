@@ -167,14 +167,14 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
 
       if (code === "no-speech") {
         if (safariRef.current) {
-          setMicError("Nichts gehört — tippe die Kugel und sprich lauter.");
+          setMicError("Nichts gehört — tippe auf Sprache und sprich lauter.");
         }
         return;
       }
 
       if (code === "aborted") return;
 
-      setMicError("Spracherkennung unterbrochen — tippe die Kugel nochmal.");
+      setMicError("Spracherkennung unterbrochen — tippe auf Sprache nochmal.");
     };
 
     recognition.onend = () => {
@@ -187,7 +187,7 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
           shouldListenRef.current = false;
           onCompleteRef.current?.(combined);
         } else if (shouldListenRef.current) {
-          setMicError("Nichts gehört — tippe die Kugel und sprich direkt.");
+          setMicError("Nichts gehört — tippe auf Sprache und sprich direkt.");
         }
         return;
       }
