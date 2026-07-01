@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { attachReferralToUser } from "@/lib/referrals";
 import { ensureGlobalLoungeMembership } from "@/lib/dashboard-lounge";
-import { sanitizeProfilePayload } from "@/lib/profiles";
 import { resolveRequestedRank } from "@/lib/rank-system";
 import { sendEmail } from "@/lib/email";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -25,6 +24,10 @@ function mapRegisterError(message = "") {
 
   if (text.includes("password")) {
     return "Das Passwort muss mindestens 8 Zeichen lang sein.";
+  }
+
+  if (text.includes("schema cache") || text.includes("column")) {
+    return "Registrierung vorübergehend nicht möglich. Bitte versuche es in einer Minute erneut.";
   }
 
   return message || "Registrierung fehlgeschlagen.";
@@ -75,29 +78,16 @@ export async function POST(request) {
 
     const userId = authData.user.id;
 
-    const { error: profileError } = await adminSupabase.from("profiles").upsert(
-      {
-        id: userId,
-        ...sanitizeProfilePayload({
-          display_name: name,
-          company_name: companyName,
-          industry,
-          username: "",
-          bio: "",
-          avatar_url: "",
-          instagram_url: "",
-          tiktok_url: "",
-          linkedin_url: "",
-          website_url: "",
-          twitter_url: "",
-        }),
-        estimated_annual_revenue: estimatedAnnualRevenue,
-        requested_rank: requestedRank,
-        current_rank: "aspiring",
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" }
-    );
+    const profilePayload = {
+      id: userId,
+      display_name: name,
+      company_name: companyName,
+      industry,
+      current_rank: "aspiring",
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: profileError } = await adminSupabase.from("profiles").upsert(profilePayload, { onConflict: "id" });
 
     if (profileError) {
       await adminSupabase.auth.admin.deleteUser(userId).catch(() => {});
