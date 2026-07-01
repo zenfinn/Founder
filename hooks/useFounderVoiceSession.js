@@ -61,9 +61,9 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
     setListening(false);
   }, [clearSilenceTimer]);
 
-  const startListening = useCallback(() => {
+  const startListening = useCallback(({ force = false } = {}) => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition || !enabled || paused) return;
+    if (!SpeechRecognition || (!force && (!enabled || paused))) return;
 
     stopListening();
     shouldListenRef.current = true;
@@ -143,9 +143,8 @@ export function useFounderVoiceSession({ enabled, paused, onTranscriptComplete }
       return undefined;
     }
 
-    startListening();
     return () => stopListening();
-  }, [enabled, paused, startListening, stopListening]);
+  }, [enabled, paused, stopListening]);
 
   useEffect(() => {
     return () => {

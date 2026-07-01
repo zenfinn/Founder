@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Loader2, MessageSquare, Mic, Send } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +22,7 @@ import {
   fetchFounderVoiceStatus,
   invalidateFounderVoiceCache,
   isMediaRecorderSupported,
+  isSpeechRecognitionSupported,
   speakFounderText,
   stopFounderSpeech,
 } from "@/lib/founder-voice";
@@ -33,8 +35,8 @@ function ChatBubble({ message }) {
     <div
       className={`max-w-[92%] rounded-2xl px-3.5 py-3 text-[15px] leading-6 sm:max-w-[88%] sm:px-4 sm:text-sm ${
         isFounder
-          ? "mr-auto bg-[#1a3aad]/20 text-neutral-100"
-          : "ml-auto bg-white/8 text-neutral-200"
+          ? "mr-auto bg-[#1a3aad]/25 text-neutral-100"
+          : "ml-auto border border-white/10 bg-[#1a3aad]/10 text-white"
       }`}
     >
       {message.text}
@@ -89,7 +91,7 @@ export function FounderAiOnboarding() {
     invalidateFounderVoiceCache();
     fetchFounderVoiceStatus({ force: true }).then((apiReady) => {
       setVoiceApiReady(apiReady);
-      setSpeechSupported(apiReady && isMediaRecorderSupported());
+      setSpeechSupported(apiReady ? isMediaRecorderSupported() : isSpeechRecognitionSupported());
     });
   }, []);
 
@@ -176,7 +178,9 @@ export function FounderAiOnboarding() {
         if (!response.ok) throw new Error(payload.error ?? "Antwort fehlgeschlagen.");
 
         setMessages((current) => [...current, { role: "founder", text: payload.reply }]);
-        setProfile(payload.profile ?? {});
+        const nextProfile = payload.profile ?? {};
+        setProfile(nextProfile);
+        profileRef.current = nextProfile;
         setReadyForRanking(Boolean(payload.readyForRanking));
         await playFounderVoice(payload.reply);
       } catch (error) {
@@ -219,8 +223,16 @@ export function FounderAiOnboarding() {
   }, [speech.liveTranscript, voiceMode]);
 
   function enableVoiceMode() {
-    setVoiceMode(true);
+    if (!speechSupported) return;
+    flushSync(() => setVoiceMode(true));
     speechRef.current?.startListening?.({ force: true });
+  }
+
+  function disableVoiceMode() {
+    speechRef.current?.stopListening?.();
+    stopFounderSpeech();
+    setVoiceMode(false);
+    setTextInput("");
   }
 
   const runRanking = useCallback(async () => {
@@ -301,7 +313,7 @@ export function FounderAiOnboarding() {
       eyebrow="Founder AI"
       title="Dein persönlicher Start"
       description="Erzähl Founder von dir — er matcht dich mit den passenden Nischen."
-      className="min-h-0 flex-1 pb-[calc(6.5rem+env(safe-area-inset-bottom))]"
+      className="min-h-0 flex-1 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
     >
       <CockpitPanel className="relative flex min-h-[min(72dvh,720px)] flex-col overflow-hidden bg-[#050505]/55 backdrop-blur-sm sm:min-h-[520px]">
         <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-[#1a3aad]/20 blur-3xl" />
@@ -322,7 +334,7 @@ export function FounderAiOnboarding() {
                 <div className="flex gap-1.5 sm:gap-2">
                   <button
                     type="button"
-                    onClick={() => setVoiceMode(false)}
+                    onClick={disableVoiceMode}
                     className={`inline-flex min-h-[40px] items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold active:scale-[0.98] ${
                       !voiceMode ? "bg-[#1a3aad] text-white" : "bg-white/5 text-neutral-400"
                     }`}
@@ -382,7 +394,10 @@ export function FounderAiOnboarding() {
                     {!speech.listening && !speech.micError && speechSupported && (
                       <button
                         type="button"
-                        onClick={() => speechRef.current?.startListening?.({ force: true })}
+                        onClick={() => {
+                          flushSync(() => setVoiceMode(true));
+                          speechRef.current?.startListening?.({ force: true });
+                        }}
                         className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border border-[#1a3aad]/40 bg-[#1a3aad]/15 text-sm font-semibold text-white active:scale-[0.98]"
                       >
                         <Mic className="h-4 w-4" />

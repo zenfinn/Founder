@@ -243,14 +243,9 @@ export function useFounderMicSession({ enabled, paused, onTranscriptComplete }) 
   }, [monitorInput]);
 
   useEffect(() => {
-    if (!enabled) {
-      teardown();
-      return undefined;
-    }
-
-    startSession();
+    if (!enabled) return undefined;
     return () => teardown();
-  }, [enabled, startSession, teardown]);
+  }, [enabled, teardown]);
 
   return {
     supported: isMediaRecorderSupported(),

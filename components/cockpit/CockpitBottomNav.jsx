@@ -17,6 +17,10 @@ const navItems = [
 export function CockpitBottomNav() {
   const pathname = usePathname() ?? "";
 
+  if (pathname.startsWith("/onboarding")) {
+    return null;
+  }
+
   return (
     <nav
       aria-label="Hauptnavigation"

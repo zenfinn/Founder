@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { BrandMark } from "@/components/BrandMark";
 import { UserHeaderControls } from "@/components/UserHeaderControls";
 import { CockpitBottomNav } from "@/components/cockpit/CockpitBottomNav";
@@ -9,6 +10,9 @@ import { FounderGlobeProvider } from "@/components/cockpit/FounderGlobeContext";
 import { FounderOnboardingGate } from "@/components/onboarding/FounderOnboardingGate";
 
 export function CockpitShell({ children }) {
+  const pathname = usePathname() ?? "";
+  const onOnboarding = pathname.startsWith("/onboarding");
+
   return (
     <FounderGlobeProvider>
       <div
@@ -26,7 +30,7 @@ export function CockpitShell({ children }) {
         </div>
       </header>
 
-      <main className="relative z-10 min-h-0 flex-1 pb-28">
+      <main className={`relative z-10 min-h-0 flex-1 ${onOnboarding ? "pb-6" : "pb-28"}`}>
         <FounderOnboardingGate>{children}</FounderOnboardingGate>
       </main>
 
