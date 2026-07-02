@@ -20,6 +20,11 @@ import {
 } from "@/lib/founder-ai-onboarding";
 import { buildRankingSpeech } from "@/lib/founder-jarvis";
 import {
+  buildMeetupHostInfoSeed,
+  isMeetupReadyForSubmit,
+  userConfirmsAction,
+} from "@/lib/founder-jarvis-meetup";
+import {
   clearJarvisSession,
   readJarvisSession,
   writeJarvisSession,
@@ -66,7 +71,10 @@ export function FounderAiOnboarding({ persistent = false }) {
   const [globeActivated, setGlobeActivated] = useState(false);
   const [messages, setMessages] = useState([]);
   const [profile, setProfile] = useState({});
+  const [meetup, setMeetup] = useState({});
   const [readyForRanking, setReadyForRanking] = useState(false);
+  const [readyForMeetupSubmit, setReadyForMeetupSubmit] = useState(false);
+  const [meetupSubmitting, setMeetupSubmitting] = useState(false);
   const [textInput, setTextInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const [rankedGroups, setRankedGroups] = useState([]);
@@ -84,6 +92,9 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   const messagesRef = useRef(messages);
   const profileRef = useRef(profile);
+  const meetupRef = useRef(meetup);
+  const hostInfoSeedRef = useRef("");
+  const meetupAwaitingConfirmRef = useRef(false);
   const phaseRef = useRef(phase);
   const voiceModeRef = useRef(voiceMode);
   const processingVoiceRef = useRef(false);
@@ -104,6 +115,10 @@ export function FounderAiOnboarding({ persistent = false }) {
   useEffect(() => {
     profileRef.current = profile;
   }, [profile]);
+
+  useEffect(() => {
+    meetupRef.current = meetup;
+  }, [meetup]);
 
   useEffect(() => {
     phaseRef.current = phase;
@@ -172,7 +187,12 @@ export function FounderAiOnboarding({ persistent = false }) {
               ? dbProfile.interests
               : undefined,
         };
+        hostInfoSeedRef.current = buildMeetupHostInfoSeed(dbProfile ?? {}, seedProfile);
         if (session?.messages?.length) setMessages(session.messages);
+        if (session?.meetup && Object.keys(session.meetup).length) {
+          setMeetup(session.meetup);
+          meetupRef.current = session.meetup;
+        }
         if (Object.keys(seedProfile).length) {
           setProfile(seedProfile);
           profileRef.current = seedProfile;
@@ -195,8 +215,8 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   useEffect(() => {
     if (!userId || !assistantMode || forceOnboarding) return;
-    writeJarvisSession(userId, { messages, profile });
-  }, [assistantMode, forceOnboarding, messages, profile, userId]);
+    writeJarvisSession(userId, { messages, profile, meetup });
+  }, [assistantMode, forceOnboarding, meetup, messages, profile, userId]);
 
   const chatMode = assistantMode ? "assistant" : "onboarding";
 
@@ -227,6 +247,49 @@ export function FounderAiOnboarding({ persistent = false }) {
     [resumeListening, setFounderMessage]
   );
 
+  const submitMeetupDraft = useCallback(
+    async (draft) => {
+      if (!isMeetupReadyForSubmit(draft) || meetupSubmitting) return false;
+
+      setMeetupSubmitting(true);
+      try {
+        const response = await fetch("/api/events/submit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: draft.title,
+            description: draft.description,
+            starts_at: draft.starts_at,
+            location_text: draft.location_text,
+            host_info: draft.host_info || hostInfoSeedRef.current || undefined,
+            category: draft.category || "Meetup",
+          }),
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error ?? "Einreichung fehlgeschlagen.");
+
+        const successText =
+          "Dein Meetup ist eingereicht und wird geprüft. Du findest den Status unter Events — sobald es freigegeben ist, sehen es alle.";
+        setMeetup({});
+        meetupRef.current = {};
+        meetupAwaitingConfirmRef.current = false;
+        setReadyForMeetupSubmit(false);
+        setMessages((current) => [...current, { role: "founder", text: successText }]);
+        setFounderMessage(successText);
+        if (voiceModeRef.current) await playFounderVoice(successText);
+        return true;
+      } catch (error) {
+        const errorText = error.message ?? "Meetup konnte gerade nicht eingereicht werden.";
+        setMessages((current) => [...current, { role: "founder", text: errorText }]);
+        setFounderMessage(errorText);
+        return false;
+      } finally {
+        setMeetupSubmitting(false);
+      }
+    },
+    [meetupSubmitting, playFounderVoice, setFounderMessage]
+  );
+
   useEffect(() => {
     if (openingStartedRef.current) return;
     openingStartedRef.current = true;
@@ -251,6 +314,11 @@ export function FounderAiOnboarding({ persistent = false }) {
 
       const userMessage = { role: "user", text };
       const nextMessages = [...messagesRef.current, userMessage];
+      const shouldSubmitMeetup =
+        meetupAwaitingConfirmRef.current &&
+        userConfirmsAction(text) &&
+        isMeetupReadyForSubmit(meetupRef.current);
+
       setMessages(nextMessages);
       setTextInput("");
       setChatLoading(true);
@@ -263,6 +331,7 @@ export function FounderAiOnboarding({ persistent = false }) {
           body: JSON.stringify({
             messages: nextMessages,
             profile: profileRef.current,
+            meetup: meetupRef.current,
             mode: chatMode,
           }),
         });
@@ -276,13 +345,24 @@ export function FounderAiOnboarding({ persistent = false }) {
         profileRef.current = nextProfile;
         setReadyForRanking(Boolean(payload.readyForRanking));
 
+        let nextMeetup = payload.meetup ?? {};
+        if (payload.meetupFlow && !nextMeetup.host_info && hostInfoSeedRef.current) {
+          nextMeetup = { ...nextMeetup, host_info: hostInfoSeedRef.current };
+        }
+        setMeetup(nextMeetup);
+        meetupRef.current = nextMeetup;
+        setReadyForMeetupSubmit(Boolean(payload.readyForSubmit));
+        meetupAwaitingConfirmRef.current = Boolean(payload.meetupAwaitingConfirm);
+
         if (voiceModeRef.current) {
           await playFounderVoice(reply);
         } else {
           setFounderMessage(reply);
         }
 
-        if (
+        if (shouldSubmitMeetup || payload.meetupConfirmed) {
+          await submitMeetupDraft(meetupRef.current);
+        } else if (
           payload.readyForRanking &&
           payload.autoRank !== false &&
           !assistantMode &&
@@ -301,7 +381,7 @@ export function FounderAiOnboarding({ persistent = false }) {
         setChatLoading(false);
       }
     },
-    [assistantMode, chatLoading, chatMode, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage]
+    [assistantMode, chatLoading, chatMode, playFounderVoice, resumeListening, setFounderIdle, setFounderMessage, submitMeetupDraft]
   );
 
   const handleSpeechComplete = useCallback(
@@ -527,7 +607,7 @@ export function FounderAiOnboarding({ persistent = false }) {
     stopFounderSpeech();
     setFounderIdle();
     if (userId) writeOnboardingSkipped(userId, userEmail);
-    if (assistantMode && userId) writeJarvisSession(userId, { messages, profile });
+    if (assistantMode && userId) writeJarvisSession(userId, { messages, profile, meetup });
     router.push("/dashboard");
   }
 
@@ -542,6 +622,7 @@ export function FounderAiOnboarding({ persistent = false }) {
   }
 
   const canRank = readyForRanking && !chatLoading;
+  const canSubmitMeetup = readyForMeetupSubmit && !chatLoading && !meetupSubmitting;
 
   const liveTranscript =
     voiceMode && speech.listening && speech.liveTranscript?.trim() ? speech.liveTranscript.trim() : "";
@@ -636,6 +717,15 @@ export function FounderAiOnboarding({ persistent = false }) {
                 <button type="button" onClick={skipOnboarding} className="min-h-[44px] px-2 text-sm text-neutral-500">
                   {assistantMode ? "Dashboard" : "Später"}
                 </button>
+                {canSubmitMeetup && (
+                  <button
+                    type="button"
+                    onClick={() => submitMeetupDraft(meetupRef.current)}
+                    className="min-h-[44px] rounded-xl bg-[#1a3aad] px-4 py-2.5 text-sm font-semibold text-white"
+                  >
+                    Meetup einreichen
+                  </button>
+                )}
                 {!assistantMode && (
                   <button
                     type="button"

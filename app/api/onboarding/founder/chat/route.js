@@ -23,9 +23,10 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const profile = body.profile && typeof body.profile === "object" ? body.profile : {};
+    const meetup = body.meetup && typeof body.meetup === "object" ? body.meetup : {};
     const mode = body.mode === "assistant" ? "assistant" : "onboarding";
 
-    const result = await chatWithJarvis({ messages, profile, mode });
+    const result = await chatWithJarvis({ messages, profile, meetup, mode });
 
     return NextResponse.json(result);
   } catch (error) {
