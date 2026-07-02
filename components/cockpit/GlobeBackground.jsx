@@ -182,14 +182,20 @@ function getVoiceGlobeCanvasSize() {
     return Math.min(Math.floor(vw * 0.56), 232);
   }
 
-  // Tablet / Mac / Desktop: more presence in the open space above the chat panel
-  const byViewport = Math.floor(Math.min(vw, vh) * 0.4);
-  return Math.min(Math.max(byViewport, 280), 380);
+  // Desktop: fill space between header and bottom chat panel (~38dvh + hints)
+  const headerReserve = vw >= 1024 ? 88 : 76;
+  const bottomReserve = Math.floor(vh * 0.36) + 96;
+  const availableHeight = Math.max(vh - headerReserve - bottomReserve, 260);
+  const byHeight = Math.floor(availableHeight * 0.96);
+  const byWidth = Math.floor(vw * 0.34);
+  const size = Math.min(byHeight, byWidth);
+
+  return Math.min(Math.max(size, 320), 480);
 }
 
 function getVoiceGlobeDrawScale(canvasSize) {
   const isDesktop = window.innerWidth >= 768;
-  return canvasSize * (isDesktop ? 0.41 : 0.36);
+  return canvasSize * (isDesktop ? 0.43 : 0.36);
 }
 
 function isUserSpeech(activity, message) {
