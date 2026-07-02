@@ -182,20 +182,22 @@ function getVoiceGlobeCanvasSize() {
     return Math.min(Math.floor(vw * 0.56), 232);
   }
 
-  // Desktop: fill space between header and bottom chat panel (~38dvh + hints)
-  const headerReserve = vw >= 1024 ? 88 : 76;
-  const bottomReserve = Math.floor(vh * 0.36) + 96;
-  const availableHeight = Math.max(vh - headerReserve - bottomReserve, 260);
-  const byHeight = Math.floor(availableHeight * 0.96);
-  const byWidth = Math.floor(vw * 0.34);
+  // Match Cockpit voice layout: header top + bottom nav (6rem) + chat panel (34dvh)
+  const headerReserve = vw >= 1024 ? 72 : 64;
+  const panelVh = vw >= 640 ? 0.34 : 0.38;
+  const bottomReserve = 96 + Math.floor(vh * panelVh);
+  const bandHeight = Math.max(vh - headerReserve - bottomReserve, 280);
+  const hintReserve = 52;
+  const byHeight = Math.floor((bandHeight - hintReserve) * 0.98);
+  const byWidth = Math.floor(vw * 0.46);
   const size = Math.min(byHeight, byWidth);
 
-  return Math.min(Math.max(size, 320), 480);
+  return Math.min(Math.max(size, 360), 600);
 }
 
 function getVoiceGlobeDrawScale(canvasSize) {
   const isDesktop = window.innerWidth >= 768;
-  return canvasSize * (isDesktop ? 0.43 : 0.36);
+  return canvasSize * (isDesktop ? 0.5 : 0.36);
 }
 
 function isUserSpeech(activity, message) {
@@ -298,7 +300,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     const isActive = activity !== "idle";
 
     return (
-      <div className="pointer-events-none fixed inset-x-0 top-[56px] z-[30] flex flex-col items-center px-4 sm:top-[64px] md:top-[72px]">
+      <div className="pointer-events-none fixed inset-x-0 top-[56px] bottom-[calc(6rem+38dvh+env(safe-area-inset-bottom))] z-[30] flex flex-col items-center justify-center px-4 sm:top-[64px] sm:bottom-[calc(6rem+34dvh+env(safe-area-inset-bottom))] md:top-[72px]">
         <div className="relative pointer-events-auto">
           <canvas
             ref={canvasRef}
