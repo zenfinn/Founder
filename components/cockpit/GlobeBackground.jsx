@@ -173,8 +173,23 @@ function drawGlobeFrame(ctx, { width, height, centerY, scale, rotation, activity
   }
 }
 
-function isUserSpeech(activity, message) {
-  return activity === "listening" && message?.trim() && !LISTENING_HINTS.has(message.trim());
+function getVoiceGlobeCanvasSize() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+
+  // Mobile: unchanged — compact above chat dock
+  if (vw < 768) {
+    return Math.min(Math.floor(vw * 0.56), 232);
+  }
+
+  // Tablet / Mac / Desktop: more presence in the open space above the chat panel
+  const byViewport = Math.floor(Math.min(vw, vh) * 0.4);
+  return Math.min(Math.max(byViewport, 280), 380);
+}
+
+function getVoiceGlobeDrawScale(canvasSize) {
+  const isDesktop = window.innerWidth >= 768;
+  return canvasSize * (isDesktop ? 0.41 : 0.36);
 }
 
 export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntensity = 1 }) {
@@ -212,7 +227,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
 
       if (hero) {
-        const size = Math.min(Math.floor(window.innerWidth * 0.56), 232);
+        const size = getVoiceGlobeCanvasSize();
         canvas.width = Math.floor(size * dpr);
         canvas.height = Math.floor(size * dpr);
         canvas.style.width = `${size}px`;
@@ -233,7 +248,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
       const height = voice.active ? parseInt(canvas.style.height, 10) : window.innerHeight;
       const center = voice.active ? 0.5 : centerY;
       const scale = voice.active
-        ? Math.min(width, height) * 0.36
+        ? getVoiceGlobeDrawScale(Math.min(width, height))
         : Math.min(width, height) * scaleFactor * glowIntensity;
       const delta = Math.min((now - lastTime) / 1000, 0.05);
       lastTime = now;
@@ -273,7 +288,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     const isActive = activity !== "idle";
 
     return (
-      <div className="pointer-events-none fixed inset-x-0 top-[56px] z-[30] flex flex-col items-center px-4 sm:top-[64px]">
+      <div className="pointer-events-none fixed inset-x-0 top-[56px] z-[30] flex flex-col items-center px-4 sm:top-[64px] md:top-[72px]">
         <div className="relative pointer-events-auto">
           <canvas
             ref={canvasRef}
