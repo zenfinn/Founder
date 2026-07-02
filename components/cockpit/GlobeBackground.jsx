@@ -192,6 +192,10 @@ function getVoiceGlobeDrawScale(canvasSize) {
   return canvasSize * (isDesktop ? 0.41 : 0.36);
 }
 
+function isUserSpeech(activity, message) {
+  return activity === "listening" && message?.trim() && !LISTENING_HINTS.has(message.trim());
+}
+
 export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntensity = 1 }) {
   const canvasRef = useRef(null);
   const geometryRef = useRef(null);
