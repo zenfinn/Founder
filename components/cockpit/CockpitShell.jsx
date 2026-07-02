@@ -15,25 +15,25 @@ export function CockpitShell({ children }) {
       <CockpitVoiceGlobeGuard />
       <div
         data-cockpit="true"
-        className="cockpit-root relative isolate flex min-h-dvh flex-col bg-[#050505] text-neutral-100"
+        className="cockpit-root relative flex min-h-dvh flex-col bg-[#050505] text-neutral-100"
       >
         <GlobeBackground />
 
-      <header className="relative z-20 flex shrink-0 items-center justify-between px-4 py-4 md:px-6">
-        <Link href="/dashboard" className="opacity-90 transition hover:opacity-100">
-          <BrandMark />
-        </Link>
-        <div className="cockpit-header-controls">
-          <UserHeaderControls variant="app" />
-        </div>
-      </header>
+        <header className="relative z-20 flex shrink-0 items-center justify-between px-4 py-4 md:px-6">
+          <Link href="/dashboard" className="opacity-90 transition hover:opacity-100">
+            <BrandMark />
+          </Link>
+          <div className="cockpit-header-controls">
+            <UserHeaderControls variant="app" />
+          </div>
+        </header>
 
-      <main className="relative z-10 min-h-0 flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
-        <FounderOnboardingGate>{children}</FounderOnboardingGate>
-      </main>
+        <main className="relative z-10 min-h-0 flex-1 pb-[calc(5.5rem+env(safe-area-inset-bottom))]">
+          <FounderOnboardingGate>{children}</FounderOnboardingGate>
+        </main>
+      </div>
 
       <CockpitBottomNav />
-    </div>
     </FounderGlobeProvider>
   );
 }

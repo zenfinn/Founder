@@ -11,13 +11,13 @@ function isJarvisRoute(pathname = "") {
 /** Turn off voice-globe UI when leaving Jarvis so overlays never block other pages. */
 export function CockpitVoiceGlobeGuard() {
   const pathname = usePathname() ?? "";
-  const { setVoiceGlobe } = useFounderGlobe();
+  const { setVoiceGlobe, voiceGlobe } = useFounderGlobe();
 
   useEffect(() => {
-    if (isJarvisRoute(pathname)) return;
+    if (!pathname || isJarvisRoute(pathname) || !voiceGlobe.active) return;
 
     setVoiceGlobe({ active: false, started: false, hint: "", error: "", tapDisabled: true });
-  }, [pathname, setVoiceGlobe]);
+  }, [pathname, setVoiceGlobe, voiceGlobe.active]);
 
   return null;
 }

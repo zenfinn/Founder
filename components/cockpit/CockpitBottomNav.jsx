@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bot, FolderOpen, Calendar, Home, LayoutGrid, MessageCircle, Sparkles, Users } from "lucide-react";
@@ -20,35 +22,47 @@ const navItems = [
   { href: "/mentoren", label: "Mentoren", Icon: Sparkles, match: (path) => path.startsWith("/mentoren") },
 ];
 
-export function CockpitBottomNav() {
+function CockpitBottomNavBar() {
   const pathname = usePathname() ?? "";
 
   return (
     <nav
       aria-label="Hauptnavigation"
-      className="pointer-events-auto fixed inset-x-0 bottom-0 z-[200] flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
+      className="pointer-events-auto fixed inset-x-0 bottom-0 z-[9999] flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
     >
-      <div className="flex max-w-[calc(100vw-1.5rem)] items-center gap-0.5 overflow-x-auto rounded-2xl border border-[#1a3aad]/35 bg-[#0a0a0a]/90 px-1.5 py-2 shadow-[0_-4px_24px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:gap-1 sm:px-2">
-      {navItems.map(({ href, label, Icon, match }) => {
-        const isActive = match(pathname);
-        return (
-          <Link
-            key={href}
-            href={href}
-            aria-label={label}
-            aria-current={isActive ? "page" : undefined}
-            title={label}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition sm:h-11 sm:w-11 ${
-              isActive
-                ? "bg-[#1a3aad] text-white"
-                : "text-neutral-400 hover:border hover:border-[#1a3aad]/50 hover:text-white"
-            }`}
-          >
-            <Icon className="h-5 w-5" strokeWidth={isActive ? 2.25 : 1.75} />
-          </Link>
-        );
-      })}
+      <div className="flex max-w-[calc(100vw-1.5rem)] items-center gap-0.5 overflow-x-auto rounded-2xl border border-[#1a3aad]/35 bg-[#0a0a0a]/95 px-1.5 py-2 shadow-[0_-4px_24px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:gap-1 sm:px-2">
+        {navItems.map(({ href, label, Icon, match }) => {
+          const isActive = match(pathname);
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-label={label}
+              aria-current={isActive ? "page" : undefined}
+              title={label}
+              className={`relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition sm:h-11 sm:w-11 ${
+                isActive
+                  ? "bg-[#1a3aad] text-white"
+                  : "text-neutral-400 hover:border hover:border-[#1a3aad]/50 hover:text-white"
+              }`}
+            >
+              <Icon className="h-5 w-5" strokeWidth={isActive ? 2.25 : 1.75} />
+            </Link>
+          );
+        })}
       </div>
     </nav>
   );
+}
+
+export function CockpitBottomNav() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
+  return createPortal(<CockpitBottomNavBar />, document.body);
 }
