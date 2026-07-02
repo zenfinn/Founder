@@ -4,8 +4,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CommunityCategoryIcon } from "@/components/community/CommunityCategoryIcon";
-import { Lock, Search, Users } from "lucide-react";
+import { FounderProUpgradeButton } from "@/components/FounderProUpgradeButton";
+import { Search, Users } from "lucide-react";
 import { getMembershipLimitMessage } from "@/lib/membership";
+
+const proUpgradeButtonClassName =
+  "inline-flex w-full items-center justify-center rounded-2xl bg-[#1a3aad] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#2f61df] disabled:cursor-not-allowed disabled:opacity-70";
 
 export function CommunityGroupsGrid({ initialPayload = null }) {
   const router = useRouter();
@@ -102,10 +106,18 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
   return (
     <div className="mt-0">
       {!proMember && (
-        <p className="mb-4 rounded-2xl border border-founder-200 bg-founder-50 px-4 py-3 text-sm font-semibold text-founder-800">
-          Basic: 1 Community. Tools nur mit Founder Pro.
-          {!canJoinMore && membershipCount >= 1 ? ` ${getMembershipLimitMessage("community")}` : ""}
-        </p>
+        <div className="mb-4 rounded-2xl border border-[#1a3aad]/30 bg-[#1a3aad]/10 px-4 py-3">
+          <p className="text-sm font-semibold text-white">Basic: 1 Community · Tools nur mit Founder Pro</p>
+          {!canJoinMore && membershipCount >= 1 ? (
+            <p className="mt-1 text-xs leading-5 text-neutral-400">{getMembershipLimitMessage()}</p>
+          ) : null}
+          <FounderProUpgradeButton
+            label="Pro upgraden — alles freischalten"
+            cancelPath="/community"
+            className={`${proUpgradeButtonClassName} mt-3`}
+            errorClassName="mt-2 text-xs font-semibold text-red-400"
+          />
+        </div>
       )}
 
       {notice && (
@@ -156,30 +168,30 @@ export function CommunityGroupsGrid({ initialPayload = null }) {
                   Öffnen
                 </Link>
               ) : group.needs_pro ? (
-                <Link
-                  href="/dashboard"
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-founder-200 bg-white px-5 py-3 text-sm font-bold text-founder-700 transition hover:bg-founder-50"
-                >
-                  <Lock className="h-4 w-4" />
-                  Founder Pro nötig
-                </Link>
+                <FounderProUpgradeButton
+                  label="Founder Pro freischalten"
+                  cancelPath="/community"
+                  className={proUpgradeButtonClassName}
+                  errorClassName="mt-2 text-xs font-semibold text-red-400"
+                />
+              ) : !group.can_join ? (
+                <div className="space-y-2">
+                  <p className="text-center text-xs font-semibold text-neutral-400">Limit erreicht</p>
+                  <FounderProUpgradeButton
+                    label="Pro upgraden — alles freischalten"
+                    cancelPath="/community"
+                    className={proUpgradeButtonClassName}
+                    errorClassName="mt-2 text-xs font-semibold text-red-400"
+                  />
+                </div>
               ) : (
                 <button
                   type="button"
-                  disabled={joiningId === group.id || !group.can_join}
+                  disabled={joiningId === group.id}
                   onClick={() => handleJoin(group.id)}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-founder-200 bg-white px-5 py-3 text-sm font-bold text-founder-700 transition hover:bg-founder-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-[#1a3aad]/35 bg-[#141414] px-5 py-3 text-sm font-bold text-white transition hover:border-[#1a3aad]/60 hover:bg-[#1a1a1a] disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {joiningId === group.id ? (
-                    "Beitreten..."
-                  ) : !group.can_join ? (
-                    <>
-                      <Lock className="h-4 w-4" />
-                      Limit erreicht
-                    </>
-                  ) : (
-                    "Beitreten"
-                  )}
+                  {joiningId === group.id ? "Beitreten..." : "Beitreten"}
                 </button>
               )}
             </div>

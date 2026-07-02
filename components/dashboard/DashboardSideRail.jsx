@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FeedAvatar } from "@/components/FeedAvatar";
+import { FounderProUpgradeButton } from "@/components/FounderProUpgradeButton";
 import { RankBadge } from "@/components/RankBadge";
 import { getProfileWelcomeName, isFounderPro } from "@/lib/membership";
 import { ArrowUpRight, FolderOpen, LayoutGrid, Sparkles, Users } from "lucide-react";
@@ -41,6 +42,16 @@ export function DashboardSideRail({ profile, copy }) {
             Profil
             <ArrowUpRight className="h-3 w-3" />
           </Link>
+          {!proMember && (
+            <div className="mt-3 w-full">
+              <FounderProUpgradeButton
+                label={copy.proUpgradeCta}
+                cancelPath="/dashboard"
+                className="inline-flex w-full items-center justify-center rounded-xl bg-[#1a3aad] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#2f61df] disabled:cursor-not-allowed disabled:opacity-70"
+                errorClassName="mt-2 text-[11px] font-semibold text-red-400"
+              />
+            </div>
+          )}
         </div>
       </div>
 
