@@ -182,22 +182,24 @@ function getVoiceGlobeCanvasSize() {
     return Math.min(Math.floor(vw * 0.56), 232);
   }
 
-  // Match Cockpit voice layout: header top + bottom nav (6rem) + chat panel (34dvh)
+  // Voice chat panel is max 34dvh but usually much shorter when empty (~13rem)
   const headerReserve = vw >= 1024 ? 72 : 64;
   const panelVh = vw >= 640 ? 0.34 : 0.38;
-  const bottomReserve = 96 + Math.floor(vh * panelVh);
-  const bandHeight = Math.max(vh - headerReserve - bottomReserve, 280);
-  const hintReserve = 52;
-  const byHeight = Math.floor((bandHeight - hintReserve) * 0.98);
-  const byWidth = Math.floor(vw * 0.46);
+  const panelCap = vw >= 640 ? 208 : 224;
+  const panelHeight = Math.min(Math.floor(vh * panelVh), panelCap);
+  const bottomReserve = 96 + panelHeight;
+  const bandHeight = Math.max(vh - headerReserve - bottomReserve, 300);
+  const hintReserve = 28;
+  const byHeight = Math.floor(bandHeight - hintReserve);
+  const byWidth = Math.floor(vw * 0.54);
   const size = Math.min(byHeight, byWidth);
 
-  return Math.min(Math.max(size, 360), 600);
+  return Math.min(Math.max(size, 420), 720);
 }
 
 function getVoiceGlobeDrawScale(canvasSize) {
   const isDesktop = window.innerWidth >= 768;
-  return canvasSize * (isDesktop ? 0.5 : 0.36);
+  return canvasSize * (isDesktop ? 0.54 : 0.36);
 }
 
 function isUserSpeech(activity, message) {
@@ -300,7 +302,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     const isActive = activity !== "idle";
 
     return (
-      <div className="pointer-events-none fixed inset-x-0 top-[56px] bottom-[calc(6rem+38dvh+env(safe-area-inset-bottom))] z-[30] flex flex-col items-center justify-center px-4 sm:top-[64px] sm:bottom-[calc(6rem+34dvh+env(safe-area-inset-bottom))] md:top-[72px]">
+      <div className="pointer-events-none fixed inset-x-0 top-[56px] bottom-[calc(6rem+min(38dvh,14rem)+env(safe-area-inset-bottom))] z-[30] flex flex-col items-center justify-center px-4 sm:top-[64px] sm:bottom-[calc(6rem+min(34dvh,13rem)+env(safe-area-inset-bottom))] md:top-[72px]">
         <div className="relative pointer-events-auto">
           <canvas
             ref={canvasRef}
@@ -332,7 +334,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
         {voiceGlobe.hint && (
           <p
             className={`max-w-xs text-center text-sm leading-6 ${
-              voiceGlobe.started ? "mt-2 text-xs font-medium text-[#5b8cff]/80" : "mt-5 text-neutral-200"
+              voiceGlobe.started ? "mt-2 text-xs font-medium text-[#5b8cff]/80" : "mt-3 text-neutral-200"
             }`}
           >
             {voiceGlobe.hint}
