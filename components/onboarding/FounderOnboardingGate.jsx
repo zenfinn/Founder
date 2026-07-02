@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { shouldShowFounderOnboarding } from "@/lib/founder-ai-onboarding";
+import {
+  isForceOnboardingEmail,
+  shouldShowFounderOnboarding,
+} from "@/lib/founder-ai-onboarding";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 
 export function FounderOnboardingGate({ children }) {
@@ -11,7 +14,8 @@ export function FounderOnboardingGate({ children }) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const onOnboardingPage = pathname?.startsWith("/onboarding/founder");
   const onJarvisPage = pathname?.startsWith("/jarvis");
-  const skipEnforce = onOnboardingPage || onJarvisPage;
+  const onDashboard = pathname === "/dashboard";
+  const skipEnforce = onOnboardingPage || onJarvisPage || !onDashboard;
   const [ready, setReady] = useState(skipEnforce);
 
   useEffect(() => {
@@ -29,7 +33,11 @@ export function FounderOnboardingGate({ children }) {
 
       if (cancelled) return;
 
-      if (user?.id && shouldShowFounderOnboarding(user.id, user.email)) {
+      if (
+        user?.id &&
+        !isForceOnboardingEmail(user.email) &&
+        shouldShowFounderOnboarding(user.id, user.email)
+      ) {
         router.replace("/onboarding/founder");
         return;
       }

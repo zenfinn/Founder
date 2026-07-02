@@ -698,7 +698,7 @@ export function FounderAiOnboarding({ persistent = false }) {
 
   if (voiceMode && phase === "chat" && globeActivated) {
     return (
-      <div className="pointer-events-none fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[15] sm:inset-x-4">
+      <div className="pointer-events-none fixed inset-x-3 bottom-[calc(6.25rem+env(safe-area-inset-bottom))] z-[15] sm:inset-x-4">
         <div className="pointer-events-auto max-h-[min(34dvh,280px)] overflow-y-auto overscroll-contain sm:max-h-[min(30dvh,260px)]">
           {chatPanel}
         </div>
