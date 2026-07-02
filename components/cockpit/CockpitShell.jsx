@@ -4,6 +4,7 @@ import Link from "next/link";
 import { BrandMark } from "@/components/BrandMark";
 import { UserHeaderControls } from "@/components/UserHeaderControls";
 import { CockpitBottomNav } from "@/components/cockpit/CockpitBottomNav";
+import { CockpitVoiceGlobeGuard } from "@/components/cockpit/CockpitVoiceGlobeGuard";
 import { GlobeBackground } from "@/components/cockpit/GlobeBackground";
 import { FounderGlobeProvider } from "@/components/cockpit/FounderGlobeContext";
 import { FounderOnboardingGate } from "@/components/onboarding/FounderOnboardingGate";
@@ -11,6 +12,7 @@ import { FounderOnboardingGate } from "@/components/onboarding/FounderOnboarding
 export function CockpitShell({ children }) {
   return (
     <FounderGlobeProvider>
+      <CockpitVoiceGlobeGuard />
       <div
         data-cockpit="true"
         className="cockpit-root relative isolate flex min-h-dvh flex-col bg-[#050505] text-neutral-100"

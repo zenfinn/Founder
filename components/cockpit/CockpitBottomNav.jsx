@@ -26,7 +26,7 @@ export function CockpitBottomNav() {
   return (
     <nav
       aria-label="Hauptnavigation"
-      className="pointer-events-auto fixed inset-x-0 bottom-0 z-[100] flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
+      className="pointer-events-auto fixed inset-x-0 bottom-0 z-[200] flex justify-center px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2"
     >
       <div className="flex max-w-[calc(100vw-1.5rem)] items-center gap-0.5 overflow-x-auto rounded-2xl border border-[#1a3aad]/35 bg-[#0a0a0a]/90 px-1.5 py-2 shadow-[0_-4px_24px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:gap-1 sm:px-2">
       {navItems.map(({ href, label, Icon, match }) => {

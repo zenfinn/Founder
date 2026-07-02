@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useFounderGlobe } from "@/components/cockpit/FounderGlobeContext";
 
 const MERIDIANS = 24;
@@ -206,14 +207,19 @@ function isUserSpeech(activity, message) {
   return activity === "listening" && message?.trim() && !LISTENING_HINTS.has(message.trim());
 }
 
+function isJarvisRoute(pathname = "") {
+  return pathname.startsWith("/jarvis") || pathname.startsWith("/onboarding/founder");
+}
+
 export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntensity = 1 }) {
+  const pathname = usePathname() ?? "";
   const canvasRef = useRef(null);
   const geometryRef = useRef(null);
   const { activity, message, voiceGlobe, invokeGlobeTap } = useFounderGlobe();
   const activityRef = useRef(activity);
   const voiceGlobeRef = useRef(voiceGlobe);
 
-  const voiceActive = voiceGlobe.active;
+  const voiceActive = voiceGlobe.active && isJarvisRoute(pathname);
 
   useEffect(() => {
     activityRef.current = activity;
@@ -302,8 +308,8 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     const isActive = activity !== "idle";
 
     return (
-      <div className="pointer-events-none fixed inset-x-0 top-[56px] bottom-[calc(6rem+min(38dvh,14rem)+env(safe-area-inset-bottom))] z-[30] flex flex-col items-center justify-center px-4 sm:top-[64px] sm:bottom-[calc(6rem+min(34dvh,13rem)+env(safe-area-inset-bottom))] md:top-[72px]">
-        <div className="relative pointer-events-auto">
+      <div className="pointer-events-none fixed inset-x-0 top-[56px] bottom-[calc(6rem+min(38dvh,14rem)+env(safe-area-inset-bottom))] z-[25] flex flex-col items-center justify-center overflow-hidden px-4 sm:top-[64px] sm:bottom-[calc(6rem+min(34dvh,13rem)+env(safe-area-inset-bottom))] md:top-[72px]">
+        <div className="relative max-w-full shrink-0 pointer-events-auto">
           <canvas
             ref={canvasRef}
             aria-hidden
