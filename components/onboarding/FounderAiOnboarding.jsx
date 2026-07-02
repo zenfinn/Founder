@@ -345,14 +345,14 @@ export function FounderAiOnboarding({ persistent = false }) {
         profileRef.current = nextProfile;
         setReadyForRanking(Boolean(payload.readyForRanking));
 
-        let nextMeetup = payload.meetup ?? {};
+        let nextMeetup = payload.meetupFlow ? (payload.meetup ?? {}) : {};
         if (payload.meetupFlow && !nextMeetup.host_info && hostInfoSeedRef.current) {
           nextMeetup = { ...nextMeetup, host_info: hostInfoSeedRef.current };
         }
         setMeetup(nextMeetup);
         meetupRef.current = nextMeetup;
-        setReadyForMeetupSubmit(Boolean(payload.readyForSubmit));
-        meetupAwaitingConfirmRef.current = Boolean(payload.meetupAwaitingConfirm);
+        setReadyForMeetupSubmit(Boolean(payload.meetupFlow && payload.readyForSubmit));
+        meetupAwaitingConfirmRef.current = Boolean(payload.meetupFlow && payload.meetupAwaitingConfirm);
 
         if (voiceModeRef.current) {
           await playFounderVoice(reply);
