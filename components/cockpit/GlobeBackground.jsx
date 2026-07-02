@@ -302,7 +302,7 @@ export function GlobeBackground({ scaleFactor = 0.34, centerY = 0.42, glowIntens
     const isActive = activity !== "idle";
 
     return (
-      <div className="pointer-events-none fixed inset-0 z-[25] flex items-center justify-center px-4 pt-14 pb-[calc(6.5rem+min(34dvh,13rem)+env(safe-area-inset-bottom))] sm:pt-16">
+      <div className="pointer-events-none fixed inset-x-0 top-14 z-[25] flex items-center justify-center px-4 sm:top-16 bottom-[calc(5.5rem+min(34dvh,13rem)+env(safe-area-inset-bottom))]">
         <div className="flex max-w-full flex-col items-center">
           <div className="relative shrink-0 pointer-events-auto">
           <canvas
