@@ -603,7 +603,7 @@ export function FounderAiOnboarding({ persistent = false }) {
             </div>
 
             <div
-              className={`space-y-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] ${
+              className={`flex flex-col space-y-2 overflow-y-auto overscroll-contain pr-0.5 [-webkit-overflow-scrolling:touch] ${
                 voiceMode ? "max-h-[24vh] sm:max-h-[26vh]" : "min-h-0 flex-1 max-h-[min(40vh,360px)]"
               }`}
             >
