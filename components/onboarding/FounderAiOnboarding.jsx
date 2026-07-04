@@ -472,7 +472,7 @@ export function FounderAiOnboarding({ persistent = false }) {
       fetch("/api/onboarding/founder/rank", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile: profileRef.current }),
+        body: JSON.stringify({ profile: profileRef.current, messages: messagesRef.current }),
       }),
       minDelay,
     ]);

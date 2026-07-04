@@ -20,6 +20,7 @@ export async function POST(request) {
 
     const body = await request.json().catch(() => ({}));
     const profile = body.profile && typeof body.profile === "object" ? body.profile : {};
+    const messages = Array.isArray(body.messages) ? body.messages : [];
 
     const { data: groups, error: groupsError } = await supabase
       .from("groups")
@@ -32,7 +33,7 @@ export async function POST(request) {
       (group) => !isGlobalLounge(group) && !isProLoungeCommunity(group) && group.slug
     );
 
-    const { rankedGroups, profilePatch } = await rankNichesForProfile(profile, eligible);
+    const { rankedGroups, profilePatch } = await rankNichesForProfile(profile, eligible, { messages });
 
     return NextResponse.json({ rankedGroups, profilePatch });
   } catch (error) {
