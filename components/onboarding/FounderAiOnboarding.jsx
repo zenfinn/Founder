@@ -281,6 +281,13 @@ export function FounderAiOnboarding({ persistent = false }) {
         } else {
           setFounderMessage(reply);
         }
+
+        if (payload.autoRank && chatMode === "onboarding" && !rankingTriggeredRef.current) {
+          rankingTriggeredRef.current = true;
+          window.setTimeout(() => {
+            runRankingRef.current?.();
+          }, voiceModeRef.current ? 700 : 500);
+        }
       } catch (error) {
         const errorText = error.message ?? "Kurz technisches Problem — versuch es nochmal.";
         setMessages((current) => [...current, { role: "founder", text: errorText }]);
